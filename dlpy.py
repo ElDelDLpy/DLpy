@@ -3,6 +3,11 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.6.2
+#
+# - Versión de prueba para comprobar la actualización desde GitHub: no cambia
+#   el funcionamiento, solo sube la versión.
+#
 # ## 0.6.1
 #
 # - Actualización desde GitHub: al arrancar compara su versión con la del dlpy.py
@@ -560,7 +565,7 @@
 #   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.6.1"
+VERSION = "0.6.2"
 
 import os
 import re
