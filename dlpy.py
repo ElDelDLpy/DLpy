@@ -3,6 +3,23 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.6.1
+#
+# - Actualización desde GitHub: al arrancar compara su versión con la del dlpy.py
+#   del repositorio ElDelDLpy/DLpy (rama main). Si hay una más nueva pregunta
+#   «¿Instalar la x.y.z y ejecutarla ahora?». Si aceptas, reemplaza el script y
+#   ejecuta la versión nueva al instante con los mismos argumentos (en el mismo
+#   proceso, sin exec, para que funcione también en a-Shell). En esa ejecución
+#   check_version archiva la versión anterior y guarda el changelog como siempre.
+# - Antes de reemplazar valida la descarga: empieza con #!dlpy.py, trae VERSION y
+#   compila sin errores. Sin red o con una respuesta inválida no avisa y sigue.
+# - Si dices que no, no vuelve a preguntar por esa misma versión (se guarda en
+#   state/update.json); cuando suba otra más nueva vuelve a preguntar.
+# - Nuevo `--actualizar`: consulta ahora mismo (aunque hubieras dicho que no),
+#   avisa si ya tienes la última y sale. DLPY_NO_UPDATE=1 desactiva la
+#   comprobación automática; DLPY_UPDATE_URL cambia el enlace del dlpy.py.
+# - --selftest: pruebas nuevas de remote_script_version.
+#
 # ## 0.6.0
 #
 # - Modos de ejecución: además de iOS (a-Shell) y Android (Termux), DLpy corre
@@ -540,9 +557,10 @@
 #   Sin LINK: ofrece usar el último enlace.
 #   --selftest: ejecuta pruebas rápidas de funciones puras y sale.
 #   --sistema: muestra en qué corre y qué funciones están disponibles (y por qué).
+#   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 import os
 import re
@@ -3148,6 +3166,76 @@ def vtuple(v):
     return tuple(int(x) for x in re.findall(r"\d+", v or ""))
 
 
+# ─────────── Actualizaciones desde GitHub ───────────
+UPDATE_URL = (os.environ.get("DLPY_UPDATE_URL")
+              or "https://raw.githubusercontent.com/ElDelDLpy/DLpy/main/dlpy.py")
+UPDATE_STATE_FILE = os.path.join(STATE_DIR, "update.json")
+UPDATE_MAX_BYTES = 3 * 1024 * 1024
+
+
+def remote_script_version(text):
+    """Versión «x.y.z» de un dlpy.py descargado, o None si no parece uno válido."""
+    if not text or not text.startswith("#!dlpy.py"):
+        return None
+    m = re.search(r'(?m)^VERSION = "(\d+\.\d+\.\d+)"[ \t]*$', text)
+    return m.group(1) if m else None
+
+
+def fetch_remote_script(timeout=5):
+    """Texto del dlpy.py del repositorio, o None si falla o no es un script válido."""
+    import urllib.request
+    req = urllib.request.Request(UPDATE_URL, headers={
+        "User-Agent": "DLpy-updater", "Cache-Control": "no-cache"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            raw = r.read(UPDATE_MAX_BYTES + 1)
+        if len(raw) > UPDATE_MAX_BYTES:
+            return None
+        text = raw.decode("utf-8").replace("\r\n", "\n")
+        if not remote_script_version(text):
+            return None
+        compile(text, "dlpy.py", "exec")          # descarga truncada o dañada
+        return text
+    except Exception as _ign:
+        ignore("fetch_remote_script", _ign)
+        return None
+
+
+def check_update(force=False):
+    """Si el repositorio tiene una versión más nueva, pregunta, la instala y la ejecuta.
+
+    Devuelve True si se ejecutó la versión nueva (quien llama debe terminar)."""
+    text = fetch_remote_script(timeout=8 if force else 5)
+    remote = remote_script_version(text)
+    if not remote:
+        if force:
+            m_warn("No se pudo consultar la última versión (sin red o enlace inválido).")
+        return False
+    if vtuple(remote) <= vtuple(VERSION):
+        if force:
+            m_ok(f"Ya tienes la última versión (v{VERSION}).")
+        return False
+    if not force and load_json(UPDATE_STATE_FILE).get("declined") == remote:
+        return False
+    m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
+    if not ask(f"¿Instalar la {remote} y ejecutarla ahora?"):
+        try:
+            save_json(UPDATE_STATE_FILE, {"declined": remote})
+        except Exception as _ign:
+            ignore("check_update", _ign)
+        note("No se vuelve a preguntar por esta versión; con --actualizar la instalas.")
+        return False
+    try:
+        write_text(SCRIPT_PATH, text)
+    except Exception as e:
+        m_warn(f"No se pudo instalar la actualización: {e}")
+        return False
+    m_ok(f"DLpy {remote} instalada.")
+    import runpy
+    runpy.run_path(SCRIPT_PATH, run_name="__main__")   # termina con SystemExit
+    return True
+
+
 def pip_install(pip_name):
     m_info(f"Instalando {pip_name}...")
     if IS_ANDROID:
@@ -4689,6 +4777,9 @@ def selftest():
           "yt-dlp-ejs==0.8.0")
     check("ejs_pin sin versión", ejs_pin(["yt-dlp-ejs"]), "yt-dlp-ejs")
     check("ejs_pin ausente", ejs_pin(["brotli"]), None)
+    check("remote_script_version ok", remote_script_version('#!dlpy.py x\nVERSION = "1.2.3"\n'), "1.2.3")
+    check("remote_script_version html", remote_script_version('<html>VERSION = "1.2.3"</html>'), None)
+    check("remote_script_version sin versión", remote_script_version("#!dlpy.py\nx = 1\n"), None)
     check("js requerido nuevo", ytdlp_needs_js("2025.11.12"), True)
     check("js requerido viejo", ytdlp_needs_js("2025.10.22"), False)
     check("js requerido vacío", ytdlp_needs_js(""), False)
@@ -5066,6 +5157,11 @@ def main():
         note("Revisa sus permisos o define DLPY_DOWNLOAD_DIR con otra carpeta.")
 
     check_storage()                 # antes de cualquier otro proceso
+    if "--actualizar" in sys.argv[1:]:
+        check_update(force=True)
+        return 0
+    if not os.environ.get("DLPY_NO_UPDATE") and check_update():
+        return 0
     if not check_version():
         return 1
     if not check_dependencies():
