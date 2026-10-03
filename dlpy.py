@@ -3,6 +3,20 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.7.2
+#
+# - Preguntas s/n unificadas en un solo sitio: ask_yn (por donde pasan todas, también
+#   ask) arma el final de CUALQUIER pregunta con yn_prompt: quita el «(S/n)» / «(s/N)»
+#   / «▸» que traiga el texto y pone «(S/n) ▸ » si el valor por defecto es sí o
+#   «(s/N) ▸ » si es no. Así toda pregunta lo muestra siempre, la mayúscula coincide
+#   con lo que hace Enter y una pregunta nueva no puede olvidarlo. Las preguntas de
+#   elegir número («▸ ») no son s/n y no cambian.
+# - Ojo con las actualizaciones: la pregunta «¿Instalar la x.y.z…?» la pinta la
+#   versión que YA tienes instalada. Hasta que una versión con este arreglo esté en
+#   GitHub e instalada, la actualización seguirá preguntando con el texto de la
+#   versión vieja.
+# - --selftest: pruebas nuevas de yn_prompt.
+#
 # ## 0.7.1
 #
 # - Actualización: si la versión local es MÁS NUEVA que la del dlpy.py de GitHub (el
@@ -675,7 +689,7 @@
 #     (desde 0.6.7 también revisa las dependencias y vuelve a preguntar lo rechazado.)
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.7.1"
+VERSION = "0.7.2"
 
 import os
 import re
@@ -2286,11 +2300,22 @@ def parse_yn(ans, default=True):
     return None
 
 
+YN_SUFFIX_RE = re.compile(r"\s*(?:\([sSyY]/[nN]\))?\s*▸?\s*$")
+
+
+def yn_prompt(msg, default=True):
+    """Texto de una pregunta s/n con el final unificado: «… (S/n) ▸ » si Enter = sí,
+    «… (s/N) ▸ » si Enter = no, sin importar qué traiga ya `msg`."""
+    base = YN_SUFFIX_RE.sub("", str(msg))
+    return f"{base} {'(S/n)' if default else '(s/N)'} ▸ "
+
+
 def ask_yn(prompt, default=True, seconds=False):
     """Pregunta s/n y la repite hasta recibir una respuesta válida.
     seconds=False: ask_line; seconds=None: timed_input sin cuenta; número: con cuenta.
     Devuelve True/False, o None si venció la cuenta regresiva.
     EOFError/KeyboardInterrupt se propagan a quien llama."""
+    prompt = yn_prompt(prompt, default)
     while True:
         r = ask_line(prompt) if seconds is False else timed_input(prompt, seconds)
         if r is None:
@@ -5252,6 +5277,13 @@ def selftest():
     check("variantes snapshot viejo", script_variants(_head + _body, _full.replace(VERSION, "0.0.1"), _md)[1], _full)
     check("variantes desde md", script_variants(_head + _body, "", _md)[1], _full)
     check("variantes sin fuente", script_variants(_head + _body, "", "")[1], None)
+    check("yn sin sufijo", yn_prompt("¿Seguir?"), "¿Seguir? (S/n) ▸ ")
+    check("yn sin sufijo no", yn_prompt("¿Seguir?", False), "¿Seguir? (s/N) ▸ ")
+    check("yn sufijo repetido", yn_prompt("¿Seguir? (S/n) ▸ "), "¿Seguir? (S/n) ▸ ")
+    check("yn sufijo distinto al default", yn_prompt("¿Borrar? (S/n) ▸ ", False), "¿Borrar? (s/N) ▸ ")
+    check("yn solo flecha", yn_prompt("¿Seguir? ▸ "), "¿Seguir? (S/n) ▸ ")
+    check("yn conserva paréntesis", yn_prompt("¿Instalar (3 MB)?"), "¿Instalar (3 MB)? (S/n) ▸ ")
+    check("yn multilínea", yn_prompt("¿Mover (1 MB) a backups? (s/N) ▸ ", False), "¿Mover (1 MB) a backups? (s/N) ▸ ")
     check("update_status nueva", update_status("9.9.9", "0.7.1"), "nueva")
     check("update_status igual", update_status("0.7.1", "0.7.1"), "igual")
     check("update_status local", update_status("0.6.5", "0.7.1"), "local")
