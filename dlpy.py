@@ -3,6 +3,43 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.7.5
+#
+# - Conversión: antes de la barra imprime «Usando VideoToolbox HEVC» / «Usando x265»
+#   / etc. y la barra queda genérica («Conv.» / «Remux»). Si un intento falla avisa
+#   y pasa al siguiente encoder.
+#
+# ## 0.7.4
+#
+# - Actualización: si hay una versión nueva en GitHub pregunta SIEMPRE (ya no se
+#   guarda «rechazada» en state/update.json). Decir que no solo vale en esa
+#   ejecución; al siguiente arranque vuelve a salir la pregunta.
+# - Bits de video: se detectan solo con datos claros (bit_depth/bits o texto
+#   10bit/main10/… en format/format_note). HDR no asume 10 bits. Si hay ≥10 bits
+#   detectados y la conversión se estima lenta (> 60 s) pregunta si mantener esos
+#   bits o pasar a 8 (más rápido; por defecto 8). Sin detección → 8 bits.
+# - Barra de conversión: muestra el encoder real («Conv. VideoToolbox HEVC»,
+#   «Conv. x265», «Conv. x264», «Remux», «Conv. audio»).
+# - stream_label: si hay altura/ancho/resolución NxM se etiqueta como Video
+#   aunque vcodec venga vacío o «none» (HLS y sitios que no rellenan códec).
+# - Tras elegir formato se limpia la pantalla y se muestra un resumen «Elegido: …».
+# - Títulos de pistas: «Elegir pista predeterminada» y «Elegir pistas de audio
+#   adicional».
+# - YA DESCARGADO unificado: bloque compacto (archivo, video, pistas/idiomas) al
+#   estilo del resumen de elección, antes de «¿Descargar de nuevo…?».
+# - --selftest: pruebas de detect_bit_depth, stream_label con sin códec, y de que
+#   check_update ya no depende de declined.
+#
+# ## 0.7.3
+#
+# - Conversión Apple: ya no pregunta si el trabajo es rápido. Sin recodificar video
+#   (solo remux y/o audio → AAC) se convierte solo. Con recodificación de video se
+#   estima el tiempo (duración × resolución × fps, ~2.5× tiempo real a 1080p30 con
+#   VideoToolbox) y, si queda ≤ 60 s, también se convierte sin preguntar (un clip
+#   corto en 4K o a pocos fps puede ser rápido). Solo pregunta cuando la estimación
+#   supera el minuto o no hay duración conocida. Sigue avisando qué se va a hacer.
+# - --selftest: pruebas de convert_is_quick.
+#
 # ## 0.7.2
 #
 # - Preguntas s/n unificadas en un solo sitio: ask_yn (por donde pasan todas, también
@@ -689,7 +726,7 @@
 #     (desde 0.6.7 también revisa las dependencias y vuelve a preguntar lo rechazado.)
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.7.2"
+VERSION = "0.7.5"
 
 import os
 import re
@@ -1956,9 +1993,16 @@ def pp_label(name):
 
 
 def stream_label(d):
+    """Etiqueta de la barra de descarga. Prioriza dimensiones: en HLS y sitios
+    que no rellenan vcodec un stream de video no debe pintarse como «Audio»."""
     info = d.get("info_dict") or {}
-    if has(info.get("vcodec")):
-        return res_label(info) if (info.get("height") or info.get("resolution")) else "Video"
+    h = info.get("height") or 0
+    w = info.get("width") or 0
+    res = str(info.get("resolution") or "")
+    v = info.get("vcodec")
+    # Video si hay tamaño, resolución tipo 1920x1080, o códec de video real
+    if h or w or ("x" in res and "audio" not in res.lower()) or has(v):
+        return res_label(info) if (h or w or res) else "Video"
     return info.get("language") or "Audio"
 
 
@@ -2513,7 +2557,7 @@ def track_row(n, t):
 def ask_default_track(tracks, original):
     """Devuelve (pista, sin_respuesta). sin_respuesta=True omite las pistas extra."""
     clear_screen()
-    header("PISTA PREDETERMINADA")
+    header("Elegir pista predeterminada")
     m_info("Se detectaron varios idiomas.")
     legend(["apple", "orig"])
     print_rows([track_row(i, t) for i, t in enumerate(tracks, 1)], ["apple", "orig"], TRACK_HEAD)
@@ -2552,7 +2596,7 @@ def ask_extra_tracks(tracks, primary):
         return [primary]
 
     clear_screen()
-    header("PISTAS ADICIONALES")
+    header("Elegir pistas de audio adicional")
     legend(["apple", "orig"])
     print_rows([track_row(i, t) for i, t in enumerate(others, 1)], ["apple", "orig"], TRACK_HEAD)
     note("Números separados por espacio (ej. 1 2 4) · Enter = todas")
@@ -2792,6 +2836,8 @@ def apple_plan(kind, fmt, selected, merge_ext):
     if not (venc or any(aenc) or remux):
         return None
     vbr = (v or {}).get("vbr") or (v or {}).get("tbr") or 4000
+    bits = detect_bit_depth(v) if v is not None else None
+    hdr = detect_hdr(v) if v is not None else None
     return {"ext": ext, "cur": cur or "?",
             "vsrc": _short(vcodec) if v is not None else None,
             "venc": venc,
@@ -2800,7 +2846,49 @@ def apple_plan(kind, fmt, selected, merge_ext):
             "asrc": [_short(f.get("acodec")) for f in auds], "aenc": aenc,
             "abr": 256 if any(abr_of(f) >= 200 for f in auds) else 192,
             "labels": [track_label(t) for t in selected] if (selected and v is not None) else [],
-            "remux": remux}
+            "remux": remux,
+            "height": (v or {}).get("height") or 0,
+            "fps": (v or {}).get("fps") or 0,
+            "bits": bits,          # None = no detectado; no se asume 10 por HDR
+            "hdr": hdr,
+            "out_bits": 8}         # profundidad de salida (puede subir si el usuario elige)
+
+
+def detect_bit_depth(fmt):
+    """Profundidad de bits del formato si se puede saber; None si no hay dato claro.
+    No asume 10 solo por ser HDR."""
+    if not fmt:
+        return None
+    for k in ("bit_depth", "bits"):
+        try:
+            n = int(fmt.get(k))
+            if n >= 8:
+                return n
+        except (TypeError, ValueError):
+            pass
+    blob = " ".join(str(fmt.get(k) or "") for k in
+                    ("format_note", "format", "format_id", "vcodec")).lower()
+    m = re.search(r"\b(12|10)\s*-?\s*bits?\b|\bmain10\b|\bp10\b|\bhip10\b", blob)
+    if m:
+        if "12" in (m.group(0) or ""):
+            return 12
+        return 10
+    return None
+
+
+def detect_hdr(fmt):
+    """Etiqueta HDR legible si el formato lo declara; None si no / SDR."""
+    if not fmt:
+        return None
+    dr = str(fmt.get("dynamic_range") or "").strip().upper()
+    if dr and dr not in ("SDR", "NONE", "N/A"):
+        return dr
+    blob = " ".join(str(fmt.get(k) or "") for k in
+                    ("format_note", "format")).lower()
+    for tag in ("hdr10+", "hdr10", "hlg", "dolby vision", "dvhe", "hdr"):
+        if tag in blob:
+            return tag.upper().replace("DOLBY VISION", "DV")
+    return None
 
 
 def plan_summary(plan):
@@ -2812,20 +2900,72 @@ def plan_summary(plan):
         parts.append(f"audio {'/'.join(enc)} → AAC")
     if plan["remux"]:
         parts.append(f"contenedor {plan['cur']} → {plan['ext']}")
+    bits = plan.get("bits")
+    out_b = plan.get("out_bits") or 8
+    if bits and bits >= 10:
+        if out_b >= 10:
+            parts.append(f"{bits}-bit")
+        else:
+            parts.append(f"{bits}-bit → 8-bit")
+    elif plan.get("hdr"):
+        parts.append(str(plan["hdr"]))
     return " · ".join(parts) or f"contenedor → {plan['ext']}"
 
 
+# Umbral (s) bajo el cual se convierte sin preguntar. ~1 min en el iPhone.
+CONVERT_QUICK_SECS = 60
+# Velocidad de referencia: ~2.5× tiempo real a 1080p30 con hevc_videotoolbox.
+CONVERT_BASE_SPEED = 2.5
+
+
+def convert_est_secs(plan, duration):
+    """Segundos estimados de conversión, o None si no se puede estimar.
+    Sin recodificar video (solo remux/audio) ≈ 0. Con venc: duración × coste
+    relativo a 1080p30 / CONVERT_BASE_SPEED (más alto o más fps → más lento)."""
+    if not plan.get("venc"):
+        return 0.0
+    try:
+        dur = float(duration or 0)
+    except (TypeError, ValueError):
+        return None
+    if dur <= 0:
+        return None
+    h = float(plan.get("height") or 0) or 720.0
+    fps = float(plan.get("fps") or 0) or 30.0
+    scale = (h / 1080.0) ** 2 * (fps / 30.0)
+    return dur * max(0.15, scale) / CONVERT_BASE_SPEED
+
+
+def convert_is_quick(plan, duration, limit=CONVERT_QUICK_SECS):
+    """True si la conversión debería acabar en ≤ limit segundos (o no hay venc)."""
+    est = convert_est_secs(plan, duration)
+    return est is not None and est <= limit
+
+
 def video_encoder_attempts(plan):
-    """[(códec resultante, opciones)] a probar en orden; la primera que funcione se queda."""
+    """[(códec_corto, nombre_legible, opciones)] a probar en orden; la primera
+    que funcione se queda. out_bits del plan elige yuv420p vs yuv420p10le.
+    El nombre se imprime como «Usando …»; la barra usa una etiqueta corta."""
     if not plan["venc"]:
-        return [(None, ["-c:v", "copy"] + (["-tag:v", "hvc1"] if plan["hvc"] else []))]
+        tag = ["-tag:v", "hvc1"] if plan.get("hvc") else []
+        return [(None, "remux (sin recodificar video)", ["-c:v", "copy"] + tag)]
     b = f"{plan['vbr']}k"
-    return [("hevc", ["-c:v", "hevc_videotoolbox", "-b:v", b, "-allow_sw", "1",
-                      "-tag:v", "hvc1", "-pix_fmt", "yuv420p"]),
-            ("hevc", ["-c:v", "libx265", "-preset", "veryfast", "-crf", "26",
-                      "-tag:v", "hvc1", "-pix_fmt", "yuv420p"]),
-            ("h264", ["-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
-                      "-pix_fmt", "yuv420p"])]
+    ten = (plan.get("out_bits") or 8) >= 10
+    pix = "yuv420p10le" if ten else "yuv420p"
+    # VideoToolbox: profile main10 solo si pedimos 10 bits
+    vt = ["-c:v", "hevc_videotoolbox", "-b:v", b, "-allow_sw", "1",
+          "-tag:v", "hvc1", "-pix_fmt", pix]
+    if ten:
+        vt += ["-profile:v", "main10"]
+    x265 = ["-c:v", "libx265", "-preset", "veryfast", "-crf", "26",
+            "-tag:v", "hvc1", "-pix_fmt", pix]
+    if ten:
+        x265 += ["-x265-params", "profile=main10"]
+    x264 = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
+            "-pix_fmt", "yuv420p"]          # H.264 High 10 casi no se usa en Apple
+    return [("hevc", "VideoToolbox HEVC", vt),
+            ("hevc", "x265", x265),
+            ("h264", "x264", x264)]
 
 
 def apple_ffmpeg_opts(plan, vopts):
@@ -2850,17 +2990,31 @@ def apple_ffmpeg_opts(plan, vopts):
 
 def apple_convert_file(pp, path, plan, dur, bar, out_path):
     """Convierte path → out_path probando los encoders en orden. Devuelve el
-    códec de video usado (None si no hubo recodificación) o lanza RuntimeError."""
+    códec de video usado (None si no hubo recodificación) o lanza RuntimeError.
+    Antes de cada intento: «Usando …»; la barra queda genérica (Conv. / Remux)."""
     root, ext = os.path.splitext(out_path)
     tmp = root + ".apple" + ext
-    vsets = video_encoder_attempts(plan) if plan["vsrc"] is not None else [(None, [])]
+    if plan.get("vsrc") is not None:
+        vsets = video_encoder_attempts(plan)
+    else:
+        vsets = [(None, "AAC (audio)", [])]
     err, used, ok = None, None, False
-    for vcodec, vopts in vsets:
+    prev_name = None
+    for vcodec, name, vopts in vsets:
         try:
             aopts = apple_ffmpeg_opts(plan, vopts)
-            dbg("intento de conversión", {"video": vcodec, "opciones": aopts})
+            dbg("intento de conversión", {"video": vcodec, "name": name, "opciones": aopts})
+            if prev_name:
+                m_warn(f"{prev_name} no disponible; probando {name}")
+            m_info(f"Usando {name}")
+            if vcodec is None and not plan.get("venc") and plan.get("vsrc") is not None:
+                bar_label = "Remux"
+            elif vcodec is None:
+                bar_label = "Conv. audio"
+            else:
+                bar_label = "Conv."
             if bar is not None:
-                bar.reset(f"Conv. {vcodec.upper()}" if vcodec else "Conv. audio")
+                bar.reset(bar_label)
                 ffmpeg_progress(pp, path, tmp, aopts, dur, bar)
             else:
                 pp.run_ffmpeg(path, tmp, aopts)
@@ -2870,7 +3024,8 @@ def apple_convert_file(pp, path, plan, dur, bar, out_path):
             err = "archivo vacío"
         except Exception as e:
             err = e
-            dbg("intento fallido", {"video": vcodec, "error": str(e)[-300:]})
+            dbg("intento fallido", {"video": vcodec, "name": name, "error": str(e)[-300:]})
+        prev_name = name
         if os.path.exists(tmp):
             os.remove(tmp)
     if not ok:
@@ -2992,8 +3147,10 @@ def reuse_downloaded(old_file, old_entry, index, key, title, info, kind, fmt, fm
     return True
 
 
-def ask_apple_convert(plan, can_merge):
-    """Avisa de que no es nativo en Apple y pregunta. Devuelve el plan o None."""
+def ask_apple_convert(plan, can_merge, duration=None):
+    """Avisa de que no es nativo en Apple y pregunta (o convierte solo si es
+    rápido). Devuelve el plan o None. Bits ≥10 detectados + estimación lenta:
+    pregunta si mantenerlos o pasar a 8 (default 8)."""
     clear_screen()
     header("COMPATIBILIDAD APPLE")
     m_warn("Este resultado no es compatible con Apple.")
@@ -3001,13 +3158,47 @@ def ask_apple_convert(plan, can_merge):
     if not can_merge:
         m_info("No hay ffmpeg para convertir; se descargará tal cual.")
         return None
+    est = convert_est_secs(plan, duration)
+    bits = plan.get("bits")
+    slow = not convert_is_quick(plan, duration)
+
+    # Conversión rápida: sin preguntar; salida a 8 bits
+    if not slow:
+        plan["out_bits"] = 8
+        if est is not None and est > 0 and plan.get("venc"):
+            m_info(f"Conversión rápida (~{max(1, int(round(est)))} s estimados): se convierte sin preguntar.")
+        else:
+            m_info("Conversión rápida (solo remux/audio): se convierte sin preguntar.")
+        return plan
+
+    # Lenta + bits detectados ≥10: elegir profundidad
+    if plan.get("venc") and bits and bits >= 10:
+        if est is not None:
+            note(f"Estimación ~{int(round(est))} s a 8 bits (umbral: {CONVERT_QUICK_SECS} s).")
+        note(f"Se detectaron {bits} bits en el origen. 10 bits conserva más detalle y tarda más.")
+        try:
+            keep = ask_yn(f"¿Mantener {bits} bits (más lento, más calidad)? (s/N) ▸ ",
+                          default=False, seconds=WAIT_SECONDS)
+        except (EOFError, KeyboardInterrupt):
+            m_info("Conversión cancelada; se descargará sin convertir.")
+            return None
+        if keep:
+            plan["out_bits"] = bits
+            m_info(f"Se mantendrán {bits} bits.")
+        else:
+            plan["out_bits"] = 8
+            m_info("Se convertirá a 8 bits (más rápido).")
+        return plan
+
     if plan["venc"]:
         note("Recodificar el video a HEVC puede tardar bastante en el iPhone.")
+        if est is not None:
+            note(f"Estimación ~{int(round(est))} s (umbral de pregunta: {CONVERT_QUICK_SECS} s).")
+        if plan.get("hdr"):
+            note(f"Origen {plan['hdr']}: sin profundidad de bits detectada; se usa 8 bits.")
     if countdown_supported():
         note(f"Enter = convertir · sin respuesta en {WAIT_SECONDS} s se convierte")
     try:
-        # Mismo lector que las preguntas previas (cbreak): input() tras ellas
-        # dejaba congelado a-Shell cuando había varios idiomas.
         r = ask_yn("¿Convertir? (S/n) ▸ ", default=True, seconds=WAIT_SECONDS)
     except (EOFError, KeyboardInterrupt):
         m_info("Conversión cancelada; se descargará sin convertir.")
@@ -3135,7 +3326,9 @@ def build_meta(kind, fmt, fmt_id, selected, orig_ids, final, conv=None):
     return meta
 
 
-def show_existing(path, entry):
+def show_existing(path, entry, title=None):
+    """Resumen compacto y unificado del archivo ya descargado (mismo estilo que
+    «Elegido: …» tras elegir formato)."""
     try:
         size = os.path.getsize(path)
     except OSError as _ign:
@@ -3144,60 +3337,56 @@ def show_existing(path, entry):
     when = entry.get("date")
     when_s = time.strftime("%Y-%m-%d %H:%M", time.localtime(when)) if when else "?"
     header("YA DESCARGADO")
-    kv("Archivo", os.path.basename(path))
-    kv("Tamaño", human_size(size))
-    kv("Fecha", when_s)
-    kv("Versión", f"v{entry.get('version', '?')}")
+    title = title or entry.get("title") or os.path.splitext(os.path.basename(path))[0]
+    show_title(title)
+    arch = (f"{os.path.basename(path)} · {human_size(size)} · {when_s} · "
+            f"v{entry.get('version', '?')}")
+    kv("Archivo", arch)
     meta = entry.get("meta")
     if not meta:
-        kv("Contenedor", os.path.splitext(path)[1].lstrip("."))
-        m_info("Sin datos técnicos: descargado con una versión anterior.")
+        kv("Contenedor", os.path.splitext(path)[1].lstrip(".") or "?")
+        m_info("Sin datos técnicos (versión anterior).")
         return
-    kv("Tipo", meta.get("kind"))
-    kv("Contenedor", meta.get("container"))
-    if meta.get("converted"):
-        kv("Conversión", "a compatible Apple", flag="apple")
+    if meta.get("kind") == "audio":
+        kv("Tipo", "solo audio")
     v = meta.get("video")
     if v:
-        kv("Video", f"{v.get('res')} · {v.get('codec')}", flag="apple" if v.get("apple") else None)
+        vbits = []
+        if v.get("res"):
+            vbits.append(str(v["res"]))
+        if v.get("codec"):
+            vbits.append(str(v["codec"]))
+        if meta.get("converted"):
+            vbits.append("convertido Apple")
+        kv("Video", " · ".join(vbits) or "?", flag="apple" if v.get("apple") else None)
+    elif meta.get("kind") == "video":
+        kv("Video", meta.get("container") or "?", flag="apple" if meta.get("converted") else None)
     tracks = meta.get("tracks") or []
     if not tracks:
         kv("Audio", "sin pistas de audio")
         return
-    # Pista predeterminada (la usada) e idioma, siempre visibles
-    primary = next((t for t in tracks if t.get("default")), tracks[0])
-    lang = primary.get("lang") or "und"
-    label = primary.get("label") or lang
-    codec = str(primary.get("codec") or "?")
-    if primary.get("abr"):
-        codec += f" {primary['abr']}k"
-    flags_note = []
-    if primary.get("original"):
-        flags_note.append("original")
-    if primary.get("apple"):
-        flags_note.append(PLAT_LABEL)
-    extra = f" · {' · '.join(flags_note)}" if flags_note else ""
-    kv("Pista usada", f"{label}{extra}", flag="default")
-    kv("Idioma", lang)
-    if len(tracks) == 1:
-        kv("Códec audio", codec, flag="apple" if primary.get("apple") else None)
-    else:
-        kv("Audio", f"{len(tracks)} pista(s) · predeterminada: {lang}")
-        rows = []
-        for i, t in enumerate(tracks, 1):
-            fl = set()
-            if t.get("apple"):
-                fl.add("apple")
-            if t.get("original"):
-                fl.add("orig")
-            if t.get("default"):
-                fl.add("default")
-            c = str(t.get("codec") or "?") + (f" {t['abr']}k" if t.get("abr") else "")
-            rows.append({"n": i, "flags": fl,
-                         "cols": [str(t.get("lang") or "und"), str(t.get("label") or ""), c]})
-        print()
-        legend(["apple", "orig", "default"])
-        print_rows(rows, ["apple", "orig", "default"], ["Idioma", "Pista", "Códec"])
+    kv("Audio", f"{len(tracks)} pista" + ("s" if len(tracks) != 1 else ""))
+    rows = []
+    for i, t in enumerate(tracks, 1):
+        fl = set()
+        if t.get("apple"):
+            fl.add("apple")
+        if t.get("original"):
+            fl.add("orig")
+        if t.get("default"):
+            fl.add("default")
+        c = str(t.get("codec") or "?") + (f" {t['abr']}k" if t.get("abr") else "")
+        note_bits = []
+        if t.get("default"):
+            note_bits.append("predeterminada")
+        if t.get("original"):
+            note_bits.append("original")
+        tail = f"   ({' · '.join(note_bits)})" if note_bits else ""
+        rows.append({"n": i, "flags": fl,
+                     "cols": [str(t.get("lang") or "und"),
+                              str(t.get("label") or "") + tail, c]})
+    legend(["apple", "orig", "default"])
+    print_rows(rows, ["apple", "orig", "default"], ["Idioma", "Pista", "Códec"])
 
 
 def clipboard_cmd():
@@ -3392,16 +3581,9 @@ def check_update(force=False):
     if status == "local":
         m_info(f"DLpy {VERSION} · versión local más reciente que la de GitHub ({remote})")
         return False
-    if not force and load_json(UPDATE_STATE_FILE).get("declined") == remote:
-        m_warn(f"DLpy {VERSION} · hay una {remote} (rechazada; --actualizar la instala)")
-        return False
     m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
     if not ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ "):
-        try:
-            save_json(UPDATE_STATE_FILE, {"declined": remote})
-        except Exception as _ign:
-            ignore("check_update", _ign)
-        note("No se vuelve a preguntar por esta versión; con --actualizar la instalas.")
+        note("En el próximo arranque se volverá a preguntar.")
         return False
     try:
         write_text(SCRIPT_PATH, text)
@@ -5177,8 +5359,18 @@ def selftest():
     check("etiqueta video", stream_label({"info_dict": {"vcodec": "avc1", "height": 1080}}), "1080p")
     check("etiqueta video 60fps", stream_label({"info_dict": {"vcodec": "avc1", "height": 1080, "fps": 60}}), "1080p60")
     check("etiqueta video sin altura", stream_label({"info_dict": {"vcodec": "avc1"}}), "Video")
+    check("etiqueta video sin códec", stream_label({"info_dict": {"vcodec": None, "height": 1080}}), "1080p")
+    check("etiqueta video vcodec none+alto", stream_label({"info_dict": {"vcodec": "none", "height": 720, "fps": 30}}), "720p")
+    check("etiqueta video resolución", stream_label({"info_dict": {"resolution": "1920x1080"}}), "1920x1080")
     check("etiqueta audio idioma", stream_label({"info_dict": {"vcodec": "none", "language": "es-US"}}), "es-US")
     check("etiqueta audio sin idioma", stream_label({"info_dict": {"vcodec": "none"}}), "Audio")
+    check("bits 10 format_note", detect_bit_depth({"format_note": "10-bit hdr"}), 10)
+    check("bits main10", detect_bit_depth({"vcodec": "vp09.00.51.08", "format": "main10"}), 10)
+    check("bits bit_depth", detect_bit_depth({"bit_depth": 10}), 10)
+    check("bits sin dato", detect_bit_depth({"format_note": "hdr", "dynamic_range": "HDR10"}), None)
+    check("bits 8 no inventa", detect_bit_depth({"height": 1080, "vcodec": "vp9"}), None)
+    check("hdr dynamic_range", detect_hdr({"dynamic_range": "HDR10"}), "HDR10")
+    check("hdr ninguno", detect_hdr({"format_note": "sdr"}), None)
     check("yes vacío/def", yes("", False), False)
     check("yes s", yes(" S "), True)
     check("yes n", yes("n"), False)
@@ -5284,6 +5476,17 @@ def selftest():
     check("yn solo flecha", yn_prompt("¿Seguir? ▸ "), "¿Seguir? (S/n) ▸ ")
     check("yn conserva paréntesis", yn_prompt("¿Instalar (3 MB)?"), "¿Instalar (3 MB)? (S/n) ▸ ")
     check("yn multilínea", yn_prompt("¿Mover (1 MB) a backups? (s/N) ▸ ", False), "¿Mover (1 MB) a backups? (s/N) ▸ ")
+    _remux = {"venc": False, "height": 1080, "fps": 30}
+    _v1080 = {"venc": True, "height": 1080, "fps": 30}
+    _v4k = {"venc": True, "height": 2160, "fps": 30}
+    _v4kslow = {"venc": True, "height": 2160, "fps": 60}
+    check("quick remux", convert_is_quick(_remux, 600), True)
+    check("quick 1080 corto", convert_is_quick(_v1080, 30), True)
+    check("quick 4k muy corto", convert_is_quick(_v4k, 10), True)
+    check("quick 1080 largo no", convert_is_quick(_v1080, 300), False)
+    check("quick 4k60 largo no", convert_is_quick(_v4kslow, 120), False)
+    check("quick sin duración", convert_is_quick(_v1080, None), False)
+    check("quick est remux", convert_est_secs(_remux, 100), 0.0)
     check("update_status nueva", update_status("9.9.9", "0.7.1"), "nueva")
     check("update_status igual", update_status("0.7.1", "0.7.1"), "igual")
     check("update_status local", update_status("0.6.5", "0.7.1"), "local")
@@ -5749,8 +5952,7 @@ def main():
 
     # 1b) Ya descargado: mostrar datos y preguntar si continúa
     if old_file:
-        show_title(title)
-        show_existing(old_file, old_entry)
+        show_existing(old_file, old_entry, title=title)
         print()
         try:
             de_nuevo = ask_yn("¿Descargar de nuevo con otros parámetros? (s/N) ▸ ", default=False)
@@ -5829,6 +6031,29 @@ def main():
     dbg("elegido", {"entrada": raw, "tipo": kind, "formato": pick(fmt, FMT_KEYS)})
     roast_choice(kind, fmt)
 
+    # Resumen limpio tras la lista (evita teclado/prompt bajo decenas de filas)
+    clear_screen()
+    show_title(title)
+    if kind == "v":
+        bits = []
+        bits.append(res_label(fmt) or "Video")
+        if fmt.get("ext"):
+            bits.append(str(fmt["ext"]))
+        vc = (fmt.get("vcodec") or "?").split(".")[0]
+        if fmt.get("_guess"):
+            vc += "?"
+        bits.append(vc)
+        bits.append("con audio" if has(fmt.get("acodec")) else "sin audio")
+        m_ok("Elegido: VIDEO " + " · ".join(bits))
+    else:
+        bits = [str(fmt.get("ext") or "?"),
+                (fmt.get("acodec") or "?").split(".")[0],
+                f"{abr_of(fmt):.0f}k"]
+        lang = fmt.get("language")
+        if lang:
+            bits.insert(0, str(lang))
+        m_ok("Elegido: AUDIO " + " · ".join(bits))
+
     # 4) Armar selección de pistas
     fmt_id, merge_ext = fmt["format_id"], None
     selected = []
@@ -5859,7 +6084,7 @@ def main():
                       "pistas": [t["fmt"].get("format_id") for t in selected]})
     dbg("plan Apple", plan if plan else "no hace falta (ya es compatible)")
     if plan:
-        plan = ask_apple_convert(plan, can_merge)
+        plan = ask_apple_convert(plan, can_merge, info.get("duration"))
         dbg("conversión", "aceptada" if plan else "rechazada / no disponible")
     conv_state = {}
 
