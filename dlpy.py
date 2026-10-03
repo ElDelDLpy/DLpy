@@ -3,6 +3,11 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.6.4
+#
+# - Tercera versión de prueba de la actualización desde GitHub: no cambia el
+#   funcionamiento, solo sube la versión.
+#
 # ## 0.6.3
 #
 # - Segunda versión de prueba de la actualización desde GitHub: no cambia el
@@ -570,7 +575,7 @@
 #   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.6.3"
+VERSION = "0.6.4"
 
 import os
 import re
