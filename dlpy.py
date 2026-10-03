@@ -3,6 +3,61 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.7.1
+#
+# - Actualización: si la versión local es MÁS NUEVA que la del dlpy.py de GitHub (el
+#   autor puede tener una sin subir) ya no dice «última versión»: muestra el aviso
+#   «DLpy x.y.z · versión local más reciente que la de GitHub (a.b.c)» y sigue sin
+#   ofrecer nada. Con la misma versión sigue saliendo «✓ última versión». La
+#   comparación vive en update_status (--selftest la prueba).
+# - Estilo de las preguntas s/n unificado: la de actualizar («¿Instalar la x.y.z y
+#   ejecutarla ahora?») era la única sin «(S/n) ▸ »; ahora igual que las demás.
+# - `--2shortcuts` pinta el mismo encabezado que el resto del script (banner con
+#   versión, plataforma y espacio) antes de preguntar «¿Con changelog? (s/N) ▸ ».
+#
+# ## 0.7.0
+#
+# - `--2shortcuts` pregunta qué mandar: «¿Con changelog? (s/N)». Sin changelog (por
+#   defecto, también si no hay terminal) manda el dlpy.py tal como está en disco,
+#   que ya no trae el bloque CHANGELOG; con changelog manda el script con todo el
+#   historial: el propio archivo si aún lo trae, si no la copia completa que
+#   guarda DLpy en script/script_snapshot.py (solo si es de esta misma versión) y,
+#   si tampoco hay, lo reconstruye desde changelog.md en el mismo sitio y formato
+#   de siempre. Sin ninguna fuente de changelog no pregunta y lo avisa. Antes de
+#   copiar muestra qué se manda y cuánto pesa.
+# - Revisión de errores: sin nombres indefinidos, funciones duplicadas ni imports
+#   sin uso, y --selftest pasa en ios, android, macos, linux y windows. Único fallo
+#   encontrado y corregido: al reconstruir el changelog desde changelog.md salía una
+#   línea «#» de más antes de «# ==== FIN CHANGELOG ====».
+# - --selftest: pruebas nuevas de script_variants y changelog_block_from_md.
+#
+# ## 0.6.9
+#
+# - `--enviar-codigo` (0.6.8) se reemplaza por `--2shortcuts` (solo iOS / a-Shell):
+#   manda el dlpy.py actual tal cual a tu atajo «DLpy» y sale. Sin JSON, sin copia
+#   en delivery y sin claves extra: el atajo recibe el texto del script como
+#   entrada y lo reconoce porque empieza con #!dlpy.py. También acepta
+#   `--2shorcuts` (sin la t) y las rayas largas que pone el teclado de iOS.
+# - Cómo viaja: el script se copia al portapapeles (pbcopy) y se lanza
+#   shortcuts://run-shortcut?name=DLpy&input=clipboard, porque el código pesa
+#   cientos de KB y no cabe de forma fiable en la URL. Si pbcopy falla, lo manda
+#   dentro de la URL (input=text) avisando. Ojo: sobrescribe el portapapeles.
+# - Fuera de iOS avisa de que no aplica.
+# - --selftest: pruebas de shortcut_clip_url, shortcut_text_url y wants_2shortcuts.
+#
+# ## 0.6.8
+#
+# - Nuevo `--enviar-codigo` (solo iOS / a-Shell): manda el dlpy.py actual a tu atajo
+#   «DLpy» de Atajos y sale, igual que se entregan los videos. Hace una copia del
+#   script en dlpy_internal/delivery/<id>/dlpy.py (el original no se toca) y lanza
+#   shortcuts://run-shortcut con {"file_path", "file_title": "dlpy.py", "kind":
+#   "script", "version"}. El atajo sabe que es el código porque trae kind=script;
+#   los videos no llevan esa clave. La copia se borra sola a las 24 h como el
+#   resto de entregas. En Android y escritorio avisa de que no aplica.
+# - deliver y --enviar-codigo comparten shortcut_run_url (sin cambiar lo que ya se
+#   mandaba al atajo).
+# - --selftest: prueba nueva de shortcut_run_url.
+#
 # ## 0.6.7
 #
 # - Revisión unificada al arrancar: la actualización de DLpy y todas las
@@ -616,10 +671,11 @@
 #   --selftest: ejecuta pruebas rápidas de funciones puras y sale.
 #   --sistema: muestra en qué corre y qué funciones están disponibles (y por qué).
 #   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
+#   --2shortcuts: (iOS) manda este dlpy.py tal cual a tu atajo «DLpy» y sale (ver 0.6.9).
 #     (desde 0.6.7 también revisa las dependencias y vuelve a preguntar lo rechazado.)
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.6.7"
+VERSION = "0.7.1"
 
 import os
 import re
@@ -3282,6 +3338,13 @@ def sync_origin_copy(text, origin=None, script_path=None):
         return None
 
 
+def update_status(remote, local=None):
+    """«nueva» (hay una más reciente en GitHub), «igual» o «local» (la local es más
+    nueva que la de GitHub: el autor puede tener una sin subir)."""
+    r, l = vtuple(remote), vtuple(VERSION if local is None else local)
+    return "nueva" if r > l else "igual" if r == l else "local"
+
+
 def check_update(force=False):
     """Si el repositorio tiene una versión más nueva, pregunta, la instala y la ejecuta.
     Siempre deja una línea con el resultado (✓ si ya tienes la última).
@@ -3297,14 +3360,18 @@ def check_update(force=False):
     if not remote:
         m_warn(f"DLpy {VERSION} · no se pudo comprobar la última versión")
         return False
-    if vtuple(remote) <= vtuple(VERSION):
+    status = update_status(remote)
+    if status == "igual":
         m_check(f"DLpy {VERSION} · última versión")
+        return False
+    if status == "local":
+        m_info(f"DLpy {VERSION} · versión local más reciente que la de GitHub ({remote})")
         return False
     if not force and load_json(UPDATE_STATE_FILE).get("declined") == remote:
         m_warn(f"DLpy {VERSION} · hay una {remote} (rechazada; --actualizar la instala)")
         return False
     m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
-    if not ask(f"¿Instalar la {remote} y ejecutarla ahora?"):
+    if not ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ "):
         try:
             save_json(UPDATE_STATE_FILE, {"declined": remote})
         except Exception as _ign:
@@ -4781,10 +4848,137 @@ def deliver(final, title):
     path = unique_path(final)
     m_info(f"Enviando a {SHORTCUT_NAME}...")
     dbg("entrega", {"origen": final, "copia": path, "titulo": title})
-    payload = json.dumps({"file_path": path, "file_title": title}, ensure_ascii=False)
-    url = ("shortcuts://run-shortcut?name=" + urllib.parse.quote(SHORTCUT_NAME)
-           + "&input=text&text=" + urllib.parse.quote(payload, safe=""))
+    os.system("open " + shlex.quote(shortcut_run_url({"file_path": path, "file_title": title})))
+
+
+def shortcut_run_url(data, name=None):
+    """URL shortcuts:// que lanza el atajo con `data` (JSON) como texto de entrada."""
+    payload = json.dumps(data, ensure_ascii=False)
+    return ("shortcuts://run-shortcut?name=" + urllib.parse.quote(name or SHORTCUT_NAME)
+            + "&input=text&text=" + urllib.parse.quote(payload, safe=""))
+
+
+def shortcut_clip_url(name=None):
+    """URL shortcuts:// que lanza el atajo con el portapapeles como entrada."""
+    return ("shortcuts://run-shortcut?name=" + urllib.parse.quote(name or SHORTCUT_NAME)
+            + "&input=clipboard")
+
+
+def shortcut_text_url(text, name=None):
+    """URL shortcuts:// que lanza el atajo con `text` tal cual como entrada."""
+    return ("shortcuts://run-shortcut?name=" + urllib.parse.quote(name or SHORTCUT_NAME)
+            + "&input=text&text=" + urllib.parse.quote(text, safe=""))
+
+
+def wants_2shortcuts(args):
+    """¿Se pidió --2shortcuts? Acepta «--2shorcuts» y rayas largas (– —) del teclado."""
+    for a in args:
+        if a.lstrip("-\u2013\u2014").lower() in ("2shortcuts", "2shorcuts") and a[:1] in "-\u2013\u2014":
+            return True
+    return False
+
+
+def changelog_block_from_md(md_text):
+    """Bloque «# ==== CHANGELOG ==== … # ==== FIN CHANGELOG ====» (comentarios de
+    Python) reconstruido desde el texto de changelog.md, o None si no hay versiones."""
+    secs = parse_sections(md_text or "")
+    if not secs:
+        return None
+    out = ["# ==== CHANGELOG ===="]
+    vers = sorted(secs, key=vtuple, reverse=True)
+    for i, ver in enumerate(vers):
+        out.append(f"# ## {ver}")
+        out.append("#")
+        for ln in secs[ver].splitlines():
+            out.append(("# " + ln).rstrip())
+        if i < len(vers) - 1:
+            out.append("#")                  # separador entre versiones
+    out.append("# ==== FIN CHANGELOG ====")
+    return "\n".join(out) + "\n"
+
+
+def insert_changelog_block(code, block):
+    """Pone `block` donde lo tenía el script: justo tras los comentarios fijos del
+    principio (el último es «# Conservar en todo momento…»)."""
+    lines = code.splitlines(keepends=True)
+    at = 1
+    for i, ln in enumerate(lines[:12]):
+        if ln.startswith("# Conservar en todo momento"):
+            at = i + 1
+            break
+    if lines and not lines[at - 1].endswith("\n"):
+        lines[at - 1] += "\n"
+    return "".join(lines[:at]) + block + "".join(lines[at:])
+
+
+def script_variants(live=None, snapshot=None, md=None):
+    """(sin_changelog, con_changelog) del dlpy.py actual; con_changelog es None si
+    no hay de dónde sacarlo. Los parámetros solo se inyectan en pruebas."""
+    if live is None:
+        live = read_text(SCRIPT_PATH)
+    m = CL_RE.search(live)
+    if m:                                    # el .py todavía trae su changelog
+        return live[:m.start()] + live[m.end():], live
+    if snapshot is None and os.path.isfile(SNAPSHOT_FILE):
+        try:
+            snapshot = read_text(SNAPSHOT_FILE)
+        except OSError as _ign:
+            ignore("script_variants", _ign)
+    if snapshot and CL_RE.search(snapshot) and remote_script_version(snapshot) == VERSION:
+        return live, snapshot                # copia completa de esta misma versión
+    if md is None and os.path.isfile(CHANGELOG_FILE):
+        try:
+            md = read_text(CHANGELOG_FILE)
+        except OSError as _ign:
+            ignore("script_variants", _ign)
+    block = changelog_block_from_md(md)
+    return live, (insert_changelog_block(live, block) if block else None)
+
+
+def send_code_to_shortcut():
+    """`--2shortcuts` (iOS): manda el dlpy.py actual al atajo, que lo reconoce por la
+    primera línea (#!dlpy.py). Pregunta si va con o sin changelog."""
+    if not IS_IOS:
+        print("--2shortcuts solo aplica en iOS (a-Shell): usa tu atajo de Atajos.")
+        return 1
+    ensure_dirs()
+    clear_screen()                  # mismo encabezado que el resto del script
+    try:
+        plain, full = script_variants()
+    except OSError as e:
+        m_err(f"No se pudo leer el código: {e}")
+        return 1
+    if full is None:
+        code, how = plain, "sin changelog"
+        note("No hay changelog que añadir (changelog.md no existe todavía): va sin él.")
+    elif ask("¿Con changelog? (s/N) ▸ ", default=False):
+        code, how = full, "con changelog"
+    else:
+        code, how = plain, "sin changelog"
+    size = human_size(len(code.encode("utf-8")))
+    m_info(f"Enviando el código v{VERSION} ({how} · {size}) a {SHORTCUT_NAME}...")
+    tmp = os.path.join(WORK_ROOT, "2shortcuts_dlpy.py")
+    copied = False
+    try:
+        os.makedirs(WORK_ROOT, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(code)
+        copied = os.system("pbcopy < " + shlex.quote(tmp)) == 0
+    except OSError as _ign:
+        ignore("send_code_to_shortcut", _ign)
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError as _ign:
+            ignore("send_code_to_shortcut", _ign)
+    if copied:
+        url = shortcut_clip_url()
+    else:
+        m_warn("No se pudo usar el portapapeles; el código va dentro del enlace.")
+        url = shortcut_text_url(code)
+    dbg("2shortcuts", {"bytes": len(code.encode("utf-8")), "con_changelog": how, "url": url[:80]})
     os.system("open " + shlex.quote(url))
+    return 0
 
 
 # ───────────── Análisis tolerante (equivalente al yt-dlp en bruto) ─────────────
@@ -5036,6 +5230,37 @@ def selftest():
 
     check("root_move_target fuera", root_move_target("/sdcard/Download/x.py", "/h/u"), "/h/u/dlpy.py")
     check("root_move_target raíz", root_move_target("/h/u/otro.py", "/h/u"), None)
+    _u = shortcut_run_url({"file_path": "/a b/dlpy.py", "kind": "script"}, "DLpy")
+    check("shortcut url inicio", _u.startswith("shortcuts://run-shortcut?name=DLpy&input=text&text="), True)
+    check("shortcut url payload",
+          json.loads(urllib.parse.unquote(_u.split("&text=", 1)[1])),
+          {"file_path": "/a b/dlpy.py", "kind": "script"})
+    check("shortcut clip url", shortcut_clip_url("DLpy"),
+          "shortcuts://run-shortcut?name=DLpy&input=clipboard")
+    _code = "#!dlpy.py - x\nprint('a&b %20')\n"
+    check("shortcut text url", urllib.parse.unquote(shortcut_text_url(_code, "DLpy").split("&text=", 1)[1]), _code)
+    _head = ("#!dlpy.py - x\n# a\n# b\n# Conservar en todo momento los comentarios.\n")
+    _md = "# Changelog DLpy\n\n## 1.0.1\n\n- Dos.\n  sigue\n\n## 1.0.0\n\n- Uno.\n"
+    _blk = changelog_block_from_md(_md)
+    check("cl bloque", _blk, "# ==== CHANGELOG ====\n# ## 1.0.1\n#\n# - Dos.\n#   sigue\n#\n"
+          "# ## 1.0.0\n#\n# - Uno.\n# ==== FIN CHANGELOG ====\n")
+    check("cl bloque vacío", changelog_block_from_md("nada"), None)
+    _body = '# DLpy\nVERSION = "' + VERSION + '"\n'
+    _full = _head + _blk + _body
+    check("variantes con bloque", script_variants(_full, "", ""), (_head + _body, _full))
+    check("variantes snapshot", script_variants(_head + _body, _full, ""), (_head + _body, _full))
+    check("variantes snapshot viejo", script_variants(_head + _body, _full.replace(VERSION, "0.0.1"), _md)[1], _full)
+    check("variantes desde md", script_variants(_head + _body, "", _md)[1], _full)
+    check("variantes sin fuente", script_variants(_head + _body, "", "")[1], None)
+    check("update_status nueva", update_status("9.9.9", "0.7.1"), "nueva")
+    check("update_status igual", update_status("0.7.1", "0.7.1"), "igual")
+    check("update_status local", update_status("0.6.5", "0.7.1"), "local")
+    check("update_status 10 > 9", update_status("0.7.10", "0.7.9"), "nueva")
+    check("2shortcuts flag", wants_2shortcuts(["--2shortcuts"]), True)
+    check("2shortcuts typo", wants_2shortcuts(["--2shorcuts"]), True)
+    check("2shortcuts raya larga", wants_2shortcuts(["\u20142shortcuts"]), True)
+    check("2shortcuts no es enlace", wants_2shortcuts(["2shortcuts", "https://x.y/2shortcuts"]), False)
+    check("2shortcuts otra bandera", wants_2shortcuts(["--sistema"]), False)
     _all = ["ffmpeg", "js", "termux-api"]
     _has = lambda *names: (lambda x: "/bin/" + x if x in names else None)
     check("sys_cmds android", system_install_cmds(_all, "android", _has("pkg")),
@@ -5394,6 +5619,8 @@ def main():
         return selftest()
     if "--sistema" in sys.argv[1:]:
         return print_capabilities()
+    if wants_2shortcuts(sys.argv[1:]):
+        return send_code_to_shortcut()
     if IS_ANDROID:
         relocate_to_root()
     if "--instalar-android" in sys.argv[1:]:
