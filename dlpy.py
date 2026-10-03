@@ -3,6 +3,72 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.7.7
+#
+# - Recuperación: ahora también lista los backups internos que DLpy guarda al actualizar
+#   (dlpy_files/backups/<versión>/dlpy_<versión>.py), sin necesitar DLPY_DEV ni internet.
+#   La lista une GitHub (versions/), el repo local y esos backups, una entrada por versión
+#   (gana GitHub, luego el repo local, luego los backups).
+# - --selftest: pruebas de merge_versions y backup_versions.
+# - Lista de versiones (--versiones y recuperación) rehecha: una fila por versión con TODOS
+#   sus orígenes (GitHub, GitHub main, local, backup, instalada) y marcas: ✓ actual,
+#   ⬆ la que se instala al actualizar (el dlpy.py de GitHub), ✖ crasheó (siempre, también
+#   ×N), ≠ difiere y = idénticas. Ya no oculta la versión que falló.
+# - Comparación de versiones iguales: huella SHA-256 del archivo y del código SIN el
+#   changelog (el instalado ya no lo trae). Estados: idénticas, solo changelog, código
+#   distinto. GitHub se compara con el hash git de la API (sin descargar); solo descarga
+#   lo que difiere. Al elegir una versión muestra el diff con colores (rojo/verde).
+# - Si GitHub y local/backup tienen archivos DISTINTOS de la versión elegida pregunta de
+#   cuál instalar; si son iguales no pregunta. Si ya es idéntica a la instalada lo dice.
+# - Historial de fallos state/crash_log.json (versión, huella del código, error, hora;
+#   también los cierres inesperados). Si lo que vas a instalar o restaurar es IDÉNTICO al
+#   código que falló, avisa antes y pregunta (por defecto no). Misma versión pero otro
+#   código: lo indica sin bloquear. Vale para actualizar y para volver a una versión.
+# - Actualización: sigue preguntando siempre (decir que no no se recuerda). Con la misma
+#   versión avisa si el código instalado difiere del de GitHub.
+# - Solo con DLPY_DEV=1 y solo en a-Shell (iOS) copia además el snapshot actual a
+#   ~/Documents/dlpy.py (no si ese archivo es el propio script en ejecución). Sin DEV, o en
+#   otra plataforma, no lo copia.
+# - Una sola comparación para todo lo que habla de versiones: al buscar actualizaciones
+#   compara la de actualización (`main`) con la copia de versions/ en GitHub, el repo
+#   local, los backups y la instalada, igual que la lista (hash git y huellas del código
+#   sin changelog, diff con colores si difieren). Con la misma versión dice «idéntica a
+#   GitHub» o qué difiere; con una nueva dice si es igual a su copia de versions/.
+#   Tras recuperar una versión, la de GitHub con el mismo número que falló pero OTRO
+#   código sí se ofrece (puede estar corregida). Al arrancar avisa si la versión
+#   instalada difiere de su copia guardada (editada sin subir versión). DEV dice si la
+#   versión ya existía en versions/ con código distinto o solo otro changelog.
+# - --selftest: pruebas de huellas, comparación, historial de fallos y copia a Documents.
+#
+# ## 0.7.6
+#
+# - YA DESCARGADO: si el video ya se había entregado antes (el índice guarda
+#   «delivered» con la hora de la última entrega) y eliges no descargar de nuevo, ahora
+#   pregunta «¿Abrir otra vez con Atajos? (S/n)» (en Android/escritorio «¿Abrir otra vez
+#   el archivo?») en vez de abrirlo directo. Si nunca se había entregado (o la entrada
+#   es de una versión anterior), se manda directo como siempre. Lo mismo al reutilizar
+#   el archivo con los mismos parámetros. El resumen muestra la línea «Entregado».
+# - DLPY_DEV=1 (modo desarrollo): al correr una versión nueva por primera vez copia el
+#   script (con su changelog) a <repo>/versions/dlpy_x.y.z.py, donde <repo> es DLPY_REPO
+#   o la carpeta con .git junto al script (o ~/Documents/DLpy). Solo copia: el commit y
+#   el push los haces tú con lg2. Si la misma versión ya existe con otro contenido guarda
+#   dlpy_x.y.z_<hash>.py sin pisarla. Sin DLPY_DEV no copia nada. El banner muestra «DEV»
+#   solo cuando está activo.
+# - Recuperación tras un fallo: si DLpy revienta con una excepción, o la ejecución
+#   anterior quedó cortada y esa versión aún no había terminado bien ninguna vez,
+#   consulta versions/ del repositorio de GitHub (sin internet, el repo local), lista las
+#   versiones y deja elegir una. La elegida se instala (la rota se guarda en
+#   script/crash/) y se ejecuta. También `--versiones` para listar a mano.
+# - Tras recuperar se anota la versión que falló (state/recovered.json): mientras GitHub
+#   no tenga una versión MÁS NUEVA que la que falló no se ofrece actualizar (solo una
+#   nota; `--actualizar` la instala igualmente). Si ya hay una más nueva, avisa como
+#   siempre. Al restaurar una versión más vieja ya no dice «Actualización detectada».
+# - Limitación: un error de sintaxis impide que el script arranque, así que no puede
+#   rescatarse solo (haría falta un lanzador aparte).
+# - --selftest: pruebas de dev_repo_dir, dev_version_target, parse_versions_listing,
+#   github_repo_info, parse_menu_choice, should_offer_after_abrupt,
+#   skip_update_after_recovery, mark_delivered y deliver_existing.
+#
 # ## 0.7.5
 #
 # - Conversión: antes de la barra imprime «Usando VideoToolbox HEVC» / «Usando x265»
@@ -724,9 +790,13 @@
 #   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
 #   --2shortcuts: (iOS) manda este dlpy.py tal cual a tu atajo «DLpy» y sale (ver 0.6.9).
 #     (desde 0.6.7 también revisa las dependencias y vuelve a preguntar lo rechazado.)
+#   --versiones: lista las versiones guardadas en versions/ de GitHub y deja instalar una (0.7.6).
+#   DLPY_DEV=1: copia cada versión nueva a <repo>/versions/ y muestra «DEV» en el banner (0.7.6).
+#   DLPY_REPO=<carpeta>: clon de DLpy para DLPY_DEV (por defecto el de .git junto al script).
+#   (0.7.7: --versiones muestra todos los orígenes con marcas y diffs; DLPY_DEV=1 en a-Shell copia además el snapshot a ~/Documents/dlpy.py.)
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.7.5"
+VERSION = "0.7.7"
 
 import os
 import re
@@ -1123,6 +1193,8 @@ def apple_video(f):
 WAIT_SECONDS = 10
 PHANTOM_SECS = 0.4        # un Enter vacío antes de este tiempo se considera fantasma
 DEBUG = os.environ.get("DLPY_DEBUG", "").strip().lower() not in ("", "0", "no", "false")
+# DLPY_DEV=1: modo desarrollo (copia cada versión nueva a <repo>/versions/ y lo muestra en el banner)
+DEV = os.environ.get("DLPY_DEV", "").strip().lower() not in ("", "0", "no", "false")
 _env_color = os.environ.get("DLPY_COLOR")
 if _env_color is not None:
     USE_COLOR = _env_color.strip().lower() not in ("0", "no", "false", "")
@@ -1608,10 +1680,11 @@ def title_bar(left, right, style):
 def banner():
     """Encabezado notorio: barra de versión + debug, espacio usado y separador.
     Se pinta tras cada clear_screen (y al arrancar) para que quede visible."""
+    dev = "DEV · " if DEV else ""       # «DEV» solo aparece con DLPY_DEV activo
     if DEBUG:
-        print(title_bar(f" DLpy v{VERSION}", "DEBUG ACTIVO ", "1;30;103"))
+        print(title_bar(f" DLpy v{VERSION}", dev + "DEBUG ACTIVO ", "1;30;103"))
     else:
-        print(title_bar(f" DLpy v{VERSION}", "debug off ", "1;30;106"))
+        print(title_bar(f" DLpy v{VERSION}", dev + "debug off ", "1;30;106"))
     where = f"Corre en: {platform_name()} · {machine_name()}"
     if len(where) > safe_width():
         where = where[:safe_width() - 1] + "…"
@@ -3091,7 +3164,7 @@ def reuse_downloaded(old_file, old_entry, index, key, title, info, kind, fmt, fm
         return False
     if old_conv == want_conv:
         m_ok("Mismos parámetros: se reutiliza el archivo ya descargado.")
-        deliver(old_file, title)
+        deliver_existing(old_file, old_entry, title)
         return True
     # Aquí old_conv != want_conv. Si ya estaba convertido y ahora se quiere el
     # original, no queda el archivo sin convertir: se vuelve a descargar.
@@ -3342,6 +3415,8 @@ def show_existing(path, entry, title=None):
     arch = (f"{os.path.basename(path)} · {human_size(size)} · {when_s} · "
             f"v{entry.get('version', '?')}")
     kv("Archivo", arch)
+    if entry.get("delivered"):
+        kv("Entregado", time.strftime("%Y-%m-%d %H:%M", time.localtime(entry["delivered"])))
     meta = entry.get("meta")
     if not meta:
         kv("Contenedor", os.path.splitext(path)[1].lstrip(".") or "?")
@@ -3515,10 +3590,11 @@ def remote_script_version(text):
     return m.group(1) if m else None
 
 
-def fetch_remote_script(timeout=5):
-    """Texto del dlpy.py del repositorio, o None si falla o no es un script válido."""
+def fetch_remote_script(timeout=5, url=None):
+    """Texto del dlpy.py del repositorio (o del `url` dado), o None si falla o no es
+    un script válido."""
     import urllib.request
-    req = urllib.request.Request(UPDATE_URL, headers={
+    req = urllib.request.Request(url or UPDATE_URL, headers={
         "User-Agent": "DLpy-updater", "Cache-Control": "no-cache"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -3575,14 +3651,35 @@ def check_update(force=False):
         m_warn(f"DLpy {VERSION} · no se pudo comprobar la última versión")
         return False
     status = update_status(remote)
+    rec = load_json(RECOVERED_FILE)
+    crashed = rec.get("crashed")
+    if crashed and vtuple(VERSION) > vtuple(crashed):
+        clear_recovered()                  # ya pasaste la versión que falló
+        rec, crashed = {}, None
     if status == "igual":
-        m_check(f"DLpy {VERSION} · última versión")
+        row = origins_row(remote, text)            # misma versión: compara todos los orígenes
+        st = row_state(row_diffs(row))
+        m_check(f"DLpy {VERSION} · última versión" + (" · idéntica a GitHub" if st == "igual" else ""))
+        if st not in (None, "igual"):
+            report_row(row)
+            note("Mismo número con código distinto en algún origen: revisa cuál es el bueno.")
         return False
     if status == "local":
         m_info(f"DLpy {VERSION} · versión local más reciente que la de GitHub ({remote})")
         return False
-    m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
-    if not ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ "):
+    match = (crash_match(remote, text) or (None,))[0]
+    if skip_update_after_recovery(remote, crashed, match):
+        if not force:
+            m_info(f"DLpy {VERSION} · recuperada tras fallar la {crashed}; no se ofrece la {remote} de GitHub")
+            note("Cuando haya una versión más nueva que la que falló se avisará. "
+                 "Con --actualizar puedes instalarla de todos modos.")
+            return False
+        m_warn(f"La {remote} de GitHub es la que falló en este equipo.")
+    else:
+        m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
+    report_row(origins_row(remote, text))         # ¿la actualización = la copia de versions/ en GitHub?
+    kind = show_crash_warning(remote, text)       # avisa si es idéntica a una que falló
+    if not ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ ", default=(kind != "igual")):
         note("En el próximo arranque se volverá a preguntar.")
         return False
     try:
@@ -3590,6 +3687,7 @@ def check_update(force=False):
     except Exception as e:
         m_warn(f"No se pudo instalar la actualización: {e}")
         return False
+    clear_recovered()
     m_check(f"DLpy {remote} · instalada")
     copied = sync_origin_copy(text)
     if copied:
@@ -4598,6 +4696,16 @@ def check_version():
         if not os.path.isfile(SNAPSHOT_FILE):
             save_snapshot()
             save_json(VERSION_FILE, {"version": VERSION, "snapshot_version": VERSION})
+        elif state.get("snapshot_version") == VERSION:
+            _TEXT_CACHE.clear()               # misma versión: ¿igual que la copia guardada?
+            snap = {"origin": "backup", "ref": SNAPSHOT_FILE, "sha": None, "label": "copia guardada"}
+            me = {"origin": "instalada", "ref": SCRIPT_PATH, "sha": None, "label": "instalada"}
+            if compare_sources(snap, me) == "distinto":
+                add, rem = diff_counts(diff_lines(source_text(snap), source_text(me),
+                                                  "copia guardada", "instalada"))
+                m_warn(f"La {VERSION} instalada difiere de la copia guardada (-{rem} +{add} líneas): "
+                       f"se editó sin subir la versión.")
+            _TEXT_CACHE.clear()
         if changelog_pending():          # misma versión pero el .py trae changelog
             extract_changelog()
         publish_changelog_to_files()
@@ -4605,7 +4713,9 @@ def check_version():
 
     # ── Actualización (o primera instalación) ──
     prev = stored or "0.0.0"
-    if stored:
+    if stored and vtuple(stored) > vtuple(VERSION):
+        m_info(f"Versión anterior restaurada: {stored} → {VERSION}")
+    elif stored:
         m_info(f"Actualización detectada: {stored} → {VERSION}")
     if not archive_previous(prev, state.get("snapshot_version"), announce=bool(stored)):
         return False
@@ -4614,6 +4724,904 @@ def check_version():
     extract_changelog()      # changelog.md y limpieza del .py
     save_json(VERSION_FILE, {"version": VERSION, "snapshot_version": VERSION})
     return True
+
+
+# ───────────────────── DEV: copia de cada versión al repo ─────────────────────
+VER_FILE_RE = re.compile(r"^dlpy_(\d+\.\d+\.\d+)\.py$")
+RUNNING_FILE = os.path.join(STATE_DIR, "running.json")      # ejecución en curso
+CRASH_FILE = os.path.join(STATE_DIR, "crash.json")          # último fallo
+CRASH_LOG_FILE = os.path.join(STATE_DIR, "crash_log.json")  # historial de fallos (con huella del código)
+RECOVERED_FILE = os.path.join(STATE_DIR, "recovered.json")  # versión recuperada tras un fallo
+GOOD_FILE = os.path.join(STATE_DIR, "good_versions.json")   # versiones que ya terminaron bien
+
+
+def dev_repo_dir(env=None, script_path=None, home=None):
+    """Carpeta del clon de DLpy: DLPY_REPO, la del script (o una superior con .git)
+    o ~/Documents/DLpy. None si no se encuentra."""
+    env = os.environ if env is None else env
+    forced = os.path.expanduser((env.get("DLPY_REPO") or "").strip())
+    if forced:
+        return os.path.abspath(forced) if os.path.isdir(forced) else None
+    d = os.path.dirname(os.path.abspath(script_path or SCRIPT_PATH))
+    for _ in range(3):
+        if os.path.exists(os.path.join(d, ".git")):
+            return d
+        up = os.path.dirname(d)
+        if up == d:
+            break
+        d = up
+    cand = os.path.join(home or HOME, "Documents", "DLpy")
+    return cand if os.path.exists(os.path.join(cand, ".git")) else None
+
+
+def dev_version_target(vdir, version, text):
+    """Ruta donde guardar `text` en versions/, o None si ya está igual. Misma versión
+    con otro contenido: dlpy_x.y.z_<hash>.py (no pisa la anterior)."""
+    import hashlib
+    base = os.path.join(vdir, f"dlpy_{version}.py")
+    if not os.path.exists(base):
+        return base
+    try:
+        if read_text(base) == text:
+            return None
+    except (OSError, ValueError) as _ign:
+        ignore("dev_version_target", _ign)
+    h = hashlib.sha1(text.encode("utf-8")).hexdigest()[:7]
+    alt = os.path.join(vdir, f"dlpy_{version}_{h}.py")
+    return None if os.path.exists(alt) else alt
+
+
+def dev_copy_to_documents(text, home=None, script_path=None):
+    """Copia `text` a ~/Documents/dlpy.py. ('copiada'|'igual'|'mismo'|'error', ruta):
+    'mismo' = ese archivo es el propio script en ejecución (no se pisa)."""
+    dest = os.path.join(home or HOME, "Documents", "dlpy.py")
+    try:
+        me = script_path or SCRIPT_PATH
+        if os.path.abspath(dest) == os.path.abspath(me) or (
+                os.path.exists(dest) and os.path.exists(me) and os.path.samefile(dest, me)):
+            return "mismo", dest
+        if os.path.isfile(dest) and read_text(dest) == text:
+            return "igual", dest
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        write_text(dest, text)
+        return "copiada", dest
+    except (OSError, ValueError) as e:
+        ignore("dev_copy_to_documents", e)
+        return "error", dest
+
+
+def dev_sync_version():
+    """Con DLPY_DEV=1: copia esta versión a <repo>/versions/ (con su changelog, desde el
+    snapshot si es de esta versión) y, solo en a-Shell, el snapshot a ~/Documents/dlpy.py. No hace
+    commit ni push: eso lo haces tú con lg2. Sin DLPY_DEV no toca nada."""
+    if not DEV:
+        return
+    try:
+        src = SCRIPT_PATH
+        if (os.path.isfile(SNAPSHOT_FILE)
+                and load_json(VERSION_FILE).get("snapshot_version") == VERSION):
+            src = SNAPSHOT_FILE
+        text = read_text(src)
+    except Exception as e:
+        m_warn(f"DEV: no se pudo leer el script: {e}")
+        return
+    repo = dev_repo_dir()
+    if not repo:
+        m_warn("DEV: no encuentro el repositorio de DLpy (define DLPY_REPO con su carpeta).")
+    else:
+        try:
+            vdir = os.path.join(repo, "versions")
+            os.makedirs(vdir, exist_ok=True)
+            dest = dev_version_target(vdir, VERSION, text)
+            if dest is None:
+                dbg("dev", f"versions/dlpy_{VERSION}.py ya está al día")
+            else:
+                base = os.path.join(vdir, f"dlpy_{VERSION}.py")
+                if dest != base:               # misma versión, otro contenido: dice en qué
+                    try:
+                        kind = compare_texts(read_text(base), text)
+                    except (OSError, ValueError):
+                        kind = None
+                    m_warn(f"DEV · versions/dlpy_{VERSION}.py ya existe con "
+                           f"{ {'distinto': 'código distinto', 'changelog': 'otro changelog'}.get(kind, 'otro contenido') }"
+                           f": se guarda aparte.")
+                write_text(dest, text)
+                m_ok(f"DEV · {VERSION} copiada a {os.path.join(os.path.basename(repo), 'versions', os.path.basename(dest))}")
+                note("Súbela cuando quieras con lg2 (add / commit / push).")
+        except Exception as e:
+            m_warn(f"DEV: no se pudo copiar la versión al repositorio: {e}")
+    if not IS_IOS:                      # el snapshot en Documents es solo para a-Shell
+        dbg("dev", "snapshot a Documents/dlpy.py: solo en a-Shell (iOS)")
+        return
+    state, dest = dev_copy_to_documents(text)
+    if state == "copiada":
+        m_ok(f"DEV · snapshot {VERSION} copiado a Documents/dlpy.py")
+    elif state == "error":
+        m_warn("DEV: no se pudo copiar el snapshot a Documents/dlpy.py")
+    else:
+        dbg("dev", f"Documents/dlpy.py {'ya está al día' if state == 'igual' else 'es este mismo script: no se copia'}")
+
+
+# ───────────────────── Recuperación tras un fallo ─────────────────────
+def github_repo_info(url=None):
+    """(dueño, repo, rama) del enlace raw.githubusercontent.com de actualización, o None."""
+    m = re.match(r"https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/", url or UPDATE_URL)
+    return m.groups() if m else None
+
+
+def parse_versions_listing(data, info):
+    """[(versión, url_raw)] de la respuesta de la API de GitHub para versions/, de la más
+    nueva a la más vieja. Ignora lo que no sea dlpy_x.y.z.py."""
+    owner, repo, branch = info
+    out = []
+    for it in data if isinstance(data, list) else []:
+        if not isinstance(it, dict):
+            continue
+        m = VER_FILE_RE.match(str(it.get("name") or ""))
+        if m and it.get("type", "file") == "file":
+            out.append((m.group(1), f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/versions/{it['name']}"))
+    out.sort(key=lambda x: vtuple(x[0]), reverse=True)
+    return out
+
+
+def _listing_data(timeout=8, url=None):
+    """(respuesta JSON de la API de GitHub para versions/, info) o (None, info) si falla."""
+    info = github_repo_info(url)
+    if not info:
+        return None, None
+    import urllib.request
+    api = (f"https://api.github.com/repos/{info[0]}/{info[1]}/contents/versions"
+           f"?ref={urllib.parse.quote(info[2])}")
+    req = urllib.request.Request(api, headers={
+        "User-Agent": "DLpy-updater", "Accept": "application/vnd.github+json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.load(r), info
+    except Exception as _ign:
+        ignore("remote_versions", _ign)
+        return None, info
+
+
+def parse_listing_shas(data):
+    """{versión: hash git} de la respuesta de la API (sirve para comparar sin descargar)."""
+    out = {}
+    for it in data if isinstance(data, list) else []:
+        if isinstance(it, dict):
+            m = VER_FILE_RE.match(str(it.get("name") or ""))
+            if m and it.get("sha"):
+                out[m.group(1)] = str(it["sha"])
+    return out
+
+
+def remote_versions(timeout=8, url=None):
+    """Versiones guardadas en versions/ del repositorio de GitHub, o None si no se pudo leer."""
+    data, info = _listing_data(timeout, url)
+    return parse_versions_listing(data, info) if data is not None else None
+
+
+def remote_versions_full(timeout=8, url=None):
+    """((versión, url) …, {versión: hash git}) de versions/ en GitHub, o None."""
+    data, info = _listing_data(timeout, url)
+    if data is None:
+        return None
+    return parse_versions_listing(data, info), parse_listing_shas(data)
+
+
+def local_versions(repo=None):
+    """[(versión, ruta)] de <repo>/versions/ en este equipo (respaldo sin internet)."""
+    repo = repo or dev_repo_dir()
+    vdir = os.path.join(repo, "versions") if repo else ""
+    out = []
+    try:
+        for n in os.listdir(vdir):
+            m = VER_FILE_RE.match(n)
+            if m:
+                out.append((m.group(1), os.path.join(vdir, n)))
+    except OSError as _ign:
+        ignore("local_versions", _ign)
+    out.sort(key=lambda x: vtuple(x[0]), reverse=True)
+    return out
+
+
+def backup_versions():
+    """[(versión, ruta)] de los backups que DLpy guarda solo al actualizar
+    (dlpy_files/backups/<versión>/dlpy_<versión>.py). Sirven sin DLPY_DEV ni internet."""
+    out = []
+    try:
+        for n in os.listdir(BACKUP_DIR):
+            if not VER_DIR_RE.match(n):
+                continue
+            ver = n.split("-")[0]
+            p = os.path.join(BACKUP_DIR, n, f"dlpy_{ver}.py")
+            if os.path.isfile(p):
+                out.append((ver, p))
+    except OSError as _ign:
+        ignore("backup_versions", _ign)
+    return out
+
+
+def merge_versions(*sources):
+    """Une listas [(versión, origen)]: una entrada por versión (gana la primera fuente
+    que la tenga, p. ej. GitHub antes que el repo local y los backups), de la más
+    nueva a la más vieja."""
+    seen = {}
+    for lst in sources:
+        for ver, src in lst or []:
+            seen.setdefault(ver, src)
+    return sorted(seen.items(), key=lambda x: vtuple(x[0]), reverse=True)
+
+
+# ─────────── Comparar versiones: huellas, diferencias y fallos guardados ───────────
+def norm_text(text):
+    """Texto con saltos de línea \\n (para comparar sin que CRLF cuente como cambio)."""
+    return (text or "").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def has_changelog(text):
+    return bool(CL_RE.search(norm_text(text)))
+
+
+def strip_changelog(text):
+    """El código sin el bloque CHANGELOG (el dlpy.py instalado ya no lo trae)."""
+    t = norm_text(text)
+    m = CL_RE.search(t)
+    return t[:m.start()] + t[m.end():] if m else t
+
+
+def text_fingerprints(text):
+    """(huella del archivo completo, huella del código sin changelog), SHA-256."""
+    import hashlib
+    n = norm_text(text)
+    return (hashlib.sha256(n.encode("utf-8")).hexdigest(),
+            hashlib.sha256(strip_changelog(n).encode("utf-8")).hexdigest())
+
+
+def git_blob_sha(data):
+    """Hash que usa git (y la API de GitHub) para un archivo: sirve para saber si dos
+    archivos son idénticos sin descargar el de GitHub."""
+    import hashlib
+    h = hashlib.sha1(b"blob %d\0" % len(data))
+    h.update(data)
+    return h.hexdigest()
+
+
+def compare_texts(a, b):
+    """'igual' · 'changelog' (mismo código, otro changelog) · 'distinto' (otro código).
+    Si uno de los dos no trae changelog (el instalado) solo cuenta el código."""
+    fa, ca = text_fingerprints(a)
+    fb, cb = text_fingerprints(b)
+    if ca != cb:
+        return "distinto"
+    if fa == fb or not has_changelog(a) or not has_changelog(b):
+        return "igual"
+    return "changelog"
+
+
+ORIGIN_ORDER = ("github", "main", "local", "backup", "instalada")
+ORIGIN_LABEL = {"github": "GitHub", "main": "GitHub main", "local": "local",
+                "backup": "backup", "instalada": "instalada"}
+SELECTABLE = ("github", "main", "local", "backup")      # la instalada no se «instala»
+_TEXT_CACHE = {}
+
+
+def collect_versions(gh=None, shas=None, main=None, local=None, backups=None, installed=None):
+    """[{'ver', 'srcs': [{'origin', 'ref', 'sha', 'label'}]}] de la más nueva a la más
+    vieja. Una misma versión junta TODOS sus orígenes (GitHub versions/, la de
+    actualización `main`, repo local, backups e instalada) para poder compararlos."""
+    table = {}
+
+    def add(ver, origin, ref, sha=None, label=None):
+        table.setdefault(ver, []).append(
+            {"origin": origin, "ref": ref, "sha": sha, "label": label or ORIGIN_LABEL[origin]})
+
+    for ver, ref in gh or []:
+        add(ver, "github", ref, (shas or {}).get(ver))
+    if main:
+        add(main[0], "main", main[1], main[2] if len(main) > 2 else None)
+    for ver, ref in local or []:
+        add(ver, "local", ref)
+    for ver, ref in sorted(backups or [], key=lambda x: os.path.basename(os.path.dirname(x[1]))):
+        d = os.path.basename(os.path.dirname(ref))
+        add(ver, "backup", ref, label="backup" + (("-" + d.split("-", 1)[1]) if "-" in d else ""))
+    if installed:
+        add(installed[0], "instalada", installed[1])
+    return [{"ver": v, "srcs": sorted(table[v], key=lambda s: ORIGIN_ORDER.index(s["origin"]))}
+            for v in sorted(table, key=vtuple, reverse=True)]
+
+
+def fetch_raw_text(url, timeout=20):
+    """Texto de `url` sin validarlo como script (sirve para comparar una versión rota)."""
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "DLpy-updater", "Cache-Control": "no-cache"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            raw = r.read(UPDATE_MAX_BYTES + 1)
+        if len(raw) > UPDATE_MAX_BYTES:
+            return None
+        return norm_text(raw.decode("utf-8"))
+    except Exception as _ign:
+        ignore("fetch_raw_text", _ign)
+        return None
+
+
+def source_text(src, timeout=20):
+    """Texto de un origen (disco o GitHub), con caché; None si no se pudo leer."""
+    ref = src["ref"]
+    if ref not in _TEXT_CACHE:
+        if ref.startswith("http"):
+            _TEXT_CACHE[ref] = fetch_raw_text(ref, timeout)
+        else:
+            try:
+                _TEXT_CACHE[ref] = norm_text(read_text(ref))
+            except (OSError, ValueError) as _ign:
+                ignore("source_text", _ign)
+                _TEXT_CACHE[ref] = None
+    return _TEXT_CACHE[ref]
+
+
+def source_sha(src):
+    """Hash git del origen si se conoce sin descargar (GitHub lo da; el local se calcula)."""
+    if src.get("sha"):
+        return src["sha"]
+    if not src["ref"].startswith("http"):
+        try:
+            with open(src["ref"], "rb") as fh:
+                src["sha"] = git_blob_sha(fh.read())
+        except OSError as _ign:
+            ignore("source_sha", _ign)
+    return src.get("sha")
+
+
+def compare_sources(a, b):
+    """'igual' · 'changelog' · 'distinto', o None si alguno no se pudo leer. Primero
+    compara hashes (sin descargar); solo si difieren lee los textos."""
+    sa, sb = source_sha(a), source_sha(b)
+    if sa and sb and sa == sb:
+        return "igual"
+    ta, tb = source_text(a), source_text(b)
+    if ta is None or tb is None:
+        return None
+    return compare_texts(ta, tb)
+
+
+def row_diffs(row):
+    """[(origen_base, otro, estado)]: cada origen frente al primero de la versión."""
+    srcs = row["srcs"]
+    return [(srcs[0], s, compare_sources(srcs[0], s)) for s in srcs[1:]]
+
+
+def row_state(diffs):
+    """None (un solo origen) · 'distinto' · 'changelog' · '?' · 'igual'."""
+    st = [d[2] for d in diffs]
+    if not st:
+        return None
+    for k in ("distinto", "changelog"):
+        if k in st:
+            return k
+    return "?" if None in st else "igual"
+
+
+def group_sources(srcs):
+    """Agrupa los orígenes instalables y legibles de una versión por contenido idéntico
+    (huella completa: el changelog también cuenta). [[src, ...], ...], GitHub primero."""
+    groups = []
+    for s in srcs:
+        if s["origin"] not in SELECTABLE or source_text(s) is None:
+            continue
+        for g in groups:
+            if compare_sources(g[0], s) == "igual":
+                g.append(s)
+                break
+        else:
+            groups.append([s])
+    return groups
+
+
+def diff_lines(a_text, b_text, label_a, label_b, mode="distinto"):
+    """Líneas de diff unificado. mode 'distinto' ignora el changelog; 'changelog' lo incluye."""
+    import difflib
+    a = strip_changelog(a_text) if mode == "distinto" else norm_text(a_text)
+    b = strip_changelog(b_text) if mode == "distinto" else norm_text(b_text)
+    return list(difflib.unified_diff(a.splitlines(), b.splitlines(),
+                                     label_a, label_b, n=1, lineterm=""))
+
+
+def diff_counts(lines):
+    add = sum(1 for ln in lines if ln.startswith("+") and not ln.startswith("+++"))
+    rem = sum(1 for ln in lines if ln.startswith("-") and not ln.startswith("---"))
+    return add, rem
+
+
+def print_diff(a_text, b_text, label_a, label_b, mode="distinto", limit=24):
+    """Muestra con colores qué cambia: rojo = lo del primero, verde = lo del segundo."""
+    lines = diff_lines(a_text, b_text, label_a, label_b, mode)
+    add, rem = diff_counts(lines)
+    what = "código" if mode == "distinto" else "changelog"
+    print(paint(f"{label_a} vs {label_b} · {what}: ", "bold")
+          + paint(f"-{rem} ", "red") + paint(f"+{add}", "green"))
+    w = term_width() - 1
+    for ln in lines[:limit]:
+        if ln.startswith(("---", "+++")):
+            print(paint(ln[:w], "dim"))
+        elif ln.startswith("@@"):
+            print(paint(ln[:w], "cyan"))
+        elif ln.startswith("-"):
+            print(paint(ln[:w], "red"))
+        elif ln.startswith("+"):
+            print(paint(ln[:w], "green"))
+        else:
+            print(paint(ln[:w], "dim"))
+    if len(lines) > limit:
+        note(f"… +{len(lines) - limit} líneas más")
+    print(paint(f"- {label_a}", "red") + "   " + paint(f"+ {label_b}", "green"))
+
+
+# Fallos: historial en state/crash_log.json (crash.json solo guardaba el último)
+def load_crashes():
+    """[{version, code, error, time}] de todos los fallos guardados (más viejo primero).
+    `code` = huella del código que falló (None si no se pudo calcular o es de 0.7.6)."""
+    log = load_json(CRASH_LOG_FILE).get("crashes")
+    out = [c for c in log if isinstance(c, dict) and c.get("version")] if isinstance(log, list) else []
+    last = load_json(CRASH_FILE)                     # 0.7.6 / 0.7.7: solo el último
+    if last.get("version") and not any(
+            c.get("version") == last["version"] and c.get("time") == last.get("time") for c in out):
+        out.append({"version": last["version"], "code": None,
+                    "error": last.get("error") or "", "time": last.get("time") or 0})
+    return out
+
+
+def record_crash(version, text, error, when=None):
+    """Anota un fallo (con la huella del código que falló). Nunca revienta."""
+    try:
+        entry = {"version": version, "code": text_fingerprints(text)[1] if text else None,
+                 "error": str(error)[:300], "time": int(when or time.time())}
+        crashes = (load_crashes() + [entry])[-50:]
+        os.makedirs(os.path.dirname(CRASH_LOG_FILE), exist_ok=True)
+        save_json(CRASH_LOG_FILE, {"crashes": crashes})
+    except Exception as _ign:
+        ignore("record_crash", _ign)
+
+
+def crash_match(ver, text, crashes=None):
+    """None (nunca falló) · ('igual', fallo) el código es el MISMO que falló ·
+    ('distinta', fallo) misma versión pero otro código · ('sin_huella', fallo)."""
+    cs = [c for c in (load_crashes() if crashes is None else crashes) if c.get("version") == ver]
+    if not cs:
+        return None
+    code = text_fingerprints(text)[1] if text else None
+    if code:
+        for c in reversed(cs):
+            if c.get("code") == code:
+                return ("igual", c)
+        if any(c.get("code") for c in cs):
+            return ("distinta", cs[-1])
+    return ("sin_huella", cs[-1])
+
+
+def crash_when(entry):
+    try:
+        return time.strftime("%d/%m %H:%M", time.localtime(int(entry.get("time") or 0)))
+    except (OverflowError, OSError, ValueError):
+        return "?"
+
+
+def show_crash_warning(ver, text, crashes=None):
+    """Avisa si la `ver` ya falló. Devuelve 'igual' / 'distinta' / 'sin_huella' / None."""
+    hit = crash_match(ver, text, crashes)
+    if not hit:
+        return None
+    kind, c = hit
+    err = c.get("error") or ""
+    if kind == "igual":
+        m_err(f"La {ver} es IDÉNTICA a la que falló el {crash_when(c)}.")
+        if err:
+            note(f"Error: {err}")
+    elif kind == "distinta":
+        m_warn(f"La {ver} ya falló el {crash_when(c)}, pero este código es distinto "
+               f"(puede que ya esté corregida).")
+    else:
+        m_warn(f"La {ver} ya falló el {crash_when(c)} (sin huella guardada: no se puede saber "
+               f"si es el mismo código).")
+    return kind
+
+
+def _wrap_tokens(tokens, indent, width, sep="  "):
+    """tokens = [(texto_plano, texto_pintado)] → líneas que caben en `width`."""
+    lines, cur, curlen = [], [], 0
+    for plain, painted in tokens:
+        add = len(plain) + (len(sep) if cur else 0)
+        if cur and indent + curlen + add > width:
+            lines.append(" " * indent + sep.join(cur))
+            cur, curlen, add = [], 0, len(plain)
+        cur.append(painted)
+        curlen += add
+    if cur:
+        lines.append(" " * indent + sep.join(cur))
+    return lines
+
+
+def format_version_rows(rows, cur, upd, crashes, diffs_by_ver, width=None):
+    """Líneas de la lista numerada de versiones (con colores si el terminal los admite)."""
+    width = width or safe_width()
+    count = {}
+    for c in crashes:
+        count[c["version"]] = count.get(c["version"], 0) + 1
+    out = []
+    for i, row in enumerate(rows, 1):
+        ver = row["ver"]
+        head = f"{i}) {ver}"
+        toks = [(head, paint(head, "bold"))]
+        for s in row["srcs"]:
+            toks.append((s["label"], paint(s["label"], "dim")))
+        out += _wrap_tokens(toks, 2, width, " · ")
+        flags = []
+        if ver == cur:
+            flags.append(("✓ actual", "green"))
+        if upd and ver == upd:
+            flags.append(("⬆ la de actualizar", "cyan"))
+        if ver in count:
+            n = count[ver]
+            flags.append(("✖ crasheó" + (f" ×{n}" if n > 1 else ""), "red"))
+        diffs = diffs_by_ver.get(ver) or []
+        st = row_state(diffs)
+        if st == "igual":
+            flags.append(("= idénticas", "green"))
+        for a, b, e in diffs:
+            if e == "distinto":
+                flags.append((f"≠ {a['label']} vs {b['label']}: código", "yellow"))
+            elif e == "changelog":
+                flags.append((f"≠ {a['label']} vs {b['label']}: changelog", "yellow"))
+            elif e is None:
+                flags.append((f"? {a['label']} vs {b['label']}", "dim"))
+        out += _wrap_tokens([(t, paint(t, c)) for t, c in flags], 6, width)
+    return out
+
+
+def print_version_legend():
+    note("✓ actual · ⬆ la de actualizar · ✖ crasheó · ≠ difiere · = idénticas")
+
+
+def install_text(src, ver):
+    """Texto válido (con versión y compilable) del origen, o None."""
+    ref = src["ref"]
+    if ref.startswith("http"):
+        m_info(f"Descargando la {ver} desde {src['label']}...")
+        return fetch_remote_script(timeout=20, url=ref)
+    try:
+        text = read_text(ref)
+        return text if remote_script_version(text) and compile(text, "dlpy.py", "exec") else None
+    except Exception as _ign:
+        ignore("install_text", _ign)
+        return None
+
+
+def pick_source(row):
+    """Origen a instalar de una versión. Si GitHub, local o backup tienen archivos
+    DISTINTOS enseña qué cambia y pregunta de cuál; si son iguales no pregunta
+    (gana GitHub, luego local, luego backup). None = cancelar / sin origen."""
+    groups = group_sources(row["srcs"])
+    if not groups:
+        m_err(f"La {row['ver']} no se pudo leer en ningún origen.")
+        return None
+    if len(groups) == 1:
+        return groups[0][0]
+    ver = row["ver"]
+    m_warn(f"La {ver} no es igual en todos los sitios:")
+    base_text = source_text(groups[0][0])
+    for g in groups[1:3]:
+        mode = compare_texts(base_text, source_text(g[0]))
+        print_diff(base_text, source_text(g[0]), groups[0][0]["label"], g[0]["label"], mode)
+    shown = groups[:9]
+    for n, g in enumerate(shown, 1):
+        print(f"  {n}) " + " · ".join(s["label"] for s in g))
+    while True:
+        try:
+            ans = ask_line(f"¿De dónde instalar la {ver}? Número (Enter = cancelar) ▸ ")
+        except (EOFError, KeyboardInterrupt):
+            return None
+        n = parse_menu_choice(ans, len(shown))
+        if n is None:
+            m_warn(f"Escribe un número de 1 a {len(shown)} (o Enter para cancelar).")
+            continue
+        return shown[n - 1][0] if n else None
+
+
+def origins_row(ver, main_text=None, with_installed=None):
+    """Fila con TODOS los orígenes de `ver`: la de actualización (`main`, si se da su
+    texto), versions/ de GitHub, repo local, backups y la instalada (si es la actual).
+    Es la misma fila y la misma comparación que usa la lista de versiones."""
+    _TEXT_CACHE.clear()
+    full = remote_versions_full(timeout=6)
+    gh, shas = full if full else ([], {})
+    main = None
+    if main_text:
+        _TEXT_CACHE[UPDATE_URL] = main_text
+        main = (ver, UPDATE_URL, git_blob_sha(main_text.encode("utf-8")))
+    inst = (VERSION, SCRIPT_PATH) if (ver == VERSION if with_installed is None else with_installed) else None
+    rows = collect_versions([x for x in gh if x[0] == ver], shas, main,
+                            [x for x in local_versions() if x[0] == ver],
+                            [x for x in backup_versions() if x[0] == ver], inst)
+    return rows[0] if rows else {"ver": ver, "srcs": []}
+
+
+def report_row(row, show_diff=True):
+    """Cuenta cómo salió la comparación de los orígenes de una versión (igual que la
+    lista): idénticas, solo changelog o código distinto (con el diff en colores).
+    Devuelve row_state."""
+    ver = row["ver"]
+    diffs = row_diffs(row)
+    st = row_state(diffs)
+    labels = " · ".join(s["label"] for s in row["srcs"])
+    if st == "igual":
+        m_check(f"{ver} · {labels}: idénticas")
+    elif st is None:
+        note(f"La {ver} solo está en {labels}: no hay con qué compararla.")
+    for a, b, e in diffs:
+        if e in ("distinto", "changelog"):
+            m_warn(f"{ver} · {a['label']} ≠ {b['label']} "
+                   f"({'código distinto' if e == 'distinto' else 'solo cambia el changelog'})")
+            if show_diff:
+                print_diff(source_text(a), source_text(b), a["label"], b["label"], e, limit=12)
+        elif e is None:
+            note(f"{ver} · no se pudo comparar {a['label']} con {b['label']}.")
+    return st
+
+
+def skip_update_after_recovery(remote, crashed, match=None):
+    """True si la versión de GitHub es la que falló (o más vieja que ella): no se ofrece.
+    `match` = resultado de crash_match: con el mismo número pero otro código ('distinta')
+    sí se ofrece, porque puede estar corregida."""
+    if not crashed:
+        return False
+    if vtuple(remote) == vtuple(crashed) and match == "distinta":
+        return False
+    return vtuple(remote) <= vtuple(crashed)
+
+
+def clear_recovered():
+    try:
+        if os.path.isfile(RECOVERED_FILE):
+            os.remove(RECOVERED_FILE)
+    except OSError as _ign:
+        ignore("clear_recovered", _ign)
+
+
+def parse_menu_choice(ans, n):
+    """0 = no volver (vacío / 0 / n / no); 1..n = esa opción; None = no se entiende."""
+    a = (ans or "").strip().lower()
+    if a in ("", "0", "n", "no"):
+        return 0
+    if a.isdigit() and 1 <= int(a) <= n:
+        return int(a)
+    return None
+
+
+def good_versions():
+    v = load_json(GOOD_FILE).get("versions")
+    return [x for x in v if isinstance(x, str)] if isinstance(v, list) else []
+
+
+def mark_good(version=None):
+    """Anota que esta versión terminó una ejecución sin fallar."""
+    try:
+        v = version or VERSION
+        good = good_versions()
+        if v not in good:
+            good.append(v)
+            os.makedirs(STATE_DIR, exist_ok=True)
+            save_json(GOOD_FILE, {"versions": good[-50:]})
+    except Exception as _ign:
+        ignore("mark_good", _ign)
+
+
+def mark_running():
+    try:
+        os.makedirs(STATE_DIR, exist_ok=True)
+        save_json(RUNNING_FILE, {"version": VERSION, "pid": os.getpid(), "time": int(time.time())})
+    except Exception as _ign:
+        ignore("mark_running", _ign)
+
+
+def clear_running():
+    try:
+        if os.path.isfile(RUNNING_FILE):
+            os.remove(RUNNING_FILE)
+    except OSError as _ign:
+        ignore("clear_running", _ign)
+
+
+def should_offer_after_abrupt(prev, good):
+    """Tras un cierre inesperado (sin traceback) solo se ofrece volver atrás si esa
+    versión aún no había terminado bien ninguna ejecución (versión recién instalada)."""
+    ver = (prev or {}).get("version")
+    return bool(ver) and ver not in (good or [])
+
+
+def install_recovered(ver, text, crashed):
+    """Reemplaza dlpy.py por `text` (versión `ver`). Antes guarda el actual en
+    script/crash/. True si quedó instalada."""
+    try:
+        cdir = os.path.join(SCRIPT_DIR, "crash")
+        os.makedirs(cdir, exist_ok=True)
+        if os.path.isfile(SCRIPT_PATH):
+            tag = "crash" if crashed else "antes"
+            copy_file(SCRIPT_PATH, _free_path(os.path.join(cdir, f"dlpy_{VERSION}_{tag}.py")))
+        write_text(SCRIPT_PATH, text)
+    except Exception as e:
+        m_err(f"No se pudo instalar la {ver}: {e}")
+        return False
+    sync_origin_copy(text)
+    if crashed:
+        try:
+            save_json(RECOVERED_FILE, {"crashed": crashed, "restored": ver, "time": int(time.time())})
+        except Exception as _ign:
+            ignore("install_recovered", _ign)
+    return True
+
+
+def offer_recovery(crashed, why):
+    """Lista TODAS las versiones (GitHub versions/, la de actualización, repo local,
+    backups y la instalada) marcando actual, la que instalaría al actualizar, fallos y
+    diferencias entre orígenes de una misma versión, y deja elegir una. Si se instala,
+    la ejecuta y termina (SystemExit). False si no se hizo nada.
+    `crashed` = versión que falló (None en modo manual con --versiones)."""
+    _TEXT_CACHE.clear()
+    cbar = Bar()
+    cbar.start("Buscando versiones")
+    try:
+        full = remote_versions_full()
+        main_text = fetch_remote_script(timeout=8)
+    finally:
+        cbar.stop()
+    remote, shas = full if full else (None, {})
+    main_ver = remote_script_version(main_text)
+    main = None
+    if main_ver:
+        _TEXT_CACHE[UPDATE_URL] = main_text
+        main = (main_ver, UPDATE_URL, git_blob_sha(main_text.encode("utf-8")))
+    local, backups = local_versions(), backup_versions()
+    if remote is None and local:
+        m_warn("No se pudo leer GitHub: uso las versiones guardadas en este equipo.")
+    rows = collect_versions(remote, shas, main, local, backups, (VERSION, SCRIPT_PATH))
+    if not any(s["origin"] in SELECTABLE for r in rows for s in r["srcs"]):
+        m_warn("No hay versiones guardadas para recuperar (versions/ del repositorio o backups).")
+        return False
+    shown = rows[:20]
+    cbar = Bar()
+    cbar.start("Comparando versiones")
+    try:
+        diffs_by_ver = {r["ver"]: row_diffs(r) for r in shown}
+    finally:
+        cbar.stop()
+    header("VERSIONES")
+    if why:
+        m_warn(why)
+    if main is None:
+        note("Sin conexión: no se sabe cuál usaría al actualizar.")
+    for ln in format_version_rows(shown, VERSION, main_ver, load_crashes(), diffs_by_ver):
+        print(ln)
+    if len(rows) > len(shown):
+        note(f"(+{len(rows) - len(shown)} más antiguas sin mostrar)")
+    print_version_legend()
+    while True:
+        try:
+            ans = ask_line("¿Instalar alguna? Número (Enter = no) ▸ ")
+        except (EOFError, KeyboardInterrupt):
+            return False
+        n = parse_menu_choice(ans, len(shown))
+        if n is None:
+            m_warn(f"Escribe un número de 1 a {len(shown)} (o Enter para no volver).")
+            continue
+        break
+    if n == 0:
+        return False
+    row = shown[n - 1]
+    ver = row["ver"]
+    src = pick_source(row)                    # pregunta GitHub/local solo si difieren
+    if not src:
+        return False
+    text = install_text(src, ver)
+    if not text:
+        m_err(f"No se pudo obtener la {ver} (descarga fallida o archivo no válido).")
+        return False
+    try:
+        if text_fingerprints(text)[1] == text_fingerprints(read_text(SCRIPT_PATH))[1]:
+            m_info(f"La {ver} de {src['label']} es idéntica a la instalada; no hay nada que cambiar.")
+            return False
+    except (OSError, ValueError) as _ign:
+        ignore("offer_recovery", _ign)
+    if show_crash_warning(ver, text) == "igual" and not ask(f"¿Instalar la {ver} igualmente?", default=False):
+        return False
+    if not install_recovered(ver, text, crashed):
+        return False
+    clear_running()
+    m_check(f"DLpy {ver} · restaurada ({src['label']})")
+    if crashed:
+        note(f"Se recuperó la {ver} porque la {crashed} falló. Mientras GitHub no tenga una versión "
+             f"más nueva que la {crashed} no se ofrecerá actualizar; con --actualizar puedes "
+             f"volver a instalarla.")
+    import runpy
+    runpy.run_path(SCRIPT_PATH, run_name="__main__")      # termina con SystemExit
+    return True
+
+
+def handle_crash(err, tb):
+    """Fallo no controlado: lo resume, lo guarda en state/crash.json y ofrece volver atrás."""
+    m_err(f"DLpy {VERSION} falló: {type(err).__name__}: {err}")
+    where = next((ln.strip() for ln in reversed(tb.splitlines()) if ln.strip().startswith("File ")), "")
+    if where:
+        note(where)
+    if DEBUG:
+        print(tb)
+    try:
+        text = read_text(SCRIPT_PATH)
+    except (OSError, ValueError):
+        text = None
+    record_crash(VERSION, text, f"{type(err).__name__}: {err}")     # historial con huella
+    try:
+        os.makedirs(STATE_DIR, exist_ok=True)
+        save_json(CRASH_FILE, {"version": VERSION, "error": f"{type(err).__name__}: {err}",
+                               "time": int(time.time()), "traceback": tb[-4000:]})
+    except Exception as _ign:
+        ignore("handle_crash", _ign)
+    try:
+        offer_recovery(VERSION, f"La versión {VERSION} se cerró por un error.")
+    except (EOFError, KeyboardInterrupt):
+        pass
+    except SystemExit:
+        raise
+    except Exception as e2:
+        m_warn(f"No se pudo ofrecer la recuperación: {e2}")
+    return 1
+
+
+def run_guarded(entry):
+    """Ejecuta entry() vigilando fallos: marca «en curso» mientras corre; si revienta con
+    una excepción o la ejecución anterior quedó cortada, ofrece volver a una versión
+    guardada. --selftest / --sistema / --2shortcuts no se vigilan."""
+    import traceback
+    args = sys.argv[1:]
+    if "--selftest" in args or "--sistema" in args or wants_2shortcuts(args):
+        return entry()
+    if "--versiones" in args:                # lista manual, sin que haya fallado nada
+        clear_screen()
+        offer_recovery(None, None)
+        return 0
+    nested = getattr(sys, "_dlpy_guarded", False)     # tras actualizar/restaurar (runpy)
+    sys._dlpy_guarded = True
+    try:
+        if not nested:
+            prev = load_json(RUNNING_FILE)
+            if prev and should_offer_after_abrupt(prev, good_versions()):
+                try:
+                    pv = prev.get("version")
+                    record_crash(pv, read_text(SCRIPT_PATH) if pv == VERSION else None,
+                                 "cierre inesperado (sin traceback)", prev.get("time"))
+                except (OSError, ValueError) as _ign:
+                    ignore("run_guarded", _ign)
+                clear_screen()
+                offer_recovery(prev.get("version"),
+                               f"La ejecución anterior de la {prev.get('version')} se cortó "
+                               f"sin terminar y esa versión aún no había terminado bien.")
+        mark_running()
+        try:
+            rc = entry()
+        except Exception as e:
+            clear_running()
+            return handle_crash(e, traceback.format_exc())
+        except BaseException:                         # Ctrl-C / SystemExit: salida normal
+            clear_running()
+            mark_good()
+            raise
+        clear_running()
+        mark_good()
+        return rc
+    finally:
+        if not nested:
+            try:
+                del sys._dlpy_guarded
+            except AttributeError as _ign:
+                ignore("run_guarded", _ign)
 
 
 # ───────────────────── Caché de streams (24 h) ─────────────────────
@@ -5048,6 +6056,12 @@ def deliver_desktop(final, title):
 
 
 def deliver(final, title):
+    """Entrega el archivo (Atajos / app por defecto) y anota la hora en el índice."""
+    _deliver_platform(final, title)
+    mark_delivered(final)
+
+
+def _deliver_platform(final, title):
     if IS_ANDROID:
         return deliver_android(final, title)
     if IS_DESKTOP:
@@ -5056,6 +6070,41 @@ def deliver(final, title):
     m_info(f"Enviando a {SHORTCUT_NAME}...")
     dbg("entrega", {"origen": final, "copia": path, "titulo": title})
     os.system("open " + shlex.quote(shortcut_run_url({"file_path": path, "file_title": title})))
+
+
+def mark_delivered(final, when=None):
+    """Guarda en el índice la hora de la última entrega del archivo (clave «delivered»)."""
+    try:
+        index = load_json(INDEX_FILE)
+        name = os.path.basename(final)
+        hit = [e for e in index.values() if isinstance(e, dict) and e.get("file") == name]
+        for e in hit:
+            e["delivered"] = int(when or time.time())
+        if hit:
+            save_json(INDEX_FILE, index)
+    except Exception as _ign:
+        ignore("mark_delivered", _ign)
+
+
+def reopen_question():
+    """Texto de la pregunta «¿Abrir otra vez…?» según la plataforma."""
+    return (f"¿Abrir otra vez con Atajos? (S/n) ▸ " if IS_IOS
+            else "¿Abrir otra vez el archivo? (S/n) ▸ ")
+
+
+def deliver_existing(old_file, old_entry, title):
+    """Entrega un archivo ya descargado. Si ya se había entregado antes (índice con
+    «delivered») pregunta si abrirlo otra vez; si nunca se entregó, lo manda directo.
+    Devuelve True si lo entregó."""
+    if (old_entry or {}).get("delivered"):
+        try:
+            if not ask_yn(reopen_question(), default=True):
+                m_info("No se volvió a abrir.")
+                return False
+        except (EOFError, KeyboardInterrupt):
+            return False
+    deliver(old_file, title)
+    return True
 
 
 def shortcut_run_url(data, name=None):
@@ -5496,6 +6545,205 @@ def selftest():
     check("2shortcuts raya larga", wants_2shortcuts(["\u20142shortcuts"]), True)
     check("2shortcuts no es enlace", wants_2shortcuts(["2shortcuts", "https://x.y/2shortcuts"]), False)
     check("2shortcuts otra bandera", wants_2shortcuts(["--sistema"]), False)
+    # ── 0.7.6: DEV, recuperación y «abrir otra vez» ──
+    with tempfile.TemporaryDirectory() as _td:
+        _repo = os.path.join(_td, "DLpy")
+        os.makedirs(os.path.join(_repo, ".git"))
+        _sp = os.path.join(_repo, "dlpy.py")
+        check("repo junto al script", dev_repo_dir({}, _sp, _td), _repo)
+        check("repo DLPY_REPO", dev_repo_dir({"DLPY_REPO": _repo}, "/x/y/dlpy.py", _td), _repo)
+        check("repo DLPY_REPO inexistente", dev_repo_dir({"DLPY_REPO": os.path.join(_td, "no")}, _sp, _td), None)
+        check("repo ~/Documents/DLpy", dev_repo_dir({}, "/x/y/dlpy.py", _td), None)
+        os.makedirs(os.path.join(_td, "Documents", "DLpy", ".git"))
+        check("repo ~/Documents/DLpy ok", dev_repo_dir({}, "/x/y/dlpy.py", _td),
+              os.path.join(_td, "Documents", "DLpy"))
+        _vd = os.path.join(_repo, "versions")
+        os.makedirs(_vd)
+        _t1 = dev_version_target(_vd, "1.2.3", "a\n")
+        check("versions nuevo", _t1, os.path.join(_vd, "dlpy_1.2.3.py"))
+        write_text(_t1, "a\n")
+        check("versions igual", dev_version_target(_vd, "1.2.3", "a\n"), None)
+        _t2 = dev_version_target(_vd, "1.2.3", "b\n")
+        check("versions otro contenido", bool(_t2 and re.search(r"dlpy_1\.2\.3_[0-9a-f]{7}\.py$", _t2)), True)
+        write_text(_t2, "b\n")
+        check("versions hash repetido", dev_version_target(_vd, "1.2.3", "b\n"), None)
+        write_text(os.path.join(_vd, "dlpy_1.10.0.py"), "x")
+        write_text(os.path.join(_vd, "otro.txt"), "x")
+        check("local_versions orden", [v for v, _p in local_versions(_repo)], ["1.10.0", "1.2.3"])
+        # mark_delivered / deliver_existing con índice y funciones de prueba
+        _old = (globals()["INDEX_FILE"], globals()["deliver"], globals()["ask_yn"], globals()["m_info"])
+        try:
+            globals()["m_info"] = lambda *a, **k: None
+            globals()["INDEX_FILE"] = os.path.join(_td, "index.json")
+            save_json(globals()["INDEX_FILE"], {"k": {"file": "v.mp4"}, "o": {"file": "w.mp4"}})
+            mark_delivered("/algo/v.mp4", 1234)
+            _ix = load_json(globals()["INDEX_FILE"])
+            check("mark_delivered marca", _ix["k"].get("delivered"), 1234)
+            check("mark_delivered no toca otros", "delivered" in _ix["o"], False)
+            _calls, _asked = [], []
+            globals()["deliver"] = lambda f, t: _calls.append(f)
+            globals()["ask_yn"] = lambda p, default=True, seconds=False: (_asked.append(p) or False)
+            check("existente sin delivered: directo", deliver_existing("v.mp4", {}, "t"), True)
+            check("existente sin delivered: sin pregunta", (len(_asked), len(_calls)), (0, 1))
+            check("existente entregado: dice no", deliver_existing("v.mp4", {"delivered": 5}, "t"), False)
+            check("existente entregado: pregunta y no entrega", (len(_asked), len(_calls)), (1, 1))
+            globals()["ask_yn"] = lambda p, default=True, seconds=False: True
+            check("existente entregado: dice sí", deliver_existing("v.mp4", {"delivered": 5}, "t"), True)
+            check("existente entregado: entrega", len(_calls), 2)
+        finally:
+            (globals()["INDEX_FILE"], globals()["deliver"],
+             globals()["ask_yn"], globals()["m_info"]) = _old
+    _info = ("o", "r", "main")
+    check("github_repo_info raw", github_repo_info("https://raw.githubusercontent.com/o/r/main/dlpy.py"), _info)
+    check("github_repo_info otro host", github_repo_info("https://example.com/dlpy.py"), None)
+    _listing = [{"name": "dlpy_0.7.5.py", "type": "file"}, {"name": "dlpy_0.7.10.py", "type": "file"},
+                {"name": "README.md", "type": "file"}, {"name": "dlpy_0.7.4_abc1234.py", "type": "file"},
+                {"name": "dlpy_0.7.3.py", "type": "dir"}, "basura"]
+    check("listado versiones", parse_versions_listing(_listing, _info), [
+        ("0.7.10", "https://raw.githubusercontent.com/o/r/main/versions/dlpy_0.7.10.py"),
+        ("0.7.5", "https://raw.githubusercontent.com/o/r/main/versions/dlpy_0.7.5.py")])
+    check("listado no lista", parse_versions_listing({"message": "Not Found"}, _info), [])
+    check("menu vacío", parse_menu_choice("", 3), 0)
+    check("menu n", parse_menu_choice(" N ", 3), 0)
+    check("menu 2", parse_menu_choice("2", 3), 2)
+    check("menu fuera de rango", parse_menu_choice("4", 3), None)
+    check("menu texto", parse_menu_choice("hola", 3), None)
+    check("abrupto versión nueva", should_offer_after_abrupt({"version": "0.7.6"}, ["0.7.5"]), True)
+    check("abrupto versión buena", should_offer_after_abrupt({"version": "0.7.5"}, ["0.7.5"]), False)
+    check("abrupto sin marca", should_offer_after_abrupt({}, []), False)
+    check("merge_versions gana la primera", merge_versions([("0.7.5", "gh"), ("0.7.6", "gh")],
+          [("0.7.5", "repo"), ("0.7.4", "repo")], None, [("0.7.4", "bk"), ("0.7.3", "bk")]),
+          [("0.7.6", "gh"), ("0.7.5", "gh"), ("0.7.4", "repo"), ("0.7.3", "bk")])
+    check("merge_versions vacío", merge_versions(None, []), [])
+    with tempfile.TemporaryDirectory() as _td:
+        _old_bd = globals()["BACKUP_DIR"]
+        try:
+            globals()["BACKUP_DIR"] = _td
+            for _n, _f in (("0.7.4", "dlpy_0.7.4.py"), ("0.7.4-2", "dlpy_0.7.4.py"),
+                           ("0.7.3", "otro.py"), ("junk", "dlpy_9.9.9.py")):
+                os.makedirs(os.path.join(_td, _n))
+                write_text(os.path.join(_td, _n, _f), "#!dlpy.py\n")
+            check("backup_versions", sorted(v for v, _p in backup_versions()), ["0.7.4", "0.7.4"])
+        finally:
+            globals()["BACKUP_DIR"] = _old_bd
+    # ── 0.7.7: huellas, comparación de orígenes, fallos y copia a Documents ──
+    _cl = "# ==== CHANGELOG ====\n# ## 1.0.0\n#\n# - a\n# ==== FIN CHANGELOG ====\n"
+    _code = "#!dlpy.py\nVERSION = \"1.0.0\"\nprint(1)\n"
+    _full = "#!dlpy.py\n" + _cl + "VERSION = \"1.0.0\"\nprint(1)\n"
+    check("strip_changelog", strip_changelog(_full), _code)
+    check("huella ignora CRLF", text_fingerprints(_full.replace("\n", "\r\n")), text_fingerprints(_full))
+    check("huella código = sin changelog", text_fingerprints(_full)[1], text_fingerprints(_code)[1])
+    check("compare igual", compare_texts(_full, _full), "igual")
+    check("compare sin changelog = igual", compare_texts(_full, _code), "igual")
+    check("compare código distinto", compare_texts(_full, _full.replace("print(1)", "print(2)")), "distinto")
+    check("compare solo changelog", compare_texts(_full, _full.replace("# - a", "# - b")), "changelog")
+    check("git_blob_sha vacío", git_blob_sha(b""), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391")
+    check("git_blob_sha hello", git_blob_sha(b"hello\n"), "ce013625030ba8dba906f756967f9e9ca394464a")
+    check("listado shas", parse_listing_shas([{"name": "dlpy_0.7.5.py", "sha": "abc"},
+          {"name": "x.txt", "sha": "d"}, {"name": "dlpy_0.7.4.py"}, "basura"]), {"0.7.5": "abc"})
+    _rows = collect_versions([("0.7.7", "https://h/0.7.7"), ("0.7.6", "https://h/0.7.6")], {"0.7.7": "s1"},
+                             ("0.7.8", "https://h/main", "s2"), [("0.7.7", "/r/0.7.7")],
+                             [("0.7.6", "/b/0.7.6/dlpy_0.7.6.py"), ("0.7.6", "/b/0.7.6-2/dlpy_0.7.6.py")],
+                             ("0.7.7", "/me/dlpy.py"))
+    check("collect orden", [r["ver"] for r in _rows], ["0.7.8", "0.7.7", "0.7.6"])
+    check("collect orígenes 0.7.7", [s_["label"] for s_ in _rows[1]["srcs"]], ["GitHub", "local", "instalada"])
+    check("collect backups", [s_["label"] for s_ in _rows[2]["srcs"]], ["GitHub", "backup", "backup-2"])
+    check("collect main", [s_["origin"] for s_ in _rows[0]["srcs"]], ["main"])
+    check("row_state vacío", row_state([]), None)
+    check("row_state peor gana", row_state([(0, 0, "igual"), (0, 0, "distinto")]), "distinto")
+    check("row_state changelog", row_state([(0, 0, "igual"), (0, 0, "changelog")]), "changelog")
+    check("row_state ?", row_state([(0, 0, None), (0, 0, "igual")]), "?")
+    check("row_state igual", row_state([(0, 0, "igual")]), "igual")
+    check("diff_counts", diff_counts(diff_lines("a\nb\n", "a\nc\nd\n", "x", "y")), (2, 1))
+    with tempfile.TemporaryDirectory() as _td:
+        _TEXT_CACHE.clear()
+        _pa, _pb, _pc = (os.path.join(_td, n) for n in ("a.py", "b.py", "c.py"))
+        write_text(_pa, _full)
+        write_text(_pb, _full)
+        write_text(_pc, _full.replace("print(1)", "print(2)"))
+        _sa, _sb, _sc = ({"origin": o, "ref": r, "sha": None, "label": o} for o, r in
+                         (("github", _pa), ("local", _pb), ("backup", _pc)))
+        check("compare_sources igual", compare_sources(_sa, _sb), "igual")
+        check("compare_sources distinto", compare_sources(_sa, _sc), "distinto")
+        check("compare_sources ilegible", compare_sources(_sa, {"origin": "local", "ref": os.path.join(_td, "no.py"),
+              "sha": None, "label": "x"}), None)
+        check("group_sources", [[s_["origin"] for s_ in g] for g in group_sources([_sa, _sb, _sc])],
+              [["github", "local"], ["backup"]])
+        check("group_sources ignora instalada", group_sources([dict(_sa, origin="instalada")]), [])
+        # fallos: historial con huella
+        _old_c = (globals()["CRASH_LOG_FILE"], globals()["CRASH_FILE"])
+        try:
+            globals()["CRASH_LOG_FILE"] = os.path.join(_td, "crash_log.json")
+            globals()["CRASH_FILE"] = os.path.join(_td, "crash.json")
+            check("sin fallos", crash_match("1.0.0", _full), None)
+            record_crash("1.0.0", _full, "NameError: x", 1000)
+            check("fallo idéntico", crash_match("1.0.0", _code)[0], "igual")
+            check("fallo código distinto", crash_match("1.0.0", _full.replace("print(1)", "print(2)"))[0], "distinta")
+            check("fallo otra versión", crash_match("1.0.1", _full), None)
+            record_crash("1.0.2", None, "cierre inesperado", 1001)
+            check("fallo sin huella", crash_match("1.0.2", _full)[0], "sin_huella")
+            save_json(globals()["CRASH_FILE"], {"version": "0.9.0", "error": "viejo", "time": 5})
+            check("fallo de crash.json (0.7.6)", crash_match("0.9.0", _full)[0], "sin_huella")
+            check("historial", [c["version"] for c in load_crashes()], ["1.0.0", "1.0.2", "0.9.0"])
+            _lines = format_version_rows(
+                [{"ver": "1.0.0", "srcs": [dict(_sa, label="GitHub"), dict(_sc, label="local")]}],
+                "1.0.0", "1.0.0", load_crashes(), {"1.0.0": [(_sa, _sc, "distinto")]}, 80)
+            _txt = "\n".join(_lines)
+            check("lista marca actual", "✓ actual" in _txt, True)
+            check("lista marca actualizar", "⬆ la de actualizar" in _txt, True)
+            check("lista marca crasheó", "✖ crasheó" in _txt, True)
+            check("lista marca difiere", "≠ github vs backup: código" in _txt, True)
+        finally:
+            globals()["CRASH_LOG_FILE"], globals()["CRASH_FILE"] = _old_c
+        # DEV: snapshot a Documents/dlpy.py
+        _home = os.path.join(_td, "home")
+        check("docs copia", dev_copy_to_documents("x\n", _home, "/otro/dlpy.py")[0], "copiada")
+        check("docs contenido", read_text(os.path.join(_home, "Documents", "dlpy.py")), "x\n")
+        check("docs igual", dev_copy_to_documents("x\n", _home, "/otro/dlpy.py")[0], "igual")
+        check("docs cambia", dev_copy_to_documents("y\n", _home, "/otro/dlpy.py")[0], "copiada")
+        check("docs no pisa el propio script",
+              dev_copy_to_documents("z\n", _home, os.path.join(_home, "Documents", "dlpy.py"))[0], "mismo")
+        check("docs propio intacto", read_text(os.path.join(_home, "Documents", "dlpy.py")), "y\n")
+    _TEXT_CACHE.clear()
+    check("tras recuperar: mismo número otro código", skip_update_after_recovery("0.7.6", "0.7.6", "distinta"), False)
+    check("tras recuperar: mismo número mismo código", skip_update_after_recovery("0.7.6", "0.7.6", "igual"), True)
+    check("tras recuperar: más vieja aunque distinta", skip_update_after_recovery("0.7.5", "0.7.6", "distinta"), True)
+    _sv = (globals()["remote_versions_full"], globals()["local_versions"], globals()["backup_versions"])
+    _msgs = []
+    _ov = {k: globals()[k] for k in ("m_check", "m_warn", "note", "print_diff")}
+    try:
+        globals()["remote_versions_full"] = lambda *a, **k: ([("9.9.9", "https://h/9.9.9")], {"9.9.9": "zz"})
+        globals()["local_versions"] = lambda *a, **k: []
+        globals()["backup_versions"] = lambda *a, **k: []
+        _r = origins_row("9.9.9", "#!dlpy.py\nx\n")
+        check("origins_row nueva", [s_["label"] for s_ in _r["srcs"]], ["GitHub", "GitHub main"])
+        check("origins_row instalada solo si es la actual", [s_["origin"] for s_ in origins_row(VERSION)["srcs"]], ["instalada"])
+        for _k in ("m_check", "m_warn", "note"):
+            globals()[_k] = (lambda k: lambda m: _msgs.append((k, m)))(_k)
+        globals()["print_diff"] = lambda *a, **k: _msgs.append(("diff", a[2] + "|" + a[3]))
+        _TEXT_CACHE.clear()
+        _TEXT_CACHE.update({"https://h/9.9.9": "#!dlpy.py\nx\n", UPDATE_URL: "#!dlpy.py\nx\n"})
+        _r["srcs"][0]["sha"] = "zz"
+        _r["srcs"][1]["sha"] = "zz"
+        check("report_row idénticas", (report_row(_r), _msgs[-1][0]), ("igual", "m_check"))
+        _TEXT_CACHE[UPDATE_URL] = "#!dlpy.py\ny\n"
+        _r["srcs"][1]["sha"] = "otro"
+        _msgs.clear()
+        check("report_row distinto", report_row(_r), "distinto")
+        check("report_row dice qué difiere", [m for k, m in _msgs if k == "m_warn"],
+              ["9.9.9 · GitHub ≠ GitHub main (código distinto)"])
+        check("report_row muestra diff", [m for k, m in _msgs if k == "diff"], ["GitHub|GitHub main"])
+        _msgs.clear()
+        check("report_row un origen", report_row({"ver": "1.0.0", "srcs": _r["srcs"][1:]}), None)
+        check("report_row un origen avisa", _msgs[-1][0], "note")
+    finally:
+        (globals()["remote_versions_full"], globals()["local_versions"], globals()["backup_versions"]) = _sv
+        globals().update(_ov)
+        _TEXT_CACHE.clear()
+    check("tras recuperar: misma que falló", skip_update_after_recovery("0.7.6", "0.7.6"), True)
+    check("tras recuperar: más vieja", skip_update_after_recovery("0.7.5", "0.7.6"), True)
+    check("tras recuperar: más nueva avisa", skip_update_after_recovery("0.7.7", "0.7.6"), False)
+    check("sin recuperación avisa", skip_update_after_recovery("0.7.7", None), False)
     _all = ["ffmpeg", "js", "termux-api"]
     _has = lambda *names: (lambda x: "/bin/" + x if x in names else None)
     check("sys_cmds android", system_install_cmds(_all, "android", _has("pkg")),
@@ -5883,6 +7131,7 @@ def main():
         return 0
     if not check_version():
         return 1
+    dev_sync_version()              # solo con DLPY_DEV=1: copia esta versión a <repo>/versions/
     if not check_dependencies():
         return 1
     cleanup_internal()
@@ -5960,7 +7209,7 @@ def main():
             return 1
         if not de_nuevo:
             roast_done(len(index) - 1, reused=True)
-            deliver(old_file, title)
+            deliver_existing(old_file, old_entry, title)
             return 0
 
     formats = [normalize_format(f) for f in (info.get("formats") or [])
@@ -6255,4 +7504,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_guarded(main))
