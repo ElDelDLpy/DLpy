@@ -3,6 +3,44 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.6.7
+#
+# - Revisión unificada al arrancar: la actualización de DLpy y todas las
+#   dependencias se comprueban SIEMPRE y cada una deja una línea con el mismo
+#   formato «✓ nombre versión · estado» (✓ verde si está al día; ● amarillo si
+#   falta o no se pudo comprobar). Antes eran silenciosas cuando todo estaba bien.
+#   Orden: DLpy, yt-dlp, ffmpeg, runtime de JavaScript, termux-api (solo Android),
+#   yt-dlp-ejs.
+# - Dependencias por plataforma: lo que falta del sistema se instala con UNA sola
+#   pregunta («¿Instalar ffmpeg, Runtime de JavaScript, termux-api con …?») y el
+#   gestor de cada sistema: Android → pkg (ffmpeg, nodejs, termux-api); macOS →
+#   brew (ffmpeg, deno); Windows → winget (Gyan.FFmpeg, DenoLand.Deno); Linux →
+#   apt/dnf/pacman/zypper/apk (ffmpeg, nodejs). iOS no instala nada (a-Shell trae
+#   ffmpeg y no hay runtime de JavaScript). El runtime solo se pide si el yt-dlp
+#   instalado exige JavaScript para YouTube. Android avisa además de que la app
+#   Termux:API (F-Droid) no se puede instalar desde el script.
+# - Recuerda el «no»: si rechazas instalar algo (ffmpeg, runtime, termux-api,
+#   yt-dlp-ejs) o actualizar yt-dlp, no vuelve a preguntar (state/deps.json; para
+#   yt-dlp y yt-dlp-ejs, hasta que salga otra versión). La línea sigue apareciendo
+#   en amarillo. Si luego lo instalas por tu cuenta, el rechazo se olvida solo.
+#   `--actualizar` ahora revisa también las dependencias y vuelve a preguntar lo
+#   rechazado.
+# - Corrige: al rechazar la instalación de yt-dlp el mensaje «es obligatoria» salía
+#   dos veces.
+# - --selftest: pruebas nuevas de system_install_cmds por plataforma.
+#
+# ## 0.6.6
+#
+# - Android: al instalar una actualización desde GitHub, el código nuevo se
+#   guarda también en la carpeta desde la que se abrió DLpy (p. ej. Descargas),
+#   la que tenía antes de moverse a ~/dlpy.py. relocate_to_root recuerda esa
+#   ruta (DLPY_ORIGIN) al mover el script y check_update, además de actualizar
+#   ~/dlpy.py como siempre, escribe ahí la versión nueva (sync_origin_copy).
+#   Si esa carpeta ya no existe o no se puede escribir, avisa y sigue.
+# - Todo lo demás funciona igual: en iOS y fuera de Android no cambia nada, y
+#   si DLpy ya estaba en ~ (no se movió) no hay copia extra.
+# - --selftest: pruebas nuevas de sync_origin_copy.
+#
 # ## 0.6.5
 #
 # - Cuarta versión de prueba de la actualización desde GitHub: no cambia el
@@ -578,9 +616,10 @@
 #   --selftest: ejecuta pruebas rápidas de funciones puras y sale.
 #   --sistema: muestra en qué corre y qué funciones están disponibles (y por qué).
 #   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
+#     (desde 0.6.7 también revisa las dependencias y vuelve a preguntar lo rechazado.)
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
 
-VERSION = "0.6.5"
+VERSION = "0.6.7"
 
 import os
 import re
@@ -1039,26 +1078,31 @@ def plat_text(s):
     return s
 
 
-def _say(color, msg):
+def _say(color, msg, mark=None):
     lines = textwrap.wrap(plat_text(msg), term_width() - 2) or [""]
     b = ACTIVE_BAR
     if b is not None and b.th:
         with b.lock:                      # borra la barra, imprime y deja que se redibuje
             sys.stdout.write("\r" + " " * b.last_len + "\r")
             b.last_len = 0
-            _say_lines(color, lines)
+            _say_lines(color, lines, mark)
     else:
-        _say_lines(color, lines)
+        _say_lines(color, lines, mark)
 
 
-def _say_lines(color, lines):
-    print(dot(color) + " " + lines[0])
+def _say_lines(color, lines, mark=None):
+    print((paint(mark, color) if mark else dot(color)) + " " + lines[0])
     for ln in lines[1:]:
         print("  " + ln)
 
 
 def m_ok(msg):
     _say("green", msg)
+
+
+def m_check(msg):
+    """Línea de revisión superada: «✓ nombre versión · estado» (verde)."""
+    _say("green", msg, "✓")
 
 
 def m_warn(msg):
@@ -3221,21 +3265,43 @@ def fetch_remote_script(timeout=5):
         return None
 
 
+def sync_origin_copy(text, origin=None, script_path=None):
+    """Android: guarda también el código nuevo en la carpeta desde la que se abrió
+    DLpy (la de antes de moverse a ~). Devuelve la ruta escrita o None si no aplica."""
+    origin = origin or os.environ.get("DLPY_ORIGIN")
+    script_path = script_path or SCRIPT_PATH
+    if not origin or os.path.abspath(origin) == os.path.abspath(script_path):
+        return None
+    try:
+        if not os.path.isdir(os.path.dirname(origin)):
+            return None
+        write_text(origin, text)
+        return origin
+    except OSError as e:
+        m_warn(f"No se pudo actualizar también {origin}: {e}")
+        return None
+
+
 def check_update(force=False):
     """Si el repositorio tiene una versión más nueva, pregunta, la instala y la ejecuta.
+    Siempre deja una línea con el resultado (✓ si ya tienes la última).
 
     Devuelve True si se ejecutó la versión nueva (quien llama debe terminar)."""
-    text = fetch_remote_script(timeout=8 if force else 5)
+    cbar = Bar()
+    cbar.start("Comprobando DLpy")
+    try:
+        text = fetch_remote_script(timeout=8 if force else 5)
+    finally:
+        cbar.stop()
     remote = remote_script_version(text)
     if not remote:
-        if force:
-            m_warn("No se pudo consultar la última versión (sin red o enlace inválido).")
+        m_warn(f"DLpy {VERSION} · no se pudo comprobar la última versión")
         return False
     if vtuple(remote) <= vtuple(VERSION):
-        if force:
-            m_ok(f"Ya tienes la última versión (v{VERSION}).")
+        m_check(f"DLpy {VERSION} · última versión")
         return False
     if not force and load_json(UPDATE_STATE_FILE).get("declined") == remote:
+        m_warn(f"DLpy {VERSION} · hay una {remote} (rechazada; --actualizar la instala)")
         return False
     m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
     if not ask(f"¿Instalar la {remote} y ejecutarla ahora?"):
@@ -3250,7 +3316,10 @@ def check_update(force=False):
     except Exception as e:
         m_warn(f"No se pudo instalar la actualización: {e}")
         return False
-    m_ok(f"DLpy {remote} instalada.")
+    m_check(f"DLpy {remote} · instalada")
+    copied = sync_origin_copy(text)
+    if copied:
+        m_check(f"Código actualizado también en {copied}")
     import runpy
     runpy.run_path(SCRIPT_PATH, run_name="__main__")   # termina con SystemExit
     return True
@@ -3279,59 +3348,11 @@ def pip_install(pip_name):
     refresh_paths()
 
 
-def ffmpeg_install_cmd():
-    """Orden que instala ffmpeg con el gestor de este sistema, o None si no hay."""
-    which = shutil.which
-    if IS_ANDROID:
-        return ["pkg", "install", "-y", "ffmpeg"] if which("pkg") else None
-    if IS_MAC:
-        return ["brew", "install", "ffmpeg"] if which("brew") else None
-    if IS_WINDOWS:
-        return (["winget", "install", "--id", "Gyan.FFmpeg", "-e",
-                 "--accept-package-agreements", "--accept-source-agreements"]
-                if which("winget") else None)
-    if IS_LINUX:
-        root = hasattr(os, "geteuid") and os.geteuid() == 0
-        sudo = [] if root else (["sudo"] if which("sudo") else None)
-        if sudo is None:
-            return None
-        for exe, args in (("apt-get", ["apt-get", "install", "-y", "ffmpeg"]),
-                          ("dnf", ["dnf", "install", "-y", "ffmpeg-free"]),
-                          ("pacman", ["pacman", "-S", "--noconfirm", "ffmpeg"]),
-                          ("zypper", ["zypper", "--non-interactive", "install", "ffmpeg"]),
-                          ("apk", ["apk", "add", "ffmpeg"])):
-            if which(exe):
-                return sudo + args
-    return None
-
-
 def ffmpeg_hint():
     return {"android": "pkg install ffmpeg", "macos": "brew install ffmpeg",
             "windows": "winget install Gyan.FFmpeg  (o https://ffmpeg.org/download.html)",
             "linux": "sudo apt install ffmpeg  (o el gestor de tu distribución)",
             "ios": "a-Shell lo incluye"}[PLATFORM]
-
-
-def ensure_ffmpeg():
-    """Si falta ffmpeg ofrece instalarlo con el gestor del sistema (no en iOS:
-    a-Shell lo trae integrado)."""
-    if IS_IOS or shutil.which("ffmpeg"):
-        return
-    m_warn("Falta ffmpeg (hace falta para unir audio y video).")
-    cmd = ffmpeg_install_cmd()
-    if cmd and ask(f"¿Instalar ffmpeg con «{' '.join(cmd)}»? (S/n) ▸ "):
-        import subprocess
-        try:
-            subprocess.call(cmd)
-        except OSError as e:
-            m_warn(f"No se pudo lanzar el instalador: {e}")
-        if shutil.which("ffmpeg"):
-            m_ok("ffmpeg instalado")
-            return
-        if IS_WINDOWS:
-            note("Si winget terminó bien, cierra y abre la terminal para que Windows encuentre ffmpeg.")
-        m_warn("No se pudo instalar ffmpeg.")
-    note("Instálalo con: " + ffmpeg_hint())
 
 
 def ask(msg, default=True):
@@ -3399,9 +3420,10 @@ def ejs_pin(requires=None):
     return None
 
 
-def check_js_components():
+def check_js_components(force=False):
     """Si hay runtime de JavaScript, deja instalado yt-dlp-ejs en la versión que pide
-    yt-dlp. Sin runtime no hace nada (instalarlo sería inútil)."""
+    yt-dlp. Sin runtime no hace nada (instalarlo sería inútil; check_system_packages
+    ya lo ofrece o lo muestra como faltante)."""
     if not ytdlp_needs_js() or not js_runtime():
         return
     pin = ejs_pin()
@@ -3410,15 +3432,25 @@ def check_js_components():
     want = pin.split("==", 1)[1] if "==" in pin else None
     cur = pkg_version("yt-dlp-ejs") if is_installed("yt_dlp_ejs") else None
     if cur and (not want or cur == want):
+        m_check(f"yt-dlp-ejs {cur} · para YouTube")
+        declined_clear("yt-dlp-ejs")
         return
-    m_info("YouTube necesita yt-dlp-ejs" + (f" {want}" if want else "")
-           + (f" (tienes {cur})" if cur else "") + ".")
+    what = "yt-dlp-ejs" + (f" {want}" if want else "")
+    if not force and load_json(DEPS_STATE_FILE).get("yt-dlp-ejs") == pin:
+        m_warn(f"{what} · " + (f"tienes {cur}" if cur else "falta")
+               + " (rechazado; --actualizar lo pregunta)")
+        return
+    m_warn(f"{what} · " + (f"tienes {cur}" if cur else "falta") + " (YouTube lo necesita)")
     if ask(f"¿Instalar {pin}? (S/n) ▸ "):
         pip_install(pin)
         if is_installed("yt_dlp_ejs"):
-            m_ok(f"yt-dlp-ejs {pkg_version('yt-dlp-ejs') or ''} instalado")
+            m_check(f"yt-dlp-ejs {pkg_version('yt-dlp-ejs') or ''} · instalado")
+            declined_clear("yt-dlp-ejs")
         else:
             m_warn("No se pudo instalar yt-dlp-ejs; YouTube puede mostrar menos formatos.")
+    else:
+        declined_set("yt-dlp-ejs", pin)
+        note("No se vuelve a preguntar por esta versión; --actualizar lo pregunta de nuevo.")
 
 
 def warn_youtube_js(link):
@@ -3431,8 +3463,180 @@ def warn_youtube_js(link):
     note("Instálalo con: " + JS_INSTALL_HINT[PLATFORM])
 
 
-def check_dependencies():
-    """Revisa instalación y actualizaciones. Devuelve False si falta una obligatoria."""
+# ─────────── Dependencias del sistema por plataforma ───────────
+# Lo que DLpy necesita fuera de pip según dónde corre: ffmpeg, un runtime de
+# JavaScript para YouTube y (solo Android) termux-api. Se revisa siempre y lo que
+# falta se instala con UNA sola pregunta, con el gestor de cada sistema.
+DEPS_STATE_FILE = os.path.join(STATE_DIR, "deps.json")      # rechazos recordados
+SYS_PKGS = {
+    "ffmpeg": {"android": "ffmpeg", "macos": "ffmpeg", "windows": "Gyan.FFmpeg",
+               "linux": "ffmpeg", "dnf": "ffmpeg-free"},
+    "js": {"android": "nodejs", "macos": "deno", "windows": "DenoLand.Deno", "linux": "nodejs"},
+    "termux-api": {"android": "termux-api"},
+}
+JS_LABELS = {"deno": "Deno", "node": "Node.js", "bun": "Bun", "quickjs": "QuickJS"}
+
+
+def declined_set(key, value=True):
+    """Recuerda que dijiste «no» a `key` (valor: True, o la versión rechazada)."""
+    d = load_json(DEPS_STATE_FILE)
+    if d.get(key) == value:
+        return
+    d[key] = value
+    try:
+        save_json(DEPS_STATE_FILE, d)
+    except Exception as _ign:
+        ignore("declined_set", _ign)
+
+
+def declined_clear(key):
+    d = load_json(DEPS_STATE_FILE)
+    if key not in d:
+        return
+    d.pop(key)
+    try:
+        save_json(DEPS_STATE_FILE, d)
+    except Exception as _ign:
+        ignore("declined_clear", _ign)
+
+
+def system_install_cmds(keys, platform=None, which=None, root=None):
+    """Órdenes (lista de listas) que instalan `keys` con el gestor del sistema, o
+    None si no hay gestor / nada que instalar. Los parámetros solo se inyectan en
+    pruebas."""
+    platform = platform or PLATFORM
+    which = which or shutil.which
+
+    def pkgs(mgr=None):
+        out = []
+        for k in keys:
+            d = SYS_PKGS.get(k, {})
+            n = d.get(mgr) or d.get(platform)
+            if n and n not in out:
+                out.append(n)
+        return out
+
+    if platform == "android":
+        p = pkgs()
+        return [["pkg", "install", "-y"] + p] if p and which("pkg") else None
+    if platform == "macos":
+        p = pkgs()
+        return [["brew", "install"] + p] if p and which("brew") else None
+    if platform == "windows":
+        if not which("winget"):
+            return None
+        return [["winget", "install", "--id", n, "-e", "--accept-package-agreements",
+                 "--accept-source-agreements"] for n in pkgs()] or None
+    if platform == "linux":
+        if root is None:
+            root = hasattr(os, "geteuid") and os.geteuid() == 0
+        sudo = [] if root else (["sudo"] if which("sudo") else None)
+        if sudo is None:
+            return None
+        for exe, args in (("apt-get", ["apt-get", "install", "-y"]),
+                          ("dnf", ["dnf", "install", "-y"]),
+                          ("pacman", ["pacman", "-S", "--noconfirm"]),
+                          ("zypper", ["zypper", "--non-interactive", "install"]),
+                          ("apk", ["apk", "add"])):
+            if which(exe):
+                p = pkgs(exe)
+                return [sudo + args + p] if p else None
+    return None
+
+
+def system_keys():
+    """Qué necesita DLpy del sistema en ESTA plataforma."""
+    keys = ["ffmpeg"]
+    if not IS_IOS and ytdlp_needs_js():
+        keys.append("js")
+    if IS_ANDROID:
+        keys.append("termux-api")
+    return keys
+
+
+def system_state(key):
+    """(instalado, nombre, detalle) de una dependencia del sistema."""
+    if key == "ffmpeg":
+        if IS_IOS:
+            return True, "ffmpeg", "integrado en a-Shell"
+        return bool(shutil.which("ffmpeg")), "ffmpeg", ("instalado" if shutil.which("ffmpeg")
+                                                        else "falta (unir audio y video)")
+    if key == "js":
+        rt = js_runtime()
+        if rt:
+            return True, JS_LABELS.get(rt[0], rt[0]), "JavaScript para YouTube"
+        return False, "Runtime de JavaScript", "falta (YouTube)"
+    ok = bool(shutil.which("termux-notification"))
+    return ok, "termux-api", ("instalado" if ok else "falta (notificaciones y portapapeles)")
+
+
+def system_hint(key):
+    if key == "ffmpeg":
+        return ffmpeg_hint()
+    if key == "js":
+        return JS_INSTALL_HINT[PLATFORM]
+    return "pkg install termux-api"
+
+
+def check_system_packages(force=False):
+    """Línea ✓ por cada dependencia del sistema; ofrece instalar las que faltan
+    con una sola pregunta (y recuerda el «no», salvo con force)."""
+    declined = load_json(DEPS_STATE_FILE)
+    missing = []
+    for key in system_keys():
+        ok, name, detail = system_state(key)
+        if ok:
+            m_check(f"{name} · {detail}")
+            declined_clear(key)
+        else:
+            missing.append((key, name, detail))
+    ask_now = []
+    for key, name, detail in missing:
+        if declined.get(key) and not force:
+            m_warn(f"{name} · falta, rechazado (--actualizar lo pregunta)")
+        else:
+            m_warn(f"{name} · {detail}")
+            ask_now.append((key, name))
+    if not ask_now:
+        return
+    keys = [k for k, _n in ask_now]
+    cmds = system_install_cmds(keys)
+    if not cmds:
+        for key, name in ask_now:
+            note(f"{name}: instálalo con {system_hint(key)}")
+        return
+    shown = " && ".join(" ".join(c) for c in cmds)
+    names = ", ".join(n for _k, n in ask_now)
+    if not ask(f"¿Instalar {names} con «{shown}»? (S/n) ▸ "):
+        for key in keys:
+            declined_set(key)
+        note("No se vuelve a preguntar; con --actualizar lo pregunta de nuevo.")
+        return
+    import subprocess
+    for c in cmds:
+        try:
+            subprocess.call(c)
+        except OSError as e:
+            m_warn(f"No se pudo lanzar el instalador: {e}")
+    failed = False
+    for key, name in ask_now:
+        ok, name2, detail = system_state(key)
+        if ok:
+            m_check(f"{name2} · instalado")
+            declined_clear(key)
+        else:
+            failed = True
+            m_warn(f"{name} · no se pudo instalar")
+            note(f"Instálalo con: {system_hint(key)}")
+    if "termux-api" in keys and shutil.which("termux-notification"):
+        note("Además necesitas la app Termux:API (F-Droid); el script no puede instalarla.")
+    if failed and IS_WINDOWS:
+        note("Si winget terminó bien, cierra y abre la terminal para que Windows encuentre lo instalado.")
+
+
+def check_dependencies(force=False):
+    """Revisa instalación y actualizaciones; cada cosa deja una línea ✓/●.
+    Devuelve False si falta una obligatoria."""
     for pip_name, module, required in DEPENDENCIES:
         if not is_installed(module):
             m_warn(f"Falta la dependencia: {pip_name}" + (" (obligatoria)" if required else ""))
@@ -3449,7 +3653,7 @@ def check_dependencies():
                         m_info("Instálala con: pip install " + pip_name)
                     return False
                 continue
-            m_ok(f"{pip_name} {pkg_version(pip_name) or ''} instalado")
+            m_check(f"{pip_name} {pkg_version(pip_name) or ''} · instalado".replace("  ", " "))
             continue
 
         cur = pkg_version(pip_name)
@@ -3460,14 +3664,23 @@ def check_dependencies():
         finally:
             cbar.stop()
         if cur and lat and vtuple(lat) > vtuple(cur):
-            m_info(f"Actualización de {pip_name}: {cur} → {lat}")
-            if ask(f"¿Actualizar {pip_name}? (S/n) ▸ "):
-                pip_install(pip_name)
-                m_ok(f"{pip_name} {pkg_version(pip_name) or '?'}")
+            if not force and load_json(DEPS_STATE_FILE).get(pip_name) == lat:
+                m_warn(f"{pip_name} {cur} · hay una {lat} (rechazada; --actualizar la instala)")
+            else:
+                m_info(f"Actualización de {pip_name}: {cur} → {lat}")
+                if ask(f"¿Actualizar {pip_name}? (S/n) ▸ "):
+                    pip_install(pip_name)
+                    m_check(f"{pip_name} {pkg_version(pip_name) or '?'} · actualizada")
+                    declined_clear(pip_name)
+                else:
+                    declined_set(pip_name, lat)
+                    note("No se vuelve a preguntar por esta versión; con --actualizar la instalas.")
+        elif cur and lat:
+            m_check(f"{pip_name} {cur} · última versión")
         else:
-            m_ok(f"{pip_name} {cur or ''}")
-    ensure_ffmpeg()
-    check_js_components()
+            m_warn(f"{pip_name} {cur or '?'} · no se pudo comprobar la última versión")
+    check_system_packages(force)
+    check_js_components(force)
     return True
 
 
@@ -4823,6 +5036,29 @@ def selftest():
 
     check("root_move_target fuera", root_move_target("/sdcard/Download/x.py", "/h/u"), "/h/u/dlpy.py")
     check("root_move_target raíz", root_move_target("/h/u/otro.py", "/h/u"), None)
+    _all = ["ffmpeg", "js", "termux-api"]
+    _has = lambda *names: (lambda x: "/bin/" + x if x in names else None)
+    check("sys_cmds android", system_install_cmds(_all, "android", _has("pkg")),
+          [["pkg", "install", "-y", "ffmpeg", "nodejs", "termux-api"]])
+    check("sys_cmds android sin pkg", system_install_cmds(_all, "android", _has()), None)
+    check("sys_cmds macos", system_install_cmds(_all, "macos", _has("brew")),
+          [["brew", "install", "ffmpeg", "deno"]])
+    check("sys_cmds macos solo termux-api", system_install_cmds(["termux-api"], "macos", _has("brew")), None)
+    check("sys_cmds windows", [c[3] for c in system_install_cmds(_all, "windows", _has("winget"))],
+          ["Gyan.FFmpeg", "DenoLand.Deno"])
+    check("sys_cmds linux dnf", system_install_cmds(_all, "linux", _has("dnf"), True),
+          [["dnf", "install", "-y", "ffmpeg-free", "nodejs"]])
+    check("sys_cmds linux apt sudo", system_install_cmds(["ffmpeg"], "linux", _has("apt-get", "sudo"), False),
+          [["sudo", "apt-get", "install", "-y", "ffmpeg"]])
+    check("sys_cmds linux sin sudo", system_install_cmds(["ffmpeg"], "linux", _has("apt-get"), False), None)
+    check("sys_cmds ios", system_install_cmds(_all, "ios", _has("pkg", "brew")), None)
+    with tempfile.TemporaryDirectory() as _td:
+        _o = os.path.join(_td, "dlpy.py")
+        check("origin_copy escribe", sync_origin_copy("#!dlpy.py\nx\n", _o, "/h/u/dlpy.py"), _o)
+        check("origin_copy contenido", read_text(_o), "#!dlpy.py\nx\n")
+        check("origin_copy mismo archivo", sync_origin_copy("x", _o, _o), None)
+        check("origin_copy sin carpeta", sync_origin_copy("x", os.path.join(_td, "no", "dlpy.py"), "/h/u/dlpy.py"), None)
+        check("origin_copy sin origen", sync_origin_copy("x", "", "/h/u/dlpy.py"), None)
 
     with tempfile.TemporaryDirectory() as _td:
         _a, _b = os.path.join(_td, "a.bin"), os.path.join(_td, "b.bin")
@@ -5145,6 +5381,7 @@ def relocate_to_root():
     except OSError as _ign:
         ignore("relocate_to_root", _ign)
     os.environ["DLPY_MOVED"] = "1"
+    os.environ["DLPY_ORIGIN"] = SCRIPT_PATH      # carpeta de origen: se actualiza junto con ~/dlpy.py
     try:
         os.execv(sys.executable, [sys.executable, dst] + sys.argv[1:])
     except OSError as e:
@@ -5179,7 +5416,7 @@ def main():
     check_storage()                 # antes de cualquier otro proceso
     if "--actualizar" in sys.argv[1:]:
         check_update(force=True)
-        return 0
+        return 0 if check_dependencies(force=True) else 1
     if not os.environ.get("DLPY_NO_UPDATE") and check_update():
         return 0
     if not check_version():
