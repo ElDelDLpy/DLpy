@@ -22,12 +22,12 @@
 #   Sin LINK: ofrece usar el último enlace.
 #   --selftest: ejecuta pruebas rápidas de funciones puras y sale.
 #   --sistema: muestra en qué corre y qué funciones están disponibles (y por qué).
-#   --actualizar: busca ahora una versión nueva en GitHub (ver 0.6.1) y sale.
-#   --2shortcuts: (iOS) manda este dlpy.py tal cual a tu atajo «DLpy» y sale (ver 0.6.9).
-#     (desde 0.6.7 también revisa las dependencias y vuelve a preguntar lo rechazado.)
-#   --versiones: lista las versiones guardadas en versions/ de GitHub y deja instalar una (0.7.6).
-#   DLPY_DEV=1: muestra «DEV» en el banner y, en a-Shell, copia el snapshot a ~/Documents/dlpy.py (0.7.8).
-# Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.6.0).
+#   --actualizar: busca ahora una versión nueva en GitHub (ver 0.0.1) y sale.
+#   --2shortcuts: (iOS) manda este dlpy.py tal cual a tu atajo «DLpy» y sale (ver 0.0.1).
+#     (desde 0.0.1 también revisa las dependencias y vuelve a preguntar lo rechazado.)
+#   --versiones: lista las versiones guardadas en versions/ de GitHub y deja instalar una (0.0.1).
+#   DLPY_DEV=1: muestra «DEV» en el banner y, en a-Shell, copia el snapshot a ~/Documents/dlpy.py (0.0.1).
+# Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
 VERSION = "0.0.1"
 
@@ -434,7 +434,7 @@ if _env_color is not None:
 else:
     USE_COLOR = sys.stdout.isatty() and not os.environ.get("NO_COLOR") and ANSI_OK
 CLR = "\r\x1b[2K" if sys.stdout.isatty() and ANSI_OK else "\r"
-# Secuencia de clear_screen (DLPY_CLEAR=1..4; por defecto 3, ver changelog 0.3.7 y 0.4.3)
+# Secuencia de clear_screen (DLPY_CLEAR=1..4; por defecto 3, ver changelog 0.0.1)
 CLEAR_SEQS = {"1": "\x1b[3J\x1b[2J\x1b[H", "2": "\x1b[2J\x1b[3J\x1b[H",
               "3": "\x1bc", "4": "\x1b[2J\x1b[H"}
 CLEAR_SEQ = CLEAR_SEQS.get(os.environ.get("DLPY_CLEAR", "3").strip(), CLEAR_SEQS["3"])
@@ -2543,7 +2543,7 @@ def saved_dirs():
     """Carpetas donde puede estar una descarga terminada (destino actual primero)."""
     out = [DOWNLOAD_DIR]
     if os.path.abspath(FILES_DIR) != os.path.abspath(DOWNLOAD_DIR):
-        out.append(FILES_DIR)       # 0.5.0 en Android guardaba aquí
+        out.append(FILES_DIR)       # 0.0.1 en Android guardaba aquí
     return out
 
 
@@ -4339,10 +4339,10 @@ def print_diff(a_text, b_text, label_a, label_b, mode="distinto", limit=24):
 # Fallos: historial en state/crash_log.json (crash.json solo guardaba el último)
 def load_crashes():
     """[{version, code, error, time}] de todos los fallos guardados (más viejo primero).
-    `code` = huella del código que falló (None si no se pudo calcular o es de 0.7.6)."""
+    `code` = huella del código que falló (None si no se pudo calcular o es de 0.0.1)."""
     log = load_json(CRASH_LOG_FILE).get("crashes")
     out = [c for c in log if isinstance(c, dict) and c.get("version")] if isinstance(log, list) else []
-    last = load_json(CRASH_FILE)                     # 0.7.6 / 0.7.7: solo el último
+    last = load_json(CRASH_FILE)                     # 0.0.1: solo el último
     if last.get("version") and not any(
             c.get("version") == last["version"] and c.get("time") == last.get("time") for c in out):
         out.append({"version": last["version"], "code": None,
@@ -5700,7 +5700,7 @@ def selftest():
     _full = _head + _blk + _body
     check("variantes con bloque", script_variants(_full, "", ""), (_head + _body, _full))
     check("variantes snapshot", script_variants(_head + _body, _full, ""), (_head + _body, _full))
-    check("variantes snapshot viejo", script_variants(_head + _body, _full.replace(VERSION, "0.0.1"), _md)[1], _full)
+    check("variantes snapshot viejo", script_variants(_head + _body, _full.replace(VERSION, "0.0.0"), _md)[1], _full)
     check("variantes desde md", script_variants(_head + _body, "", _md)[1], _full)
     check("variantes sin fuente", script_variants(_head + _body, "", "")[1], None)
     check("yn sin sufijo", yn_prompt("¿Seguir?"), "¿Seguir? (S/n) ▸ ")
@@ -5730,7 +5730,7 @@ def selftest():
     check("2shortcuts raya larga", wants_2shortcuts(["\u20142shortcuts"]), True)
     check("2shortcuts no es enlace", wants_2shortcuts(["2shortcuts", "https://x.y/2shortcuts"]), False)
     check("2shortcuts otra bandera", wants_2shortcuts(["--sistema"]), False)
-    # ── 0.7.6: recuperación y «abrir otra vez» ──
+    # ── 0.0.1: recuperación y «abrir otra vez» ──
     with tempfile.TemporaryDirectory() as _td:
         # mark_delivered / deliver_existing con índice y funciones de prueba
         _old = (globals()["INDEX_FILE"], globals()["deliver"], globals()["ask_yn"], globals()["m_info"])
@@ -5788,7 +5788,7 @@ def selftest():
             check("backup_versions", sorted(v for v, _p in backup_versions()), ["0.7.4", "0.7.4"])
         finally:
             globals()["BACKUP_DIR"] = _old_bd
-    # ── 0.7.9: changelog_block (cerrado, abierto y sin changelog) ──
+    # ── 0.0.1: changelog_block (cerrado, abierto y sin changelog) ──
     _cb = changelog_block("#!dlpy.py\n# ==== CHANGELOG ====\n# ## 1.0.0\n#\n# - a\n# ==== FIN CHANGELOG ====\nx = 1\n")
     check("changelog_block cerrado", (_cb[3], "# - a" in _cb[2]), (True, True))
     _src = "#!dlpy.py\n# ==== CHANGELOG ====\n# ## 1.0.0\n#\n# - a\n#   sigue\n# DLpy - desc\nVERSION = 1\n"
@@ -5799,7 +5799,7 @@ def selftest():
     _cb = changelog_block(_src2)
     check("changelog_block abierto + código", _src2[:_cb[0]] + _src2[_cb[1]:], "#!dlpy.py\nprint(1)\n")
     check("changelog_block sin changelog", changelog_block("#!dlpy.py\nprint(1)\n"), None)
-    # ── 0.7.7: huellas, comparación de orígenes, fallos y copia a Documents ──
+    # ── 0.0.1: huellas, comparación de orígenes, fallos y copia a Documents ──
     _cl = "# ==== CHANGELOG ====\n# ## 1.0.0\n#\n# - a\n# ==== FIN CHANGELOG ====\n"
     _code = "#!dlpy.py\nVERSION = \"1.0.0\"\nprint(1)\n"
     _full = "#!dlpy.py\n" + _cl + "VERSION = \"1.0.0\"\nprint(1)\n"
@@ -5856,7 +5856,7 @@ def selftest():
             record_crash("1.0.2", None, "cierre inesperado", 1001)
             check("fallo sin huella", crash_match("1.0.2", _full)[0], "sin_huella")
             save_json(globals()["CRASH_FILE"], {"version": "0.9.0", "error": "viejo", "time": 5})
-            check("fallo de crash.json (0.7.6)", crash_match("0.9.0", _full)[0], "sin_huella")
+            check("fallo de crash.json (0.0.1)", crash_match("0.9.0", _full)[0], "sin_huella")
             check("historial", [c["version"] for c in load_crashes()], ["1.0.0", "1.0.2", "0.9.0"])
             _lines = format_version_rows(
                 [{"ver": "1.0.0", "srcs": [dict(_sa, label="GitHub"), dict(_sc, label="backup")]}],
