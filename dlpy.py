@@ -3,6 +3,22 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.0.2
+#
+# - Estilo visual unificado: los avisos sueltos (--instalar-android, --2shortcuts, permiso
+#   de almacenamiento de Android) usan los mismos mensajes con punto de color que el resto
+#   (● azul = info, verde = listo, amarillo = aviso, rojo = error).
+# - --sistema: «Corre en» y «Modo» con el mismo formato etiqueta: valor que el resto, y el
+#   resumen final en gris.
+# - Títulos de sección todos en MAYÚSCULAS («ELEGIR PISTA PREDETERMINADA», «ELEGIR PISTAS
+#   DE AUDIO ADICIONAL»), y su línea ahora mide lo mismo que la del banner (antes usaba
+#   el ancho completo del terminal y podía verse más larga que el banner).
+# - Separador del modo debug con el mismo ancho que el banner.
+# - Avisos de «en curso» (Abriendo..., Reanalizando...) siempre en azul (info), como
+#   «Analizando enlace...» y «Reintentando análisis».
+# - Lista de orígenes al instalar una versión: números en cian, como los demás menús.
+# - «¿Abrir otra vez…?» sigue con el sistema de preguntas de 0.0.1 (sin cuenta regresiva).
+#
 # ## 0.0.1
 #
 # - Versión reiniciada a 0.0.1 con el changelog limpio: se quitaron las entradas de
@@ -34,7 +50,7 @@
 #   DLPY_DEV=1: muestra «DEV» en el banner y, en a-Shell, copia el snapshot a ~/Documents/dlpy_<versión>.py (0.0.1).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 import os
 import re
@@ -273,6 +289,16 @@ def _writable_dir(path):
         return False
 
 
+def _early_say(color, msg):
+    """Mensaje con el mismo punto de color que m_info/m_ok/m_warn, para usar antes de que
+    existan los ayudantes de la interfaz (se llama al importar, en Android)."""
+    env = os.environ.get("DLPY_COLOR")
+    on = (env.strip().lower() not in ("0", "no", "false", "") if env is not None
+          else sys.stdout.isatty() and not os.environ.get("NO_COLOR") and ANSI_OK)
+    code = {"green": "92", "yellow": "93", "blue": "94"}[color]
+    print((f"\x1b[{code}m●\x1b[0m" if on else "●") + " " + msg)
+
+
 def ensure_storage_access(shared_root, download_dir):
     """Android: pide el permiso de almacenamiento con termux-setup-storage (solo una
     vez si se rechaza) y espera a que aparezca ~/storage/shared. Usa print porque
@@ -296,7 +322,7 @@ def ensure_storage_access(shared_root, download_dir):
             f.write(str(int(time.time())))
     except OSError:
         pass
-    print("DLpy necesita acceso al almacenamiento: acepta el permiso de Android...")
+    _early_say("blue", "DLpy necesita acceso al almacenamiento: acepta el permiso de Android...")
     try:
         subprocess.run(["termux-setup-storage"], stdin=subprocess.DEVNULL,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
@@ -309,10 +335,10 @@ def ensure_storage_access(shared_root, download_dir):
                 os.remove(marker)
             except OSError:
                 pass
-            print("Acceso concedido.")
+            _early_say("green", "Acceso concedido.")
             return True
         time.sleep(0.5)
-    print("No se concedió el acceso al almacenamiento; se usará ~/dlpy_files.")
+    _early_say("yellow", "No se concedió el acceso al almacenamiento; se usará ~/dlpy_files.")
     return False
 
 
@@ -942,7 +968,7 @@ def clear_screen():
     En debug no borra: imprime un separador para conservar lo ya mostrado."""
     if DEBUG:
         print()
-        print(paint("─" * min(term_width(), 40), "dim"))
+        print(paint("─" * min(safe_width(), 40), "dim"))
         banner()
         show_pinned()
         return
@@ -961,7 +987,7 @@ def show_title(title):
 
 
 def header(title):
-    w = term_width()
+    w = safe_width()                      # misma medida que la línea del banner
     text = " " + title[:max(1, w - 6)] + " "
     print()
     print(paint("──" + text + "─" * max(0, w - 2 - len(text)), "cyan"))
@@ -1868,7 +1894,7 @@ def track_row(n, t):
 def ask_default_track(tracks, original):
     """Devuelve (pista, sin_respuesta). sin_respuesta=True omite las pistas extra."""
     clear_screen()
-    header("Elegir pista predeterminada")
+    header("ELEGIR PISTA PREDETERMINADA")
     m_info("Se detectaron varios idiomas.")
     legend(["apple", "orig"])
     print_rows([track_row(i, t) for i, t in enumerate(tracks, 1)], ["apple", "orig"], TRACK_HEAD)
@@ -1907,7 +1933,7 @@ def ask_extra_tracks(tracks, primary):
         return [primary]
 
     clear_screen()
-    header("Elegir pistas de audio adicional")
+    header("ELEGIR PISTAS DE AUDIO ADICIONAL")
     legend(["apple", "orig"])
     print_rows([track_row(i, t) for i, t in enumerate(others, 1)], ["apple", "orig"], TRACK_HEAD)
     note("Números separados por espacio (ej. 1 2 4) · Enter = todas")
@@ -4498,7 +4524,7 @@ def pick_source(row):
         print_diff(base_text, source_text(g[0]), groups[0][0]["label"], g[0]["label"], mode)
     shown = groups[:9]
     for n, g in enumerate(shown, 1):
-        print(f"  {n}) " + " · ".join(s["label"] for s in g))
+        print("  " + paint(f"{n})", "cyan") + " " + " · ".join(s["label"] for s in g))
     while True:
         try:
             ans = ask_line(f"¿De dónde instalar la {ver}? Número (Enter = cancelar) ▸ ")
@@ -5142,7 +5168,7 @@ def deliver_android(final, title):
         return
     elif action != "share":
         if android_open(final):
-            m_ok("Abriendo en Android...")
+            m_info("Abriendo en Android...")
         else:
             m_warn("No se pudo abrir el archivo solo.")
             note("Si Termux estaba en segundo plano: Ajustes ▸ Apps ▸ Termux ▸ "
@@ -5240,7 +5266,7 @@ def deliver_desktop(final, title):
         return
     ok, why = desktop_open(final, reveal=(action == "share"))
     if ok:
-        m_ok("Abriendo la carpeta..." if action == "share" else "Abriendo con la app por defecto...")
+        m_info("Abriendo la carpeta..." if action == "share" else "Abriendo con la app por defecto...")
     else:
         m_info("No se abrió solo" + (f": {why}" if why else "") + ".")
 
@@ -5385,7 +5411,7 @@ def send_code_to_shortcut():
     """`--2shortcuts` (iOS): manda el dlpy.py actual al atajo, que lo reconoce por la
     primera línea (#!dlpy.py). Pregunta si va con o sin changelog."""
     if not IS_IOS:
-        print("--2shortcuts solo aplica en iOS (a-Shell): usa tu atajo de Atajos.")
+        m_warn("--2shortcuts solo aplica en iOS (a-Shell): usa tu atajo de Atajos.")
         return 1
     ensure_dirs()
     clear_screen()                  # mismo encabezado que el resto del script
@@ -5561,7 +5587,7 @@ def run_download(ydl, yt_dlp, info, link, fmt_id):
         dbg("fallo con el análisis previo", str(e))
         if not _RETRY_RE.search(str(e).lower()):
             raise
-    m_warn("Reanalizando el enlace...")
+    m_info("Reanalizando el enlace...")
     try:
         return ydl.extract_info(link, download=True)
     except yt_dlp.utils.DownloadError as e:
@@ -6151,8 +6177,8 @@ def capabilities():
 def print_capabilities():
     """`python dlpy.py --sistema`: qué funciona aquí y por qué."""
     print(title_bar(f" DLpy v{VERSION}", "sistema ", "1;30;106"))
-    print(f"Corre en: {platform_name()} · {machine_name()} · Python {sys.version.split()[0]}")
-    print(f"Modo: {PLATFORM}" + (" (forzado con DLPY_PLATFORM)" if os.environ.get("DLPY_PLATFORM") else ""))
+    kv("Corre en", f"{platform_name()} · {machine_name()} · Python {sys.version.split()[0]}")
+    kv("Modo", PLATFORM + (" (forzado con DLPY_PLATFORM)" if os.environ.get("DLPY_PLATFORM") else ""))
     mark = {"ok": paint("✓", "green"), "no": paint("✗", "red"),
             "part": paint("~", "yellow"), "na": paint("–", "dim")}
     counts = {"ok": 0, "no": 0, "part": 0, "na": 0}
@@ -6163,7 +6189,7 @@ def print_capabilities():
         for ln in textwrap.wrap(why, max(20, term_width() - 3)):
             print("  " + paint(ln, "dim"))
     print()
-    print(f"{counts['ok']} ✓ · {counts['part']} ~ · {counts['no']} ✗ · {counts['na']} – (no aplica)")
+    note(f"{counts['ok']} ✓ · {counts['part']} ~ · {counts['no']} ✗ · {counts['na']} – (no aplica)")
     return 0
 
 
@@ -6211,16 +6237,16 @@ def ensure_url_opener():
 def setup_android():
     """Crea ~/bin/termux-url-opener: compartir un enlace a Termux abre DLpy."""
     if not IS_ANDROID:
-        print("--instalar-android solo aplica en Termux (Android).")
+        m_warn("--instalar-android solo aplica en Termux (Android).")
         return 1
     st, path = write_url_opener(force=True)
     if st.startswith("error"):
-        print(f"No se pudo crear {path}: {st[7:]}")
+        m_err(f"No se pudo crear {path}: {st[7:]}")
         return 1
-    print(f"Listo: {path}")
-    print("Comparte un enlace desde cualquier app a Termux y se abrirá DLpy con él.")
+    m_ok(f"Listo: {path}")
+    note("Comparte un enlace desde cualquier app a Termux y se abrirá DLpy con él.")
     if not SHARED_OK:
-        print("Falta el almacenamiento compartido: ejecuta termux-setup-storage.")
+        m_warn("Falta el almacenamiento compartido: ejecuta termux-setup-storage.")
     return 0
 
 
