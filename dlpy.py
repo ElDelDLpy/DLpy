@@ -16,7 +16,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.1.8"
+VERSION = "0.1.6"
 
 import os
 import re
@@ -1666,10 +1666,6 @@ def hide_keyboard():
 
 
 def countdown_supported():
-    # 0.1.8: en a-Shell la cuenta regresiva (termios/cbreak) dejaba congelado el input()
-    # siguiente; ahí se pregunta con input() normal. DLPY_COUNTDOWN=1 la reactiva.
-    if IS_IOS and os.environ.get("DLPY_COUNTDOWN", "").strip() != "1":
-        return False
     try:
         if not (sys.stdin.isatty() and sys.stdout.isatty()):
             return False
@@ -1789,16 +1785,13 @@ def reexec_script():
     except Exception as _ign:
         ignore("reexec_script", _ign)
     try:
-        # 0.1.7: en a-Shell NO se toca el modo del terminal aquí (tcsetattr antes del runpy
-        # congelaba la ejecución recién actualizada); la cuenta regresiva ya lo restauró.
-        if os.name != "nt" and not IS_IOS and sys.stdin.isatty():
+        if os.name != "nt" and sys.stdin.isatty():
             import termios
             fd = sys.stdin.fileno()
             _restore_tty(fd, termios.tcgetattr(fd))
     except Exception as _ign:
         ignore("reexec_script", _ign)
-    if not IS_IOS:
-        drain_pending_input(0.15)
+    drain_pending_input(0.15)
     sys._dlpy_reexec = True
     runpy.run_path(SCRIPT_PATH, run_name="__main__")
 
