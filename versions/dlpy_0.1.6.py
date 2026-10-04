@@ -2,23 +2,6 @@
 # Cada edicion de este archivo sube la version: x.y.z donde Y y Z solo llegan hasta el 9 y X no tiene limites.
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
-# ==== CHANGELOG ====
-# ## 0.1.7
-#
-# - Arreglo (a-Shell): la versión nueva se congelaba en su primera pregunta cuando se abría
-#   justo después de actualizar, dentro del mismo proceso (una ejecución nueva no se congela).
-#   Cambios, solo en iOS:
-#   · La pregunta «¿Instalar la X y ejecutarla ahora?» va con input() normal (sin cuenta
-#     regresiva, sin cbreak): era el único cambio de modo del terminal antes de seguir en el
-#     mismo proceso.
-#   · reexec_script ya no restaura el terminal (_restore_tty) ni lee stdin con select
-#     (drain_pending_input) antes de abrir la versión nueva.
-#   · Si esta versión la abrió dentro de su proceso una versión anterior (que no trae estos
-#     cambios), esa ejecución tampoco lee stdin con select antes de cada pregunta
-#     (drain_pending_input), para no depender de lo que dejó la anterior.
-#   El resto de plataformas y las ejecuciones normales no cambian.
-#
-# ==== FIN CHANGELOG ====
 # DLpy - descargador para a-Shell mini basado en yt-dlp
 # Uso: python dlpy.py [LINK]
 #   Sin LINK: ofrece usar el último enlace.
@@ -33,7 +16,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.1.7"
+VERSION = "0.1.6"
 
 import os
 import re
@@ -1208,14 +1191,9 @@ def print_rows(rows, flags, head=None):
             print(" " * pw + ln)
 
 
-NESTED_IOS = False        # a-Shell: esta ejecución la lanzó runpy dentro del proceso de otra versión
-
-
 def drain_pending_input(max_wait=0.08):
     """Descarta bytes ya pendientes en stdin (Enter residual al abrir desde Atajos).
     No cambia el modo del terminal: solo lee lo que ya está en el buffer."""
-    if NESTED_IOS:
-        return                            # recién actualizada en el mismo proceso: no se lee stdin
     try:
         if IS_DESKTOP and not sys.stdin.isatty():
             return                        # tubería o archivo: son las respuestas, no se tocan
@@ -1806,15 +1784,14 @@ def reexec_script():
         sys.stderr.flush()
     except Exception as _ign:
         ignore("reexec_script", _ign)
-    if not IS_IOS:                         # a-Shell: ni tcsetattr ni select sobre stdin aquí
-        try:
-            if os.name != "nt" and sys.stdin.isatty():
-                import termios
-                fd = sys.stdin.fileno()
-                _restore_tty(fd, termios.tcgetattr(fd))
-        except Exception as _ign:
-            ignore("reexec_script", _ign)
-        drain_pending_input(0.15)
+    try:
+        if os.name != "nt" and sys.stdin.isatty():
+            import termios
+            fd = sys.stdin.fileno()
+            _restore_tty(fd, termios.tcgetattr(fd))
+    except Exception as _ign:
+        ignore("reexec_script", _ign)
+    drain_pending_input(0.15)
     sys._dlpy_reexec = True
     runpy.run_path(SCRIPT_PATH, run_name="__main__")
 
@@ -3417,10 +3394,8 @@ def check_update(force=False):
     else:
         m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
     kind = show_crash_warning(remote, text)       # avisa si es idéntica a una que falló
-    # a-Shell: esta pregunta va con input() normal (sin cbreak). Después la versión nueva corre en
-    # este mismo proceso y cambiar el modo del terminal justo antes la congelaba.
     if not ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ ", default=(kind != "igual"),
-               seconds=False if IS_IOS else WAIT_SECONDS):
+               seconds=WAIT_SECONDS):
         note("En el próximo arranque se volverá a preguntar.")
         return False
     try:
@@ -5404,8 +5379,6 @@ def run_guarded(entry):
         offer_recovery(None, None)
         return 0
     nested = getattr(sys, "_dlpy_guarded", False)     # tras actualizar/restaurar (runpy)
-    global NESTED_IOS
-    NESTED_IOS = bool(nested and IS_IOS)
     sys._dlpy_guarded = True
     try:
         if not nested:
