@@ -3,21 +3,6 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
-# ## 0.0.8
-#
-# - Listas (formatos de video, audio, pistas…): ya no saltan de línea cuando sobra espacio.
-#   print_rows() prueba, en orden, la variante más cómoda que quepa en el ancho:
-#   1) tabla alineada con 2 espacios entre columnas; 2) tabla alineada con 1 espacio;
-#   3) línea compacta «a · b · c»; 4) compacta con «·» pegado; 5) compacta con «c/audio»
-#   y «s/audio» en vez de «con audio» y «sin audio». Solo si ninguna cabe se parte la
-#   línea por palabras, como antes.
-# - Ancho en iOS: el texto estaba limitado a 40 columnas aunque la pantalla tenga más
-#   (unas 50 en a-Shell mini). Ahora, sin la medición con cursor (que sigue apagada), se
-#   lee el tamaño del terminal directamente con ioctl (os.get_terminal_size sobre la
-#   salida), que no cambia el modo del terminal ni mira COLUMNS (el valor que Atajos
-#   informa mal). Si ioctl no responde o da algo fuera de 30–120 se usa el tope de 40 de
-#   antes. DLPY_WIDTH=N sigue mandando sobre todo; --sistema muestra también «ioctl».
-#
 # ## 0.0.7
 #
 # - Arreglo: en las preguntas (s/N), al dar Enter muy rápido la pregunta se repetía aunque
@@ -136,7 +121,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.0.8"
+VERSION = "0.0.7"
 
 import os
 import re
@@ -705,19 +690,6 @@ def _forced_width():
         return None
 
 
-def _ioctl_cols():
-    """Columnas según el propio terminal (ioctl TIOCGWINSZ), sin tocar su modo ni COLUMNS.
-    None si no responde o el valor no es creíble."""
-    for stream in (sys.stdout, sys.stderr, sys.stdin):
-        try:
-            c = os.get_terminal_size(stream.fileno()).columns
-        except (OSError, ValueError, AttributeError):
-            continue
-        if 30 <= c <= 120:
-            return c
-    return None
-
-
 def term_width():
     """Ancho para el texto: columnas - 1 (la última no se usa para que el terminal no
     salte de línea solo). Sin medición fiable se limita (iOS 40, Android 60);
@@ -728,12 +700,7 @@ def term_width():
     cols, measured = _cols()
     w = cols - 1
     if not measured:
-        cap = 60 if IS_ANDROID else 40 if IS_IOS else 110
-        if IS_IOS:
-            ic = _ioctl_cols()
-            if ic:
-                w, cap = ic - 1, 110          # el terminal sabe su ancho: se usa entero
-        w = min(w, cap)
+        w = min(w, 60 if IS_ANDROID else 40 if IS_IOS else 110)
     return max(24, min(w, 110))
 
 
@@ -1267,10 +1234,7 @@ def legend(keys):
 
 
 def print_rows(rows, flags, head=None):
-    """rows: [{"n": int, "flags": set, "cols": [str, ...]}].
-    Elige la variante más cómoda que quepa sin saltar de línea: tabla alineada (columnas
-    separadas por 2 espacios, luego por 1), línea compacta «a · b», «a·b» y con «con/sin
-    audio» abreviado. Solo si ninguna cabe se parte la línea por palabras."""
+    """rows: [{"n": int, "flags": set, "cols": [str, ...]}]. Tabla si cabe; si no, compacto."""
     if not rows:
         return
     w = term_width()
@@ -1279,35 +1243,26 @@ def print_rows(rows, flags, head=None):
     ncol = len(rows[0]["cols"])
     allr = [r["cols"] for r in rows] + ([head] if head else [])
     widths = [max(len(c[i]) for c in allr) for i in range(ncol)]
+    table = pw + sum(widths) + 2 * (ncol - 1) <= w
 
     def prefix(r):
         fl = "".join(dot(FLAG_COLORS[k]) if k in r["flags"] else " " for k in flags)
         return f"{r['n']:>{nw}} " + fl + " "
 
-    for sep in ("  ", " "):                       # tabla alineada
-        if pw + sum(widths) + len(sep) * (ncol - 1) <= w:
-            if head:
-                print(" " * pw + paint(sep.join(h.ljust(widths[i])
-                                                 for i, h in enumerate(head)).rstrip(), "dim"))
-            for r in rows:
-                print(prefix(r) + sep.join(c.ljust(widths[i])
-                                           for i, c in enumerate(r["cols"])).rstrip())
-            return
-
-    short = {"con audio": "c/audio", "sin audio": "s/audio"}
-    variants = ((" · ", False), ("·", False), ("·", True))
-    texts = None
-    for sep, abbr in variants:                    # línea compacta
-        cand = [sep.join((short.get(c, c) if abbr else c) for c in r["cols"] if c)
-                for r in rows]
-        texts = cand
-        if all(dwidth(t) <= w - pw for t in cand):
-            break
-    for r, text in zip(rows, texts):
-        lines = wrap_text(text, max(8, w - pw))
-        print(prefix(r) + lines[0])
-        for ln in lines[1:]:
-            print(" " * pw + ln)
+    if table:
+        if head:
+            print(" " * pw + paint("  ".join(h.ljust(widths[i])
+                                             for i, h in enumerate(head)).rstrip(), "dim"))
+        for r in rows:
+            print(prefix(r) + "  ".join(c.ljust(widths[i])
+                                        for i, c in enumerate(r["cols"])).rstrip())
+    else:
+        for r in rows:
+            text = " · ".join(c for c in r["cols"] if c)
+            lines = wrap_text(text, max(8, w - pw))
+            print(prefix(r) + lines[0])
+            for ln in lines[1:]:
+                print(" " * pw + ln)
 
 
 def drain_pending_input(max_wait=0.08):
@@ -6505,8 +6460,7 @@ def print_capabilities():
     except Exception as _ign:
         ignore("print_capabilities", _ign)
         _env_cols = 0
-    kv("Ancho", f"variable {_env_cols or '?'} · ioctl {_ioctl_cols() or '?'} · "
-                f"medido {_PROBE['cols'] or '?'} · "
+    kv("Ancho", f"variable {_env_cols or '?'} · medido {_PROBE['cols'] or '?'} · "
                 f"texto {term_width()} · barras {safe_width()}")
     mark = {"ok": paint("✓", "green"), "no": paint("✗", "red"),
             "part": paint("~", "yellow"), "na": paint("–", "dim")}
@@ -6676,7 +6630,7 @@ def main():
         except Exception as _ign:
             ignore("main", _ign)
             env_cols = 0
-        m_info(f"Ancho del terminal: variable={env_cols or '?'} · ioctl={_ioctl_cols() or '?'} · medido={_PROBE['cols'] or '?'}"
+        m_info(f"Ancho del terminal: variable={env_cols or '?'} · medido={_PROBE['cols'] or '?'}"
                f" · texto={term_width()} · barras={safe_width()}")
         dbg("entorno", {"python": sys.version.split()[0], "plataforma": sys.platform, "modo": PLATFORM,
                         "maquina": getattr(os.uname(), "machine", "?") if hasattr(os, "uname") else "?",
