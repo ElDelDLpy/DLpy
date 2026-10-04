@@ -3,19 +3,6 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
-# ## 0.2.2
-#
-# - «Ya descargado» rediseñado para pantallas angostas:
-#   · Filas con las etiquetas alineadas: Video, Audio, Archivo, Fecha, Origen, Convertido, Bitrate.
-#   · Audio resumido en una fila (códec y bitrate) y otra con los idiomas, marcando ◆ original y
-#     ▸ predeterminada, sin tabla ni puntos de color; «✓ Compatible con Apple» al final.
-#   · El nombre del archivo solo sale si no es el del título y «Entregado» solo si es otra hora.
-#   · Origen: sitio y canal. Convertido: códec y bits de origen → salida, audio convertido, motor
-#     (VideoToolbox, x265, x264) y tiempo. Bitrate: el del video de origen → el del convertido,
-#     con el porcentaje de cambio (si no se pudo leer del archivo, se estima y lleva «~»).
-#   · La pregunta final es «¿Descargar de nuevo? (s/N)» para que no se parta en dos líneas.
-#   · Las descargas anteriores a la 0.2.2 solo muestran los datos que ya tenían guardados.
-#
 # ## 0.2.1
 #
 # - Bits del video (cualquier profundidad: 6, 8, 9, 10, 12, 14, 16…):
@@ -66,7 +53,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.2.2"
+VERSION = "0.2.1"
 
 import os
 import re
@@ -2716,12 +2703,8 @@ def parse_ffmpeg_video(text):
     m = re.match(r"\s*(\w+)(?:\s+\(([^)/]*)\))?", body)
     pm = re.search(r",\s*((?:yuvj?|nv|p0|gbrp|gray|rgb|bgr|argb|abgr|rgba|bgra)[a-z0-9_]*)", body)
     pix = pm.group(1) if pm else None
-    out = {"codec": m.group(1) if m else None, "profile": (m.group(2) or None) if m else None,
-           "pix_fmt": pix, "bits": pix_bits(pix)}
-    km = re.search(r",\s*(\d+)\s*kb/s", body)
-    if km:
-        out["kbps"] = int(km.group(1))
-    return out
+    return {"codec": m.group(1) if m else None, "profile": (m.group(2) or None) if m else None,
+            "pix_fmt": pix, "bits": pix_bits(pix)}
 
 
 def probe_video(exe, path, timeout=20):
@@ -2737,7 +2720,7 @@ def probe_video(exe, path, timeout=20):
     for pr in dict.fromkeys(c for c in cands if c):
         try:
             r = subprocess.run([pr, "-v", "error", "-select_streams", "v:0", "-show_entries",
-                                "stream=codec_name,profile,pix_fmt,bits_per_raw_sample,bit_rate", "-of", "json",
+                                "stream=codec_name,profile,pix_fmt,bits_per_raw_sample", "-of", "json",
                                 "file:" + path], capture_output=True, text=True, timeout=timeout)
             st = (json.loads(r.stdout or "{}").get("streams") or [None])[0]
             if st:
@@ -2746,13 +2729,8 @@ def probe_video(exe, path, timeout=20):
                     bits = bits or int(st.get("bits_per_raw_sample"))
                 except (TypeError, ValueError):
                     pass
-                out = {"codec": st.get("codec_name"), "profile": st.get("profile"),
-                       "pix_fmt": st.get("pix_fmt"), "bits": bits}
-                try:
-                    out["kbps"] = int(round(int(st.get("bit_rate")) / 1000.0))
-                except (TypeError, ValueError):
-                    pass
-                return out
+                return {"codec": st.get("codec_name"), "profile": st.get("profile"),
+                        "pix_fmt": st.get("pix_fmt"), "bits": bits}
         except Exception as _ign:
             ignore("probe_video ffprobe", _ign)
     if exe:
@@ -2838,8 +2816,6 @@ def apple_convert_file(pp, path, plan, dur, bar, out_path):
         vsets = [(None, "AAC (audio)", [])]
     err, used, ok = None, None, False
     prev_name = None
-    t_start = time.time()
-    plan.pop("engine", None)
     for vcodec, name, vopts in vsets:
         try:
             aopts = apple_ffmpeg_opts(plan, vopts)
@@ -2860,8 +2836,6 @@ def apple_convert_file(pp, path, plan, dur, bar, out_path):
                 pp.run_ffmpeg(path, tmp, aopts)
             if os.path.isfile(tmp) and os.path.getsize(tmp) > 0:
                 used, ok = vcodec, True
-                if vcodec is not None and plan.get("venc"):
-                    plan["engine"] = name.split()[0]        # VideoToolbox / x265 / x264
                 break
             err = "archivo vacío"
         except Exception as e:
@@ -2875,27 +2849,8 @@ def apple_convert_file(pp, path, plan, dur, bar, out_path):
     plan["result"] = (probe_video(getattr(pp, "executable", None), tmp)
                       if plan.get("vsrc") is not None else None)
     dbg("video convertido", plan["result"])
-    plan["secs"] = int(round(time.time() - t_start))
     os.replace(tmp, out_path)
     return used
-
-
-def conv_info(plan, used):
-    """Datos de una conversión terminada para el índice (los comparten la descarga y la reconversión)."""
-    d = {"venc": plan["venc"], "vcodec": used, "aenc": list(plan["aenc"]),
-         "bits": conversion_bits(plan, used, plan.get("result"))}
-    kb = (plan.get("result") or {}).get("kbps")
-    if kb:
-        d["vbr"] = kb
-    if plan.get("engine"):
-        d["engine"] = plan["engine"]
-    if plan.get("secs") is not None:
-        d["secs"] = plan["secs"]
-    if plan.get("remux") and plan.get("cur"):
-        d["cfrom"] = plan["cur"]
-    if plan.get("abr"):
-        d["abr"] = plan["abr"]                  # bitrate AAC con el que quedó el audio recodificado
-    return d
 
 
 def make_apple_pp(plan, state, bar=None):
@@ -2915,7 +2870,9 @@ def make_apple_pp(plan, state, bar=None):
                 return [], info
             info["filepath"] = dest
             info["ext"] = ext
-            state.update(conv_info(plan, used), path=dest)
+            state.update(path=dest, venc=plan["venc"], vcodec=used,
+                         aenc=list(plan["aenc"]),
+                         bits=conversion_bits(plan, used, plan.get("result")))
             return ([path] if dest != path else []), info
 
     return AppleConvertPP()
@@ -2997,10 +2954,11 @@ def reuse_downloaded(old_file, old_entry, index, key, title, info, kind, fmt, fm
         return True
     cleanup_work(work_dir)
     convert_done(plan, used)
-    conv = conv_info(plan, used)
+    conv = {"venc": plan["venc"], "vcodec": used, "aenc": list(plan["aenc"]),
+            "bits": conversion_bits(plan, used, plan.get("result"))}
     index[key] = {"file": os.path.basename(final), "title": title,
                   "date": int(time.time()), "version": VERSION,
-                  "meta": build_meta(kind, fmt, fmt_id, selected, orig_ids, final, conv, info)}
+                  "meta": build_meta(kind, fmt, fmt_id, selected, orig_ids, final, conv)}
     try:
         save_json(INDEX_FILE, index)
     except Exception as e:
@@ -3197,7 +3155,7 @@ def name_taken(base):
     return False
 
 
-def build_meta(kind, fmt, fmt_id, selected, orig_ids, final, conv=None, info=None):
+def build_meta(kind, fmt, fmt_id, selected, orig_ids, final, conv=None):
     meta = {"kind": "video" if kind == "v" else "audio",
             "container": os.path.splitext(final)[1].lstrip("."),
             "format_id": fmt_id,
@@ -3226,190 +3184,26 @@ def build_meta(kind, fmt, fmt_id, selected, orig_ids, final, conv=None, info=Non
             "abr": round(abr_of(fmt)),
             "original": fmt["format_id"] in orig_ids,
             "default": True, "apple": apple_audio(fmt)})
-    src = source_info(info)
-    if src:
-        meta["source"] = src                    # sitio y canal de donde se bajó
-    vsrc_kbps = source_video_kbps(fmt) if kind == "v" else None
-    if meta["video"] and vsrc_kbps and not conv:
-        meta["video"]["vbr"] = vsrc_kbps
     if conv:
         meta["converted"] = True
-        cv = {}
-        afrom = []
         if meta["video"]:
             if conv.get("venc"):
-                cv["vfrom"] = meta["video"].get("codec")
-                if meta["video"].get("bits"):
-                    cv["bfrom"] = meta["video"]["bits"]
                 meta["video"]["codec"] = conv.get("vcodec") or "hevc"
                 meta["video"].pop("bits", None)     # recodificado: la del origen ya no vale
             if conv.get("bits"):
                 meta["video"]["bits"] = conv["bits"]
             meta["video"]["apple"] = True
-            if conv.get("venc"):
-                to_k, est = conv.get("vbr"), False
-                if not to_k:
-                    to_k, est = estimate_video_kbps(final, info, meta["tracks"]), True
-                if vsrc_kbps:
-                    cv["vbr_from"] = vsrc_kbps
-                if to_k:
-                    cv["vbr_to"] = to_k
-                    meta["video"]["vbr"] = to_k
-                    if est:
-                        cv["vbr_est"] = True
         aenc = conv.get("aenc") or []
         for i, t in enumerate(meta["tracks"]):
             if i < len(aenc) and aenc[i]:
-                afrom.append(str(t.get("codec") or "?"))
                 t["codec"] = "aac"
-                if conv.get("abr"):
-                    t["abr"] = int(conv["abr"])
             t["apple"] = True
-        if afrom:
-            cv["afrom"] = sorted(set(afrom))
-        for k_in, k_out in (("engine", "engine"), ("secs", "secs"), ("cfrom", "cfrom")):
-            if conv.get(k_in) not in (None, ""):
-                cv[k_out] = conv[k_in]
-        if cv:
-            meta["conv"] = cv
     return meta
 
 
-def source_info(info):
-    """{'site', 'channel'} de donde se bajó el video (lo que se sepa), o {}."""
-    if not isinstance(info, dict):
-        return {}
-    site = info.get("webpage_url_domain") or _host(info.get("webpage_url") or info.get("original_url") or "")
-    site = re.sub(r"^www\.", "", str(site or "").strip())
-    chan = str(info.get("channel") or info.get("uploader") or "").strip()
-    out = {}
-    if site:
-        out["site"] = site
-    if chan:
-        out["channel"] = chan
-    return out
-
-
-def source_video_kbps(fmt):
-    """Bitrate (kbps) del video de origen según el formato, o None."""
-    try:
-        v = fmt.get("vbr")
-        if v:
-            return int(round(float(v)))
-        t = fmt.get("tbr")
-        if t:
-            a = float(fmt.get("abr") or 0) if has(fmt.get("acodec")) else 0.0
-            k = float(t) - a
-            return int(round(k)) if k > 0 else None
-    except (TypeError, ValueError, AttributeError):
-        pass
-    return None
-
-
-def estimate_video_kbps(path, info, tracks):
-    """Bitrate (kbps) del video estimado con tamaño y duración del archivo menos el audio, o None."""
-    try:
-        dur = float((info or {}).get("duration") or 0)
-        size = os.path.getsize(path)
-        if dur <= 0 or size <= 0:
-            return None
-        total = size * 8 / 1000.0 / dur
-        audio = sum(float(t.get("abr") or 0) for t in (tracks or []))
-        k = total - audio
-        return int(round(k)) if k > 0 else None
-    except (TypeError, ValueError, OSError):
-        return None
-
-
-def fmt_kbps(k):
-    k = float(k)
-    return f"{k / 1000:.1f} Mbps" if k >= 1000 else f"{k:.0f} kbps"
-
-
-def bitrate_change(a, b, est=False):
-    """«4.1 → 2.3 Mbps (−44 %)» a partir de dos bitrates en kbps."""
-    a, b = float(a), float(b)
-    pct = int(round((b - a) / a * 100)) if a else 0
-    if a >= 1000 and b >= 1000:
-        txt = f"{a / 1000:.1f} → {'~' if est else ''}{b / 1000:.1f} Mbps"
-    elif a < 1000 and b < 1000:
-        txt = f"{a:.0f} → {'~' if est else ''}{b:.0f} kbps"
-    else:
-        txt = f"{fmt_kbps(a)} → {'~' if est else ''}{fmt_kbps(b)}"
-    tail = "sin cambio" if pct == 0 else (f"+{pct} %" if pct > 0 else f"−{abs(pct)} %")
-    return f"{txt} ({tail})"
-
-
-def kv_rows(rows):
-    """Filas «etiqueta  valor» con las etiquetas alineadas (sin dos puntos). Una etiqueta vacía
-    continúa la fila anterior. El valor se parte con sangrado si no cabe."""
-    w = term_width()
-    lw = max((len(l) for l, _ in rows), default=0)
-    for label, value in rows:
-        lines = wrap_text(str(value), max(8, w - lw - 1))
-        print(paint(label.ljust(lw), "dim") + " " + lines[0])
-        for ln in lines[1:]:
-            print(" " * (lw + 1) + ln)
-
-
-def audio_rows(tracks):
-    """Filas de audio: una con códec y bitrate y, si hay varias pistas, otra con los idiomas
-    (◆ original, ▸ predeterminada). Devuelve (filas, hay_marcas)."""
-    if not tracks:
-        return [("Audio", "sin pistas de audio")], False
-    codecs = sorted({str(t.get("codec") or "?") for t in tracks})
-    abrs = [int(t["abr"]) for t in tracks if t.get("abr")]
-    if abrs:
-        rate = f"{min(abrs)}k" if min(abrs) == max(abrs) else f"{min(abrs)}-{max(abrs)}k"
-    else:
-        rate = ""
-    codec = "/".join(codecs) + (f" {rate}" if rate else "")
-    if len(tracks) == 1:
-        return [("Audio", f"{tracks[0].get('lang') or 'und'} · {codec}")], False
-    marks, toks = False, []
-    for t in tracks:
-        tok = str(t.get("lang") or "und")
-        if t.get("original"):
-            tok += "◆"
-            marks = True
-        if t.get("default"):
-            tok += "▸"
-            marks = True
-        toks.append(tok)
-    return [("Audio", f"{len(tracks)} pistas · {codec}"), ("", " ".join(toks))], marks
-
-
-def conv_rows(meta):
-    """Filas «Convertido» y «Bitrate» de una descarga convertida (vacío si no se convirtió)."""
-    if not meta.get("converted"):
-        return []
-    cv = meta.get("conv") or {}
-    v = meta.get("video") or {}
-    rows, first = [], []
-    if cv.get("vfrom"):
-        first.append(f"{cv['vfrom']} → {str(v.get('codec') or 'hevc').upper()}")
-        bf, bt = cv.get("bfrom"), v.get("bits")
-        if bf and bt:
-            first.append(f"{bf} → {bt} bits" if bf != bt else f"{bt} bits")
-    elif cv.get("cfrom"):
-        first.append(f"contenedor {cv['cfrom']} → {meta.get('container') or '?'}")
-    if first:
-        rows.append(("Convertido", " · ".join(first)))
-    if cv.get("afrom"):
-        rows.append(("Convertido" if not rows else "", "audio " + "/".join(cv["afrom"]) + " → aac"))
-    tail = " · ".join(x for x in (cv.get("engine"),
-                                  f"{cv['secs']} s" if cv.get("secs") is not None else None) if x)
-    if tail:
-        rows.append(("Convertido" if not rows else "", tail))
-    if not rows:
-        rows.append(("Convertido", "compatible Apple"))
-    if cv.get("vbr_from") and cv.get("vbr_to"):
-        rows.append(("Bitrate", bitrate_change(cv["vbr_from"], cv["vbr_to"], bool(cv.get("vbr_est")))))
-    return rows
-
-
 def show_existing(path, entry, title=None):
-    """Resumen compacto del archivo ya descargado, con las etiquetas alineadas."""
+    """Resumen compacto y unificado del archivo ya descargado (mismo estilo que
+    «Elegido: …» tras elegir formato)."""
     try:
         size = os.path.getsize(path)
     except OSError as _ign:
@@ -3420,52 +3214,58 @@ def show_existing(path, entry, title=None):
     header("YA DESCARGADO")
     title = title or entry.get("title") or os.path.splitext(os.path.basename(path))[0]
     show_title(title)
-    print()
-    rows = []
+    arch = (f"{os.path.basename(path)} · {human_size(size)} · {when_s} · "
+            f"v{entry.get('version', '?')}")
+    kv("Archivo", arch)
+    if entry.get("delivered"):
+        kv("Entregado", time.strftime("%Y-%m-%d %H:%M", time.localtime(entry["delivered"])))
     meta = entry.get("meta")
-    base = os.path.basename(path)
-    ext = os.path.splitext(path)[1].lstrip(".") or "?"
-    marks, apple = False, False
-    if meta:
-        if meta.get("kind") == "audio":
-            rows.append(("Tipo", "solo audio"))
-        v = meta.get("video")
-        if v:
-            vb = [str(x) for x in (v.get("res"), v.get("codec")) if x]
-            if v.get("bits"):
-                vb.append(f"{v['bits']} bits")
-            rows.append(("Video", " · ".join(vb) or "?"))
-            apple = bool(v.get("apple"))
-        elif meta.get("kind") == "video":
-            rows.append(("Video", meta.get("container") or "?"))
-            apple = bool(meta.get("converted"))
-        tracks = meta.get("tracks") or []
-        arows, marks = audio_rows(tracks)
-        rows += arows
-        if meta.get("kind") == "audio" and tracks:
-            apple = all(t.get("apple") for t in tracks)
-    if os.path.splitext(base)[0] != safe_name(title):
-        rows.append(("Nombre", base))
-    rows.append(("Archivo", f"{ext} · {human_size(size)}"))
-    rows.append(("Fecha", f"{when_s} · v{entry.get('version', '?')}"))
-    dl = entry.get("delivered")
-    if dl and time.strftime("%Y-%m-%d %H:%M", time.localtime(dl)) != when_s:
-        rows.append(("Entregado", time.strftime("%Y-%m-%d %H:%M", time.localtime(dl))))
-    if meta:
-        src = meta.get("source") or {}
-        if src.get("site") or src.get("channel"):
-            rows.append(("Origen", " · ".join(x for x in (src.get("site"), src.get("channel")) if x)))
-        rows += conv_rows(meta)
-    kv_rows(rows)
     if not meta:
+        kv("Contenedor", os.path.splitext(path)[1].lstrip(".") or "?")
         m_info("Sin datos técnicos (versión anterior).")
         return
-    if marks or apple:
-        print()
-    if marks:
-        note("◆ original   ▸ predeterminada")
-    if apple:
-        print(paint("✓ Compatible con Apple", "green"))
+    if meta.get("kind") == "audio":
+        kv("Tipo", "solo audio")
+    v = meta.get("video")
+    if v:
+        vbits = []
+        if v.get("res"):
+            vbits.append(str(v["res"]))
+        if v.get("codec"):
+            vbits.append(str(v["codec"]))
+        if v.get("bits"):
+            vbits.append(f"{v['bits']} bits")
+        if meta.get("converted"):
+            vbits.append("convertido Apple")
+        kv("Video", " · ".join(vbits) or "?", flag="apple" if v.get("apple") else None)
+    elif meta.get("kind") == "video":
+        kv("Video", meta.get("container") or "?", flag="apple" if meta.get("converted") else None)
+    tracks = meta.get("tracks") or []
+    if not tracks:
+        kv("Audio", "sin pistas de audio")
+        return
+    kv("Audio", f"{len(tracks)} pista" + ("s" if len(tracks) != 1 else ""))
+    rows = []
+    for i, t in enumerate(tracks, 1):
+        fl = set()
+        if t.get("apple"):
+            fl.add("apple")
+        if t.get("original"):
+            fl.add("orig")
+        if t.get("default"):
+            fl.add("default")
+        c = str(t.get("codec") or "?") + (f" {t['abr']}k" if t.get("abr") else "")
+        note_bits = []
+        if t.get("default"):
+            note_bits.append("predeterminada")
+        if t.get("original"):
+            note_bits.append("original")
+        tail = f"   ({' · '.join(note_bits)})" if note_bits else ""
+        rows.append({"n": i, "flags": fl,
+                     "cols": [str(t.get("lang") or "und"),
+                              str(t.get("label") or "") + tail, c]})
+    legend(["apple", "orig", "default"])
+    print_rows(rows, ["apple", "orig", "default"], ["Idioma", "Pista", "Códec"])
 
 
 def clipboard_cmd():
@@ -6644,7 +6444,7 @@ def selftest():
     _l = ("  Stream #0:0[0x1](und): Video: hevc (Main 10) (hvc1 / 0x31637668), yuv420p10le(tv, progressive), "
           "160x90 [SAR 1:1 DAR 16:9], 17 kb/s, 10 fps\n  Stream #0:1: Audio: aac, 44100 Hz\n")
     check("parse ffmpeg 10 bits", parse_ffmpeg_video(_l),
-          {"codec": "hevc", "profile": "Main 10", "pix_fmt": "yuv420p10le", "bits": 10, "kbps": 17})
+          {"codec": "hevc", "profile": "Main 10", "pix_fmt": "yuv420p10le", "bits": 10})
     check("parse ffmpeg 8 bits", parse_ffmpeg_video("Stream #0:0: Video: h264 (High) (avc1 / 0x31637661), "
                                                     "yuv420p(tv, bt709), 1280x720")["bits"], 8)
     check("parse ffmpeg sin video", parse_ffmpeg_video("Stream #0:0: Audio: aac"), None)
@@ -6661,38 +6461,6 @@ def selftest():
     check("aviso: todo bien", bits_warning(10, 10, "hevc"), None)
     check("aviso: pidió 8", bits_warning(8, 8, "hevc"), None)
     check("aviso: sin dato", bits_warning(10, None, "hevc"), None)
-    check("kbps cambio Mbps", bitrate_change(4100, 2300), "4.1 → 2.3 Mbps (−44 %)")
-    check("kbps cambio kbps", bitrate_change(900, 1000), "900 kbps → 1.0 Mbps (+11 %)")
-    check("kbps cambio estimado", bitrate_change(4000, 2000, True), "4.0 → ~2.0 Mbps (−50 %)")
-    check("kbps cambio igual", bitrate_change(500, 500), "500 → 500 kbps (sin cambio)")
-    check("kbps origen vbr", source_video_kbps({"vbr": 4100.4}), 4100)
-    check("kbps origen tbr sin audio", source_video_kbps({"tbr": 3000, "acodec": "none"}), 3000)
-    check("kbps origen tbr con audio", source_video_kbps({"tbr": 3000, "acodec": "mp4a", "abr": 128}), 2872)
-    check("kbps origen nada", source_video_kbps({}), None)
-    check("origen sitio/canal", source_info({"webpage_url_domain": "www.youtube.com", "channel": "Canal X"}),
-          {"site": "youtube.com", "channel": "Canal X"})
-    check("origen vacío", source_info(None), {})
-    _mc = build_meta("v", {"format_id": "1", "vcodec": "vp09.02.51.10", "vbr": 4100, "height": 1080},
-                     "1", None, set(), "a.mp4",
-                     {"venc": True, "vcodec": "hevc", "aenc": [], "bits": 8, "vbr": 2300,
-                      "engine": "VideoToolbox", "secs": 38}, {"webpage_url_domain": "youtube.com", "channel": "C"})
-    check("meta conv", _mc["conv"], {"vfrom": "vp09", "bfrom": 10, "vbr_from": 4100, "vbr_to": 2300,
-                                      "engine": "VideoToolbox", "secs": 38})
-    check("meta source", _mc["source"], {"site": "youtube.com", "channel": "C"})
-    check("filas conv", conv_rows(_mc), [("Convertido", "vp09 → HEVC · 10 → 8 bits"),
-                                         ("", "VideoToolbox · 38 s"),
-                                         ("Bitrate", "4.1 → 2.3 Mbps (−44 %)")])
-    _ma = build_meta("v", {"format_id": "1", "vcodec": "avc1.640028"}, "1",
-                     [{"lang": "en", "original": True, "fmt": {"format_id": "a", "acodec": "opus", "abr": 130}}],
-                     {"a"}, "a.mp4", {"venc": False, "vcodec": None, "aenc": [True], "bits": None, "abr": 192})
-    check("audio recodificado: códec y bitrate", (_ma["tracks"][0]["codec"], _ma["tracks"][0]["abr"]), ("aac", 192))
-    check("audio recodificado: origen guardado", _ma["conv"]["afrom"], ["opus"])
-    check("filas sin conv", conv_rows({"converted": False}), [])
-    _tr = [{"lang": "en", "codec": "mp4a", "abr": 130, "original": True, "default": True},
-           {"lang": "es", "codec": "mp4a", "abr": 128}]
-    check("audio varias", audio_rows(_tr), ([("Audio", "2 pistas · mp4a 128-130k"), ("", "en◆▸ es")], True))
-    check("audio una", audio_rows(_tr[:1]), ([("Audio", "en · mp4a 130k")], False))
-    check("audio ninguna", audio_rows([]), ([("Audio", "sin pistas de audio")], False))
     check("meta bits origen", build_meta("v", {"format_id": "1", "vcodec": "vp09.02.51.10"}, "1", None, set(),
                                          "a.mp4")["video"]["bits"], 10)
     check("meta bits convertido", build_meta("v", {"format_id": "1", "vcodec": "vp09.02.51.10"}, "1", None, set(),
@@ -7567,7 +7335,7 @@ def main():
         show_existing(old_file, old_entry, title=title)
         print()
         try:
-            de_nuevo = ask_yn("¿Descargar de nuevo? (s/N) ▸ ", default=False)
+            de_nuevo = ask_yn("¿Descargar de nuevo con otros parámetros? (s/N) ▸ ", default=False)
         except (EOFError, KeyboardInterrupt):
             return 1
         if not de_nuevo:
@@ -7856,7 +7624,7 @@ def main():
     index[key] = {"file": os.path.basename(final), "title": title,
                   "date": int(time.time()), "version": VERSION,
                   "meta": build_meta(kind, fmt, fmt_id, selected, orig_ids, final,
-                                    conv_state or None, info)}
+                                    conv_state or None)}
     dbg("índice", index[key])
     try:
         save_json(INDEX_FILE, index)
