@@ -3,6 +3,25 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.0.8
+#
+# - Listas (formatos de video, audio, pistas…): ya no saltan de línea cuando sobra espacio.
+#   print_rows() prueba, en orden, la variante más cómoda que quepa en el ancho:
+#   1) tabla alineada con 2 espacios entre columnas; 2) tabla alineada con 1 espacio;
+#   3) línea compacta «a · b · c»; 4) compacta con «·» pegado; 5) compacta con «c/audio»
+#   y «s/audio» en vez de «con audio» y «sin audio». Solo si ninguna cabe se parte la
+#   línea por palabras, como antes.
+#
+# ## 0.0.7
+#
+# - Arreglo: en las preguntas (s/N), al dar Enter muy rápido la pregunta se repetía aunque
+#   Enter sea una respuesta válida (= No). Causa: el filtro de «Enter fantasma» (Atajos /
+#   a-Shell) descartaba cualquier Enter vacío en menos de 0.4 s. Ahora, si el valor por
+#   defecto es No, el Enter vacío se acepta de inmediato (un Enter fantasma solo puede dar
+#   «No», que es inofensivo). En las (S/n) se mantiene el filtro, porque un Enter fantasma
+#   confirmaría un Sí sin que nadie lo pida.
+# - ask_line() y timed_input() aceptan phantom=: True (filtro activo), False (se acepta).
+#
 # ## 0.0.6
 #
 # - Cuenta regresiva (10 s) en tres grupos de preguntas; al vencer se toma la respuesta
@@ -111,7 +130,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.0.6"
+VERSION = "0.0.8"
 
 import os
 import re
@@ -1224,7 +1243,10 @@ def legend(keys):
 
 
 def print_rows(rows, flags, head=None):
-    """rows: [{"n": int, "flags": set, "cols": [str, ...]}]. Tabla si cabe; si no, compacto."""
+    """rows: [{"n": int, "flags": set, "cols": [str, ...]}].
+    Elige la variante más cómoda que quepa sin saltar de línea: tabla alineada (columnas
+    separadas por 2 espacios, luego por 1), línea compacta «a · b», «a·b» y con «con/sin
+    audio» abreviado. Solo si ninguna cabe se parte la línea por palabras."""
     if not rows:
         return
     w = term_width()
@@ -1233,26 +1255,35 @@ def print_rows(rows, flags, head=None):
     ncol = len(rows[0]["cols"])
     allr = [r["cols"] for r in rows] + ([head] if head else [])
     widths = [max(len(c[i]) for c in allr) for i in range(ncol)]
-    table = pw + sum(widths) + 2 * (ncol - 1) <= w
 
     def prefix(r):
         fl = "".join(dot(FLAG_COLORS[k]) if k in r["flags"] else " " for k in flags)
         return f"{r['n']:>{nw}} " + fl + " "
 
-    if table:
-        if head:
-            print(" " * pw + paint("  ".join(h.ljust(widths[i])
-                                             for i, h in enumerate(head)).rstrip(), "dim"))
-        for r in rows:
-            print(prefix(r) + "  ".join(c.ljust(widths[i])
-                                        for i, c in enumerate(r["cols"])).rstrip())
-    else:
-        for r in rows:
-            text = " · ".join(c for c in r["cols"] if c)
-            lines = wrap_text(text, max(8, w - pw))
-            print(prefix(r) + lines[0])
-            for ln in lines[1:]:
-                print(" " * pw + ln)
+    for sep in ("  ", " "):                       # tabla alineada
+        if pw + sum(widths) + len(sep) * (ncol - 1) <= w:
+            if head:
+                print(" " * pw + paint(sep.join(h.ljust(widths[i])
+                                                 for i, h in enumerate(head)).rstrip(), "dim"))
+            for r in rows:
+                print(prefix(r) + sep.join(c.ljust(widths[i])
+                                           for i, c in enumerate(r["cols"])).rstrip())
+            return
+
+    short = {"con audio": "c/audio", "sin audio": "s/audio"}
+    variants = ((" · ", False), ("·", False), ("·", True))
+    texts = None
+    for sep, abbr in variants:                    # línea compacta
+        cand = [sep.join((short.get(c, c) if abbr else c) for c in r["cols"] if c)
+                for r in rows]
+        texts = cand
+        if all(dwidth(t) <= w - pw for t in cand):
+            break
+    for r, text in zip(rows, texts):
+        lines = wrap_text(text, max(8, w - pw))
+        print(prefix(r) + lines[0])
+        for ln in lines[1:]:
+            print(" " * pw + ln)
 
 
 def drain_pending_input(max_wait=0.08):
@@ -1292,7 +1323,7 @@ def split_prompt(prompt):
     return lines[:-1], last
 
 
-def ask_line(prompt):
+def ask_line(prompt, phantom=True):
     """input() robusto ante Enter fantasma (Atajos / a-Shell).
     1) Drena el buffer de stdin para no consumir un Enter residual como respuesta.
     2) Si aun así llega vacío en < PHANTOM_SECS, vuelve a pedir una sola vez.
@@ -1303,7 +1334,7 @@ def ask_line(prompt):
         print(ln)
     t0 = time.time()
     r = input(prompt)
-    if not r.strip() and time.time() - t0 < PHANTOM_SECS:
+    if phantom and not r.strip() and time.time() - t0 < PHANTOM_SECS:
         # Segunda oportunidad: el prompt ya se imprimió; input() lo vuelve a mostrar
         # en una línea nueva tras el Enter fantasma.
         r = input(prompt)
@@ -1814,19 +1845,19 @@ class _WinKeys:
         pass
 
 
-def timed_input(prompt, seconds=WAIT_SECONDS):
+def timed_input(prompt, seconds=WAIT_SECONDS, phantom=True):
     """Cuenta regresiva. Devuelve None si vence sin escribir nada; si el usuario
     empieza a escribir, cancela la cuenta y devuelve la línea completa.
     La línea se edita a mano y el terminal NO vuelve al modo normal a mitad
     (cambiar de modo es lo que congelaba a-Shell)."""
     if not countdown_supported():
-        return ask_line(prompt)
+        return ask_line(prompt, phantom)
     drain_pending_input()
     try:
         keys = _WinKeys() if os.name == "nt" else _PosixKeys()
     except Exception as _ign:
         ignore("timed_input", _ign)
-        return ask_line(prompt)
+        return ask_line(prompt, phantom)
     pre, prompt = split_prompt(prompt)
     for ln in pre:
         print(ln)
@@ -1871,7 +1902,7 @@ def timed_input(prompt, seconds=WAIT_SECONDS):
                 if ch == "\x1b":
                     esc = True
                 elif ch in "\r\n":
-                    if not buf and time.time() - t_start < PHANTOM_SECS:
+                    if phantom and not buf and time.time() - t_start < PHANTOM_SECS:
                         continue                  # Enter fantasma
                     redraw()
                     sys.stdout.write("\n")
@@ -1933,7 +1964,9 @@ def ask_yn(prompt, default=True, seconds=False):
     EOFError/KeyboardInterrupt se propagan a quien llama."""
     prompt = yn_prompt(prompt, default)
     while True:
-        r = ask_line(prompt) if seconds is False else timed_input(prompt, seconds)
+        # Enter vacío = No es inofensivo: con (s/N) no se filtra el Enter «fantasma».
+        ph = bool(default)
+        r = ask_line(prompt, ph) if seconds is False else timed_input(prompt, seconds, ph)
         if r is None:
             return None
         v = parse_yn(r, default)
