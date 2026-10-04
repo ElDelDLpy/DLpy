@@ -3,6 +3,27 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.1.1
+#
+# - Actualizar usa solo el dlpy.py de la rama main de GitHub: la comprobación de
+#   actualización ya no lista ni lee versions/ ni compara con los backups. «Idéntica a
+#   GitHub» significa que la instalada es igual al dlpy.py de main; con el mismo número y
+#   código distinto se avisa, y con un número mayor en main se ofrece instalarla. Menos
+#   pedidos a la API de GitHub en cada arranque (antes: listado de versions/ y un archivo
+#   por versión). versions/ solo se usa en la recuperación manual (--versiones) y tras un
+#   fallo, no al actualizar.
+# - origins_row() acepta github= y backups= (por defecto True, como antes).
+#
+# ## 0.1.0
+#
+# - Actualizaciones: siempre se consulta directo el repositorio de GitHub. Antes se leía
+#   raw.githubusercontent.com, que pasa por una caché (CDN) de unos 5 minutos y no hace caso
+#   de «Cache-Control» del pedido: tras subir una versión nueva, una versión anterior
+#   seguía viendo la vieja y no detectaba la actualización. Ahora, para cualquier enlace
+#   raw de GitHub (dlpy.py y las copias de versions/), se pide primero a la API de GitHub
+#   (contents?ref=rama, contenido en bruto, sin caché) y, si la API falla o está limitada,
+#   al enlace raw con un parámetro único (?_=<hora>) que evita la caché.
+#
 # ## 0.0.9
 #
 # - Misma versión que GitHub pero distinta de la copia guardada: si la instalada es
@@ -143,7 +164,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.0.9"
+VERSION = "0.1.1"
 
 import os
 import re
@@ -3157,16 +3178,46 @@ def remote_script_version(text):
     return m.group(1) if m else None
 
 
+_RAW_GH_RE = re.compile(r"^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/?#]+)/([^?#]+)$")
+
+
+def fresh_bytes(url, timeout=5, limit=None):
+    """Bytes de `url` sin pasar por cachés. Para enlaces raw de GitHub consulta primero la
+    API del repositorio (contents?ref=rama, formato raw: lee lo último subido) y, si falla
+    o está limitada, el enlace raw con un parámetro único que evita la caché del CDN.
+    Otros enlaces se piden tal cual. None si todo falla."""
+    import urllib.request
+    import urllib.parse
+    limit = limit or UPDATE_MAX_BYTES
+    base = {"User-Agent": "DLpy-updater", "Cache-Control": "no-cache", "Pragma": "no-cache"}
+    tries = []
+    m = _RAW_GH_RE.match(url or "")
+    if m:
+        owner, repo, branch, path = m.groups()
+        tries.append((f"https://api.github.com/repos/{owner}/{repo}/contents/"
+                      f"{urllib.parse.quote(path)}?ref={urllib.parse.quote(branch)}",
+                      dict(base, Accept="application/vnd.github.raw")))
+        tries.append((f"{url}?_={int(time.time())}", base))
+    else:
+        tries.append((url, base))
+    for u, headers in tries:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(u, headers=headers),
+                                        timeout=timeout) as r:
+                raw = r.read(limit + 1)
+            if len(raw) <= limit:
+                return raw
+        except Exception as _ign:
+            ignore("fresh_bytes", _ign)
+    return None
+
+
 def fetch_remote_script(timeout=5, url=None):
     """Texto del dlpy.py del repositorio (o del `url` dado), o None si falla o no es
     un script válido."""
-    import urllib.request
-    req = urllib.request.Request(url or UPDATE_URL, headers={
-        "User-Agent": "DLpy-updater", "Cache-Control": "no-cache"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            raw = r.read(UPDATE_MAX_BYTES + 1)
-        if len(raw) > UPDATE_MAX_BYTES:
+        raw = fresh_bytes(url or UPDATE_URL, timeout)
+        if raw is None:
             return None
         text = raw.decode("utf-8").replace("\r\n", "\n")
         if not remote_script_version(text):
@@ -3227,7 +3278,7 @@ def check_update(force=False):
         clear_recovered()                  # ya pasaste la versión que falló
         rec, crashed = {}, None
     if status == "igual":
-        row = origins_row(remote, text)            # misma versión: compara todos los orígenes
+        row = origins_row(remote, text, github=False, backups=False)   # solo main ↔ instalada (sin versions/)
         st = row_state(row_diffs(row))
         GITHUB_SAME["igual"] = (st == "igual")      # check_version lo usa para refrescar la copia guardada
         m_check(f"DLpy {VERSION} · última versión" + (" · idéntica a GitHub" if st == "igual" else ""))
@@ -3248,7 +3299,6 @@ def check_update(force=False):
         m_warn(f"La {remote} de GitHub es la que falló en este equipo.")
     else:
         m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
-    report_row(origins_row(remote, text), show_diff=False)   # ¿igual a su copia de versions/ en GitHub?
     kind = show_crash_warning(remote, text)       # avisa si es idéntica a una que falló
     if not ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ ", default=(kind != "igual"),
                seconds=WAIT_SECONDS):
@@ -4562,12 +4612,9 @@ def collect_versions(gh=None, shas=None, main=None, backups=None, installed=None
 
 def fetch_raw_text(url, timeout=20):
     """Texto de `url` sin validarlo como script (sirve para comparar una versión rota)."""
-    import urllib.request
-    req = urllib.request.Request(url, headers={"User-Agent": "DLpy-updater", "Cache-Control": "no-cache"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            raw = r.read(UPDATE_MAX_BYTES + 1)
-        if len(raw) > UPDATE_MAX_BYTES:
+        raw = fresh_bytes(url, timeout)
+        if raw is None:
             return None
         return norm_text(raw.decode("utf-8"))
     except Exception as _ign:
@@ -4857,12 +4904,12 @@ def pick_source(row):
         return shown[n - 1][0] if n else None
 
 
-def origins_row(ver, main_text=None, with_installed=None):
+def origins_row(ver, main_text=None, with_installed=None, github=True, backups=True):
     """Fila con TODOS los orígenes de `ver`: la de actualización (`main`, si se da su
     texto), versions/ de GitHub, backups y la instalada (si es la actual).
     Es la misma fila y la misma comparación que usa la lista de versiones."""
     _TEXT_CACHE.clear()
-    full = remote_versions_full(timeout=6)
+    full = remote_versions_full(timeout=6) if github else None
     gh, shas = full if full else ([], {})
     main = None
     if main_text:
@@ -4870,7 +4917,7 @@ def origins_row(ver, main_text=None, with_installed=None):
         main = (ver, UPDATE_URL, git_blob_sha(main_text.encode("utf-8")))
     inst = (VERSION, SCRIPT_PATH) if (ver == VERSION if with_installed is None else with_installed) else None
     rows = collect_versions([x for x in gh if x[0] == ver], shas, main,
-                            [x for x in backup_versions() if x[0] == ver], inst)
+                            [x for x in backup_versions() if x[0] == ver] if backups else [], inst)
     return rows[0] if rows else {"ver": ver, "srcs": []}
 
 
