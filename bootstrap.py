@@ -1,7 +1,8 @@
+#!dlpy.py - bootstrap: al ejecutarse se reemplaza por el dlpy.py real de GitHub y lo abre.
 import os, re, runpy, sys, time, urllib.request
 
 URL = os.environ.get("DLPY_UPDATE_URL") or "https://raw.githubusercontent.com/ElDelDLpy/DLpy/main/dlpy.py"
-DEST = os.path.join(os.path.expanduser("~"), "Documents", "dlpy.py")
+DEST = os.path.abspath(__file__)
 MAX = 3 * 1024 * 1024
 
 
@@ -23,15 +24,11 @@ def descargar():
 
 
 texto = descargar()
-if texto:
-    os.makedirs(os.path.dirname(DEST), exist_ok=True)
-    with open(DEST + ".tmp", "w", encoding="utf-8") as f:
-        f.write(texto)
-    os.replace(DEST + ".tmp", DEST)
-    sys._dlpy_reexec = True
-elif os.path.isfile(DEST):
-    print("Sin conexión con GitHub: se abre la copia que ya hay en Documents.")
-else:
-    sys.exit("No se pudo descargar DLpy y no hay copia en Documents.")
+if not texto:
+    sys.exit("No se pudo descargar DLpy (¿sin conexión?). Vuelve a abrirlo para reintentar.")
+with open(DEST + ".tmp", "w", encoding="utf-8") as f:
+    f.write(texto)
+os.replace(DEST + ".tmp", DEST)
+sys._dlpy_reexec = True
 sys.argv[0] = DEST
 runpy.run_path(DEST, run_name="__main__")
