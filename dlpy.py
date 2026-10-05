@@ -3,19 +3,6 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
-# ## 0.2.6
-#
-# - Banner en tarjeta (el de dlpy_card_test.py): borde redondeado con el degradado naranja→magenta→naranja
-#   y, al arrancar, un destello que le da una vuelta (se apaga solo; con DLPY_ANIM=0 y en debug sale fijo).
-#   · Fila 1: «▍DLpy vX» y el estado de debug. Fila 2: dónde corre. Fila 3: barra de dos escalas en una
-#     sola línea: arriba (gris) el espacio usado del equipo y abajo (degradado) lo que ocupa DLpy del
-#     límite de limpieza, con «iPhone 77 %» y «DLpy 42 %» a los lados.
-#   · Si DLpy pasa del límite, el porcentaje sale en ámbar y el desglose va dentro de la tarjeta.
-#   · La tarjeta ocupa 5 líneas (antes 3): la lista de formatos descuenta 2 filas más (list_cap).
-#   · Terminal de menos de 30 columnas: se usa el banner de antes.
-# - El % del panel de descarga, al cambiar, fluye en degradado y se apaga hacia blanco en 1,6 s (antes
-#   pasaba de naranja a blanco en medio segundo). El efecto no se reinicia hasta que termina el anterior.
-#
 # ## 0.2.5
 #
 # - Instalación de paquetes (pip) unificada: una sola lógica de reintento para PEP 668
@@ -128,7 +115,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.2.6"
+VERSION = "0.2.5"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz (estilo Aurora) · Terminal: ancho y texto ·
@@ -1314,125 +1301,10 @@ def title_bar(left, right):
     return paint("▍", "orange") + paint(left, "white", True) + " " * gap + right
 
 
-def _fg(c):
-    return f"\x1b[38;2;{c[0]};{c[1]};{c[2]}m"
-
-
-def _bg(c):
-    return f"\x1b[48;2;{c[0]};{c[1]};{c[2]}m"
-
-
-def tri(x):
-    """Onda triangular 0→1→0: el degradado va y vuelve sin saltos (como grad con phase)."""
-    return 1 - abs(2 * (x % 1.0) - 1)
-
-
-def smooth(x):
-    """Entrada y salida suaves (0→1)."""
-    x = max(0.0, min(1.0, x))
-    return x * x * (3 - 2 * x)
-
-
-def disk_fraction():
-    """Fracción usada del almacenamiento del equipo (0–1) o None si no se puede leer (0.2.6)."""
-    for path in (FILES_DIR, HOME, os.getcwd()):
-        try:
-            u = shutil.disk_usage(path)
-            if u.total > 0:
-                return max(0.0, min(1.0, (u.total - u.free) / u.total))
-        except (OSError, ValueError, NameError):
-            continue
-    return None
-
-
-def card_bar(n, phone, mine):
-    """Una línea con dos escalas: «▀» arriba = equipo (texto), abajo = DLpy (fondo) (0.2.6)."""
-    o, m, trk, gray = (PALETTE[k][0] for k in ("orange", "magenta", "track", "gray"))
-    if not TRUECOLOR:
-        k = int(n * min(1.0, mine) + 0.5)
-        return grad(FILL * k) + paint(EMPTY * (n - k), "track")
-    out = ""
-    for i in range(n):
-        pos = (i + 0.5) / n
-        top = gray if phone is not None and pos <= phone else trk
-        bot = mix(o, m, min(1.0, pos / mine)) if mine > 0 and pos <= mine else trk
-        out += _fg(top) + _bg(bot) + "▀"
-    return out + "\x1b[0m"
-
-
-def card_rows(inner):
-    """Filas del interior de la tarjeta, cada una de `inner` columnas exactas (0.2.6)."""
-    dev = "DEV · " if DEV else ""
-    state = (paint(dev + "DEBUG ACTIVO", "amber", True) if DEBUG else paint(dev + "debug off", "gray"))
-    try:
-        r = storage_report()
-        _head, detail, over = storage_lines()
-        mine = r["total"] / CLEAN_LIMIT if CLEAN_LIMIT > 0 else 0.0
-    except Exception:
-        detail, over, mine = [], False, 0.0
-    phone = disk_fraction()
-    left_t = paint("▍", "orange") + paint(f"DLpy v{VERSION}", "white", True)
-    gap = max(1, inner - dwidth(left_t) - dwidth(state))
-    rows = [left_t + " " * gap + state]
-    where = fit_text(f"  {platform_name()} · {machine_name()}", inner)
-    rows.append(paint(where, "gray") + " " * max(0, inner - dwidth(where)))
-    left = f"{plat_text('iPhone')} {phone * 100:.0f}% " if phone is not None else ""
-    right = f" DLpy {mine * 100:.0f}%"
-    n = inner - 2 - len(left) - len(right)
-    if n < 6:                                   # sin sitio para etiquetas: solo la barra
-        left, right, n = "", "", inner - 2
-    rows.append("  " + paint(left, "gray") + card_bar(n, phone, mine)
-                + paint(right, "amber" if over else "gray"))
-    if over:                                    # el desglose solo si se pasa del límite
-        for ln in detail:
-            t = fit_text("  " + ln, inner)
-            rows.append(paint(t, "gray") + " " * max(0, inner - dwidth(t)))
-    return rows
-
-
-def card_lines(t=None, env=1.0):
-    """Tarjeta redondeada. El borde lleva el degradado naranja→magenta→naranja y, encima, un
-    destello que lo recorre entero. t = segundos (None = fija); env 1→0 apaga el destello (0.2.6)."""
-    w = max(30, min(safe_width(), 60))
-    body = card_rows(w - 4)
-    h = len(body)
-    perim = 2 * w + 2 * h
-    span = max(14.0, perim * 0.30)
-    head = (t / BANNER_LAP * perim) if t is not None else 0.0
-    o, m, trk, white = (PALETTE[k][0] for k in ("orange", "magenta", "track", "white"))
-
-    def col(pos):
-        if not USE_COLOR:
-            return ""
-        if not TRUECOLOR:
-            return "\x1b[" + PALETTE["orange" if tri(pos / perim) < 0.5 else "magenta"][1] + "m"
-        base = mix(o, m, tri(pos / perim))
-        if t is None or env <= 0:
-            return _fg(base)
-        d = (pos - head + perim / 2) % perim - perim / 2
-        lit = 0.5 * (1 + math.cos(2 * math.pi * d / span)) if abs(d) < span / 2 else 0.0
-        lit *= env
-        dim = mix(base, trk, 0.40 * env)
-        return _fg(mix(dim, mix(base, white, 0.60), lit))
-
-    rs = "\x1b[0m" if USE_COLOR else ""
-    top = "".join(col(i) + ch for i, ch in enumerate("╭" + "─" * (w - 2) + "╮")) + rs
-    bottom = "".join(col(w + h + (w - 1 - j)) + ch
-                     for j, ch in enumerate("╰" + "─" * (w - 2) + "╯")) + rs
-    out = [top]
-    for k, r in enumerate(body):
-        out.append(col(2 * w + h + (h - 1 - k)) + "│" + rs + " " + r + " " + col(w + k) + "│" + rs)
-    out.append(bottom)
-    return out
-
-
-BANNER_LAP = 1.6          # segundos que tarda el destello en dar la vuelta al borde (0.2.6)
-_BANNER_INTRO = [True]    # el destello solo se ve en el primer banner de la ejecución
-
-
-def banner_plain():
-    """Banner de antes (terminales de menos de 30 columnas)."""
-    dev = "DEV · " if DEV else ""
+def banner():
+    """Encabezado: título + versión + estado de debug, dónde corre, espacio usado y degradado.
+    Se pinta tras cada clear_screen (y al arrancar) para que quede visible."""
+    dev = "DEV · " if DEV else ""       # «DEV» solo aparece con DLPY_DEV activo
     state = (paint(dev + "DEBUG ACTIVO", "amber", True) if DEBUG
              else paint(dev + "debug off", "gray"))
     print(title_bar(f"DLpy v{VERSION}", state))
@@ -1442,6 +1314,7 @@ def banner_plain():
     except Exception:
         head, detail, over = "Espacio: ?", [], False
     col = "amber" if over else "gray"
+    # 0.2.4: dónde corre + espacio usado, siempre en 1 línea («Espacio:» solo si sobra sitio)
     room_w = safe_width() - 2
     for cand in (head, head.replace("Espacio: ", "")):
         room = room_w - dwidth(cand) - 3
@@ -1451,44 +1324,10 @@ def banner_plain():
         print("  " + paint(fit_text(where, room), "gray") + paint(" · ", "gray") + paint(cand, col))
     else:
         print("  " + paint(fit_text(cand, room_w), col))
-    if over:
+    if over:                                             # el desglose solo si se pasa del límite
         for ln in detail:
             print("  " + paint(ln, "gray"))
     print(rule())
-
-
-def banner():
-    """Encabezado en tarjeta: título + versión + estado de debug, dónde corre y la barra de espacio
-    (equipo / DLpy). Se pinta tras cada clear_screen (y al arrancar) para que quede visible.
-    El primer banner de la ejecución da una vuelta de destello al borde (0.2.6)."""
-    if safe_width() < 30:
-        banner_plain()
-        return
-    first, _BANNER_INTRO[0] = _BANNER_INTRO[0], False
-    if not (first and ANIM_LIVE and TRUECOLOR):
-        for ln in card_lines():
-            print(ln)
-        return
-    n, t0 = 0, time.time()
-    try:
-        sys.stdout.write("\x1b[?25l")
-        while True:
-            now = time.time() - t0
-            if now >= BANNER_LAP:
-                break
-            lines = card_lines(now, smooth((BANNER_LAP - now) / (BANNER_LAP * 0.4)) if now > BANNER_LAP * 0.6 else 1.0)
-            sys.stdout.write("\x1b[?7l" + (f"\x1b[{n}A" if n else "")
-                             + "".join("\r" + ln + "\x1b[K\n" for ln in lines) + "\x1b[?7h")
-            sys.stdout.flush()
-            n = len(lines)
-            time.sleep(1.0 / 16)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        lines = card_lines()
-        sys.stdout.write((f"\x1b[{n}A" if n else "") + "".join("\r" + ln + "\x1b[K\n" for ln in lines)
-                         + "\x1b[?25h")
-        sys.stdout.flush()
 
 
 def clear_screen():
@@ -1789,18 +1628,6 @@ def bar_str(w, frac, now, sweep=None, indet=False, warn=False):
     return fill + t + track_str(rest)
 
 
-PCT_FLASH = 1.6          # segundos que dura el efecto del % al cambiar (0.2.6)
-
-
-def pct_text(ptxt, age):
-    """El % recién cambiado: degradado que fluye y se apaga hacia blanco en PCT_FLASH s (0.2.6)."""
-    f = smooth(age / PCT_FLASH)
-    n = max(1, len(ptxt) - 1)
-    o, m, w = (PALETTE[k][0] for k in ("orange", "magenta", "white"))
-    out = "".join(_fg(mix(mix(o, m, tri(i / n + age * 0.5)), w, f)) + ch for i, ch in enumerate(ptxt))
-    return out + "\x1b[0m"
-
-
 SPARK = "▁▂▃▄▅▆▇█"
 
 
@@ -1886,9 +1713,7 @@ class Bar:
                 else:
                     self.pct = pct
                     if int(pct) != self.last_ip:
-                        self.last_ip = int(pct)
-                        if time.time() - self.chg >= PCT_FLASH + 0.3:     # sin parpadeo continuo (0.2.6)
-                            self.chg = time.time()
+                        self.last_ip, self.chg = int(pct), time.time()
             if indeterminate is not None:
                 self.indet = indeterminate
 
@@ -2002,8 +1827,9 @@ class Bar:
                 shown = pct + (100 - pct) * sweep
             ptxt = f"{shown:5.1f}%"
             pcol = ptxt
-            if flash < PCT_FLASH and TRUECOLOR and ANIM and USE_COLOR and sweep is None:
-                pcol = pct_text(ptxt, flash)
+            if flash < 0.5 and TRUECOLOR and ANIM and USE_COLOR and sweep is None:
+                r, g, b = mix(PALETTE["orange"][0], PALETTE["white"][0], flash / 0.5)
+                pcol = f"\x1b[38;2;{r};{g};{b}m{ptxt}\x1b[0m"
         right = (paint(step, "gray") + "  " if step else "") + pcol
         rw = dwidth(step) + (2 if step else 0) + dwidth(ptxt)
         left = d + " " + fit_text(label, max(4, w - rw - 4))
@@ -2788,7 +2614,7 @@ def list_cap():
         lines = shutil.get_terminal_size((80, 24)).lines
     except (OSError, ValueError):
         lines = 24
-    return max(8, lines - 16)          # la tarjeta del banner ocupa 5 líneas (0.2.6)
+    return max(8, lines - 14)
 
 
 def visible_start(n, take, keep=None):
