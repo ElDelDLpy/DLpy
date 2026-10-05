@@ -3,35 +3,6 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
-# ## 0.2.6
-#
-# - Banner en tarjeta (el de dlpy_card_test.py): borde redondeado con el degradado naranja→magenta→naranja
-#   y, al arrancar, un destello que le da una vuelta de 2,5 s (se apaga solo; con DLPY_ANIM=0 y en debug
-#   sale fijo).
-#   · Durante la descarga la tarjeta sigue viva: el mismo hilo del panel (≈7 fps) la repinta en las
-#     filas 1 a 5 (guarda y restaura el cursor) con una vuelta de destello cada 5 s; al terminar el
-#     destello se apaga y queda fija. Solo se anima justo después de clear_screen y si el terminal
-#     tiene alto para no desplazarse (5 filas de tarjeta + 16); si no, la tarjeta queda fija.
-#   · El contenido de la tarjeta (espacio, porcentajes) se calcula una vez y se reutiliza en cada cuadro
-#     (antes la vuelta de arranque recorría los archivos en cada cuadro).
-#   · TEST (DLPY_CARDLIVE=0 lo apaga y vuelve al comportamiento anterior): un hilo propio anima la
-#     tarjeta todo el tiempo (preguntas, listas y descarga) a ≈10 fps, y la vuelta de arranque ya no
-#     bloquea el script. Al salir queda fija.
-#   · La tarjeta queda anclada arriba con una región de desplazamiento (DECSTBM): lo que se escribe
-#     debajo (listas, preguntas, descarga) se desplaza sin tocarla, así que el banner se anima en
-#     TODAS las pantallas, también con listas largas. Se vuelve a anclar tras cada clear_screen y si
-#     cambia el alto del terminal (p. ej. al salir el teclado), y se libera al salir o al reiniciar.
-#     DLPY_CARDPIN=0 lo apaga: entonces la tarjeta solo se anima mientras la pantalla no se acerque a
-#     desplazarse (estima la fila del cursor; ahora también cuenta el Enter de cada input()).
-#   · Fila 1: «▍DLpy vX» y el estado de debug. Fila 2: dónde corre. Fila 3: barra de dos escalas en una
-#     sola línea: arriba (gris) el espacio usado del equipo y abajo (degradado) lo que ocupa DLpy del
-#     límite de limpieza, con «iPhone 77 %» y «DLpy 42 %» a los lados.
-#   · Si DLpy pasa del límite, el porcentaje sale en ámbar y el desglose va dentro de la tarjeta.
-#   · La tarjeta ocupa 5 líneas (antes 3): la lista de formatos descuenta 2 filas más (list_cap).
-#   · Terminal de menos de 30 columnas: se usa el banner de antes.
-# - El % del panel de descarga, al cambiar, fluye en degradado y se apaga hacia blanco en 1,6 s (antes
-#   pasaba de naranja a blanco en medio segundo). El efecto no se reinicia hasta que termina el anterior.
-#
 # ## 0.2.5
 #
 # - Instalación de paquetes (pip) unificada: una sola lógica de reintento para PEP 668
@@ -144,7 +115,7 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.2.6"
+VERSION = "0.2.5"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz (estilo Aurora) · Terminal: ancho y texto ·
@@ -158,7 +129,6 @@ VERSION = "0.2.6"
 #   Entrega del archivo · Atajo de iOS · Análisis tolerante · Error «no eres un bot» · Autoprueba ·
 #   Funciones disponibles según el sistema · Principal
 
-import atexit
 import math
 import os
 import re
@@ -1331,339 +1301,10 @@ def title_bar(left, right):
     return paint("▍", "orange") + paint(left, "white", True) + " " * gap + right
 
 
-def _fg(c):
-    return f"\x1b[38;2;{c[0]};{c[1]};{c[2]}m"
-
-
-def _bg(c):
-    return f"\x1b[48;2;{c[0]};{c[1]};{c[2]}m"
-
-
-def tri(x):
-    """Onda triangular 0→1→0: el degradado va y vuelve sin saltos (como grad con phase)."""
-    return 1 - abs(2 * (x % 1.0) - 1)
-
-
-def smooth(x):
-    """Entrada y salida suaves (0→1)."""
-    x = max(0.0, min(1.0, x))
-    return x * x * (3 - 2 * x)
-
-
-def disk_fraction():
-    """Fracción usada del almacenamiento del equipo (0–1) o None si no se puede leer (0.2.6)."""
-    for path in (FILES_DIR, HOME, os.getcwd()):
-        try:
-            u = shutil.disk_usage(path)
-            if u.total > 0:
-                return max(0.0, min(1.0, (u.total - u.free) / u.total))
-        except (OSError, ValueError, NameError):
-            continue
-    return None
-
-
-def card_bar(n, phone, mine):
-    """Una línea con dos escalas: «▀» arriba = equipo (texto), abajo = DLpy (fondo) (0.2.6)."""
-    o, m, trk, gray = (PALETTE[k][0] for k in ("orange", "magenta", "track", "gray"))
-    if not TRUECOLOR:
-        k = int(n * min(1.0, mine) + 0.5)
-        return grad(FILL * k) + paint(EMPTY * (n - k), "track")
-    out = ""
-    for i in range(n):
-        pos = (i + 0.5) / n
-        top = gray if phone is not None and pos <= phone else trk
-        bot = mix(o, m, min(1.0, pos / mine)) if mine > 0 and pos <= mine else trk
-        out += _fg(top) + _bg(bot) + "▀"
-    return out + "\x1b[0m"
-
-
-def card_rows(inner):
-    """Filas del interior de la tarjeta, cada una de `inner` columnas exactas (0.2.6)."""
-    dev = "DEV · " if DEV else ""
-    state = (paint(dev + "DEBUG ACTIVO", "amber", True) if DEBUG else paint(dev + "debug off", "gray"))
-    try:
-        r = storage_report()
-        _head, detail, over = storage_lines()
-        mine = r["total"] / CLEAN_LIMIT if CLEAN_LIMIT > 0 else 0.0
-    except Exception:
-        detail, over, mine = [], False, 0.0
-    phone = disk_fraction()
-    left_t = paint("▍", "orange") + paint(f"DLpy v{VERSION}", "white", True)
-    gap = max(1, inner - dwidth(left_t) - dwidth(state))
-    rows = [left_t + " " * gap + state]
-    where = fit_text(f"  {platform_name()} · {machine_name()}", inner)
-    rows.append(paint(where, "gray") + " " * max(0, inner - dwidth(where)))
-    left = f"{plat_text('iPhone')} {phone * 100:.0f}% " if phone is not None else ""
-    right = f" DLpy {mine * 100:.0f}%"
-    n = inner - 2 - len(left) - len(right)
-    if n < 6:                                   # sin sitio para etiquetas: solo la barra
-        left, right, n = "", "", inner - 2
-    rows.append("  " + paint(left, "gray") + card_bar(n, phone, mine)
-                + paint(right, "amber" if over else "gray"))
-    if over:                                    # el desglose solo si se pasa del límite
-        for ln in detail:
-            t = fit_text("  " + ln, inner)
-            rows.append(paint(t, "gray") + " " * max(0, inner - dwidth(t)))
-    return rows
-
-
-def card_lines(t=None, env=1.0, lap=None, cached=False, head=None):
-    """Tarjeta redondeada. El borde lleva el degradado naranja→magenta→naranja y, encima, un
-    destello que lo recorre entero. t = segundos (None = fija); env 1→0 apaga el destello (0.2.6).
-    cached=True reutiliza el ancho y el contenido del último cálculo (sin recorrer archivos)."""
-    if cached and CARD["body"] is not None:
-        w, body = CARD["w"], CARD["body"]
-    else:
-        w = max(30, min(safe_width(), 60))
-        body = card_rows(w - 4)
-        CARD["w"], CARD["body"] = w, body
-    h = len(body)
-    perim = 2 * w + 2 * h
-    span = max(14.0, perim * 0.30)
-    if head is None:
-        head = (t / (lap or BANNER_LAP) * perim) if t is not None else 0.0
-    o, m, trk, white = (PALETTE[k][0] for k in ("orange", "magenta", "track", "white"))
-
-    def col(pos):
-        if not USE_COLOR:
-            return ""
-        if not TRUECOLOR:
-            return "\x1b[" + PALETTE["orange" if tri(pos / perim) < 0.5 else "magenta"][1] + "m"
-        base = mix(o, m, tri(pos / perim))
-        if t is None or env <= 0:
-            return _fg(base)
-        d = (pos - head + perim / 2) % perim - perim / 2
-        lit = 0.5 * (1 + math.cos(2 * math.pi * d / span)) if abs(d) < span / 2 else 0.0
-        lit *= env
-        dim = mix(base, trk, 0.40 * env)
-        return _fg(mix(dim, mix(base, white, 0.60), lit))
-
-    rs = "\x1b[0m" if USE_COLOR else ""
-    top = "".join(col(i) + ch for i, ch in enumerate("╭" + "─" * (w - 2) + "╮")) + rs
-    bottom = "".join(col(w + h + (w - 1 - j)) + ch
-                     for j, ch in enumerate("╰" + "─" * (w - 2) + "╯")) + rs
-    out = [top]
-    for k, r in enumerate(body):
-        out.append(col(2 * w + h + (h - 1 - k)) + "│" + rs + " " + r + " " + col(w + k) + "│" + rs)
-    out.append(bottom)
-    return out
-
-
-BANNER_LAP = 2.5          # segundos que tarda el destello en dar la vuelta al borde al arrancar (0.2.6)
-CARD_LAP = 5.0            # ídem mientras se descarga (0.2.6)
-_BANNER_INTRO = [True]    # el destello de arranque solo se ve en el primer banner de la ejecución
-# Estado de la tarjeta: w/body = último contenido calculado (se reutiliza en cada cuadro);
-# fresh = la tarjeta acaba de pintarse arriba del todo; live = el panel de descarga la anima.
-CARD = {"w": None, "body": None, "fresh": False, "live": False, "t0": 0.0}
-# TEST (0.2.6): hilo propio de la tarjeta. DLPY_CARDLIVE=0 lo apaga (queda lo de antes).
-CARD_THREAD = _flag_env("DLPY_CARDLIVE", True)
-CARD.update({"run": False, "th": None, "head": 0.0, "row": 0, "rows": 24, "rows_t": 0.0, "settled": False,
-             "pin": False, "pin_rows": 0})
-CARD_PIN = _flag_env("DLPY_CARDPIN", True)      # ancla la tarjeta con una región de desplazamiento
-
-
-def card_paint(t=None, env=1.0, lap=None, head=None):
-    """Repinta la tarjeta en las filas 1 a 5 sin mover el cursor (guardar/restaurar) (0.2.6)."""
-    lines = card_lines(t, env, lap, cached=True, head=head)
-    seq = "\x1b7" + "".join(f"\x1b[{i + 1};1H{ln}" for i, ln in enumerate(lines)) + "\x1b8"
-    sys.stdout.write("\x1b[?7l" + seq + "\x1b[?7h")
-    sys.stdout.flush()
-
-
-class _RowCounter:
-    """Envoltura de sys.stdout que solo cuenta: saltos de línea y subidas de cursor desde el último
-    clear_screen, para saber en qué fila está el cursor y no pintar la tarjeta si se desplazó (0.2.6).
-    Todo lo demás lo delega tal cual."""
-
-    def __init__(self, inner):
-        self._inner = inner
-
-    def write(self, text):
-        n = self._inner.write(text)
-        try:
-            _count_rows(text)
-        except Exception as _ign:
-            ignore("row_counter", _ign)
-        return n
-
-    def writelines(self, lines):
-        for ln in lines:
-            self.write(ln)
-
-    def flush(self):
-        return self._inner.flush()
-
-    def __getattr__(self, name):
-        return getattr(self._inner, name)
-
-
-_UP_RE = re.compile(r"\x1b\[(\d*)A")
-
-
-def _count_rows(text):
-    if not isinstance(text, str) or not text:
-        return
-    cut = max((text.rfind(q) for q in set(CLEAR_SEQS.values())), default=-1)
-    if cut >= 0:                               # pantalla borrada: el cursor vuelve arriba
-        CARD["row"], text = 0, text[cut:]
-    ups = sum(int(m or 1) for m in _UP_RE.findall(text))
-    low = (len(CARD["body"]) + 2) if CARD["body"] and CARD["fresh"] else 0   # bajo la tarjeta siempre
-    CARD["row"] = max(low, CARD["row"] + text.count("\n") - ups)
-    now = time.time()
-    if now - CARD["rows_t"] > 0.5 and threading.current_thread() is threading.main_thread():
-        CARD["rows_t"] = now                   # el alto se mide en el hilo principal (a-Shell)
-        try:
-            CARD["rows"] = shutil.get_terminal_size((80, 24)).lines
-        except (OSError, ValueError):
-            pass
-
-
-def _card_ok():
-    """¿Sigue la tarjeta arriba del todo (la pantalla no se desplazó)? Margen de 5 filas por lo que
-    se escribe sin pasar por sys.stdout (el eco de input, el prompt de readline)."""
-    return bool(CARD["fresh"] and CARD["body"] is not None
-                and (CARD["pin"] or CARD["row"] + 5 <= CARD["rows"]))
-
-
-def _card_pin(rows, restore=False):
-    """Ancla la tarjeta: región de desplazamiento de la fila h+1 a la última (0.2.6).
-    DECSTBM manda el cursor al inicio, así que se coloca bajo la tarjeta (o se restaura)."""
-    h = len(CARD["body"] or ()) + 2
-    if not CARD_PIN or rows < h + 4:
-        return False
-    seq = f"\x1b[{h + 1};{rows}r"
-    seq = "\x1b7" + seq + "\x1b8" if restore else seq + f"\x1b[{h + 1};1H"
-    sys.stdout.write(seq)
-    sys.stdout.flush()
-    CARD["pin_rows"] = rows
-    return True
-
-
-def _card_unpin():
-    """Libera la región de desplazamiento sin mover el cursor."""
-    if CARD["pin"]:
-        CARD["pin"] = False
-        try:
-            sys.stdout.write("\x1b7\x1b[r\x1b8")
-            sys.stdout.flush()
-        except Exception as _ign:
-            ignore("card_unpin", _ign)
-
-
-def _card_loop():
-    last = time.time()
-    shown = None                               # None = aún no, True = animada, False = fija
-    while CARD["run"]:
-        time.sleep(0.1)
-        now = time.time()
-        dt, last = now - last, now
-        try:
-            ok = _card_ok()
-            bar = globals().get("ACTIVE_BAR")
-            lock = getattr(bar, "lock", None) or threading.RLock()
-            if CARD["pin"] and CARD["rows"] != CARD["pin_rows"]:      # cambió el alto del terminal
-                with lock:
-                    CARD["pin"] = _card_pin(CARD["rows"], restore=True)
-            if ok:
-                age = now - CARD["t0"]
-                lap = BANNER_LAP if age < BANNER_LAP else CARD_LAP
-                w, h = CARD["w"], len(CARD["body"]) + 2
-                CARD["head"] = (CARD["head"] + dt * (2 * w + 2 * h) / lap) % (2 * w + 2 * h)
-                with lock:
-                    card_paint(age, 1.0, lap, head=CARD["head"])
-                shown = True
-            elif shown:                        # se acerca el desplazamiento: queda fija y se calla
-                with lock:
-                    if CARD["row"] >= len(CARD["body"]) + 2 and CARD["fresh"]:
-                        card_paint()
-                shown = False
-        except Exception as _ign:
-            ignore("card_loop", _ign)
-            CARD["run"] = False
-
-
-def card_thread_start():
-    """Arranca (o reanuda con el contenido nuevo) el hilo que anima la tarjeta (0.2.6, test)."""
-    if not (CARD_THREAD and ANIM_LIVE and TRUECOLOR and USE_COLOR):
-        return False
-    if not isinstance(sys.stdout, _RowCounter):
-        sys.stdout = _RowCounter(sys.stdout)
-    CARD["settled"] = False
-    if CARD["th"] is None or not CARD["th"].is_alive():
-        CARD["run"], CARD["t0"], CARD["head"] = True, time.time(), 0.0
-        CARD["th"] = threading.Thread(target=_card_loop, daemon=True)
-        CARD["th"].start()
-        atexit.register(card_thread_stop)
-    return True
-
-
-def card_thread_stop():
-    """Al salir: para el hilo y deja la tarjeta fija (0.2.6)."""
-    if CARD["settled"]:
-        return
-    CARD["settled"] = True
-    CARD["run"] = False
-    th = CARD["th"]
-    if th is not None and th.is_alive() and th is not threading.current_thread():
-        th.join(timeout=0.5)
-    try:
-        ok = _card_ok()
-        _card_unpin()
-        if ok:
-            card_paint()
-    except Exception as _ign:
-        ignore("card_thread_stop", _ign)
-
-
-def card_arm():
-    """Activa la animación de la tarjeta durante la descarga si es seguro (0.2.6)."""
-    if CARD["th"] is not None and CARD["run"]:
-        return                                 # ya la anima el hilo propio
-    if CARD["live"] or not (CARD["fresh"] and CARD["body"] is not None
-                            and ANIM_LIVE and TRUECOLOR and USE_COLOR):
-        return
-    try:
-        rows = shutil.get_terminal_size((80, 24)).lines
-    except (OSError, ValueError):
-        rows = 24
-    if rows < len(card_lines(cached=True)) + 16:         # sin alto: la pantalla se desplazaría
-        return
-    CARD["live"], CARD["t0"] = True, time.time()
-
-
-def card_tick():
-    """Un cuadro de la tarjeta viva; ante cualquier error la deja fija (0.2.6)."""
-    if not CARD["live"]:
-        return
-    try:
-        card_paint(time.time() - CARD["t0"], 1.0, CARD_LAP)
-    except Exception as _ign:
-        CARD["live"] = False
-        ignore("card_tick", _ign)
-
-
-def card_settle():
-    """Termina la animación: el destello se apaga en medio segundo y la tarjeta queda fija (0.2.6)."""
-    if not CARD["live"]:
-        return
-    CARD["live"] = False
-    try:
-        t0 = time.time()
-        base = t0 - CARD["t0"]
-        while True:
-            k = (time.time() - t0) / 0.5
-            if k >= 1:
-                break
-            card_paint(base + (time.time() - t0), 1.0 - smooth(k), CARD_LAP)
-            time.sleep(1.0 / 16)
-        card_paint()
-    except Exception as _ign:
-        ignore("card_settle", _ign)
-
-
-def banner_plain():
-    """Banner de antes (terminales de menos de 30 columnas)."""
-    dev = "DEV · " if DEV else ""
+def banner():
+    """Encabezado: título + versión + estado de debug, dónde corre, espacio usado y degradado.
+    Se pinta tras cada clear_screen (y al arrancar) para que quede visible."""
+    dev = "DEV · " if DEV else ""       # «DEV» solo aparece con DLPY_DEV activo
     state = (paint(dev + "DEBUG ACTIVO", "amber", True) if DEBUG
              else paint(dev + "debug off", "gray"))
     print(title_bar(f"DLpy v{VERSION}", state))
@@ -1673,6 +1314,7 @@ def banner_plain():
     except Exception:
         head, detail, over = "Espacio: ?", [], False
     col = "amber" if over else "gray"
+    # 0.2.4: dónde corre + espacio usado, siempre en 1 línea («Espacio:» solo si sobra sitio)
     room_w = safe_width() - 2
     for cand in (head, head.replace("Espacio: ", "")):
         room = room_w - dwidth(cand) - 3
@@ -1682,67 +1324,10 @@ def banner_plain():
         print("  " + paint(fit_text(where, room), "gray") + paint(" · ", "gray") + paint(cand, col))
     else:
         print("  " + paint(fit_text(cand, room_w), col))
-    if over:
+    if over:                                             # el desglose solo si se pasa del límite
         for ln in detail:
             print("  " + paint(ln, "gray"))
     print(rule())
-
-
-def banner():
-    """Encabezado en tarjeta: título + versión + estado de debug, dónde corre y la barra de espacio
-    (equipo / DLpy). Se pinta tras cada clear_screen (y al arrancar) para que quede visible.
-    El primer banner de la ejecución da una vuelta de destello al borde (0.2.6)."""
-    CARD["live"], CARD["fresh"], CARD["pin"] = False, False, False
-    if safe_width() < 30:
-        banner_plain()
-        return
-    if CARD_THREAD and ANIM_LIVE and TRUECOLOR and USE_COLOR:
-        # TEST (0.2.6): la tarjeta sale ya y la anima un hilo propio; el arranque no bloquea
-        if not isinstance(sys.stdout, _RowCounter):
-            sys.stdout = _RowCounter(sys.stdout)
-        CARD["row"] = 0
-        _BANNER_INTRO[0] = False
-        for ln in card_lines():
-            print(ln)
-        CARD["fresh"] = True
-        try:
-            CARD["rows"] = shutil.get_terminal_size((80, 24)).lines
-        except (OSError, ValueError):
-            pass
-        CARD["pin"] = _card_pin(CARD["rows"])
-        if CARD["th"] is None or not CARD["th"].is_alive():
-            card_thread_start()
-        return
-    first, _BANNER_INTRO[0] = _BANNER_INTRO[0], False
-    if not (first and ANIM_LIVE and TRUECOLOR):
-        lines = card_lines()
-        for ln in lines:
-            print(ln)
-        CARD["fresh"] = True
-        return
-    card_lines()                                      # calcula el contenido una sola vez
-    n, t0 = 0, time.time()
-    try:
-        sys.stdout.write("\x1b[?25l")
-        while True:
-            now = time.time() - t0
-            if now >= BANNER_LAP:
-                break
-            lines = card_lines(now, smooth((BANNER_LAP - now) / (BANNER_LAP * 0.4)) if now > BANNER_LAP * 0.6 else 1.0,
-                               cached=True)
-            sys.stdout.write("\x1b[?7l" + (f"\x1b[{n}A" if n else "")
-                             + "".join("\r" + ln + "\x1b[K\n" for ln in lines) + "\x1b[?7h")
-            sys.stdout.flush()
-            n = len(lines)
-            time.sleep(1.0 / 16)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        lines = card_lines(cached=True)
-        sys.stdout.write((f"\x1b[{n}A" if n else "") + "".join("\r" + ln + "\x1b[K\n" for ln in lines)
-                         + "\x1b[?25h")
-        sys.stdout.flush()
-        CARD["fresh"] = True
 
 
 def clear_screen():
@@ -1972,12 +1557,10 @@ def ask_line(prompt, phantom=True, plain=None):
     prompt = rl_safe(prompt)
     t0 = time.time()
     r = input(prompt)
-    CARD["row"] += 1                 # el Enter del input() no pasa por sys.stdout (0.2.6)
     if phantom and not r.strip() and time.time() - t0 < PHANTOM_SECS:
         # Segunda oportunidad: el prompt ya se imprimió; input() lo vuelve a mostrar
         # en una línea nueva tras el Enter fantasma.
         r = input(prompt)
-        CARD["row"] += 1
     return r
 
 
@@ -2045,18 +1628,6 @@ def bar_str(w, frac, now, sweep=None, indet=False, warn=False):
     return fill + t + track_str(rest)
 
 
-PCT_FLASH = 1.6          # segundos que dura el efecto del % al cambiar (0.2.6)
-
-
-def pct_text(ptxt, age):
-    """El % recién cambiado: degradado que fluye y se apaga hacia blanco en PCT_FLASH s (0.2.6)."""
-    f = smooth(age / PCT_FLASH)
-    n = max(1, len(ptxt) - 1)
-    o, m, w = (PALETTE[k][0] for k in ("orange", "magenta", "white"))
-    out = "".join(_fg(mix(mix(o, m, tri(i / n + age * 0.5)), w, f)) + ch for i, ch in enumerate(ptxt))
-    return out + "\x1b[0m"
-
-
 SPARK = "▁▂▃▄▅▆▇█"
 
 
@@ -2115,8 +1686,6 @@ class Bar:
             return
         global ACTIVE_BAR
         ACTIVE_BAR = self
-        if self.panel:
-            card_arm()                         # la tarjeta del banner sigue viva (0.2.6)
         self.run = True
         self.th = threading.Thread(target=self._loop, daemon=True)
         self.th.start()
@@ -2144,9 +1713,7 @@ class Bar:
                 else:
                     self.pct = pct
                     if int(pct) != self.last_ip:
-                        self.last_ip = int(pct)
-                        if time.time() - self.chg >= PCT_FLASH + 0.3:     # sin parpadeo continuo (0.2.6)
-                            self.chg = time.time()
+                        self.last_ip, self.chg = int(pct), time.time()
             if indeterminate is not None:
                 self.indet = indeterminate
 
@@ -2260,8 +1827,9 @@ class Bar:
                 shown = pct + (100 - pct) * sweep
             ptxt = f"{shown:5.1f}%"
             pcol = ptxt
-            if flash < PCT_FLASH and TRUECOLOR and ANIM and USE_COLOR and sweep is None:
-                pcol = pct_text(ptxt, flash)
+            if flash < 0.5 and TRUECOLOR and ANIM and USE_COLOR and sweep is None:
+                r, g, b = mix(PALETTE["orange"][0], PALETTE["white"][0], flash / 0.5)
+                pcol = f"\x1b[38;2;{r};{g};{b}m{ptxt}\x1b[0m"
         right = (paint(step, "gray") + "  " if step else "") + pcol
         rw = dwidth(step) + (2 if step else 0) + dwidth(ptxt)
         left = d + " " + fit_text(label, max(4, w - rw - 4))
@@ -2394,9 +1962,6 @@ class Bar:
         while self.run:
             self._poll()
             self._draw()
-            if self.panel and CARD["live"]:
-                with self.lock:
-                    card_tick()
             time.sleep(0.14)
 
 
@@ -2588,11 +2153,9 @@ class DownloadUI:
     def finish(self):
         if self.bar.th:
             self.bar.done(min_secs=0.5)
-        card_settle()
 
     def abort(self):
         self.bar.stop()
-        card_settle()
 
 
 # ───────────────────── Terminal: teclado y cuenta regresiva ─────────────────────
@@ -3051,7 +2614,7 @@ def list_cap():
         lines = shutil.get_terminal_size((80, 24)).lines
     except (OSError, ValueError):
         lines = 24
-    return max(8, lines - 16)          # la tarjeta del banner ocupa 5 líneas (0.2.6)
+    return max(8, lines - 14)
 
 
 def visible_start(n, take, keep=None):
@@ -8463,7 +8026,6 @@ def relocate_to_root():
         ignore("relocate_to_root", _ign)
     os.environ["DLPY_MOVED"] = "1"
     os.environ["DLPY_ORIGIN"] = SCRIPT_PATH      # carpeta de origen: se actualiza junto con ~/dlpy.py
-    card_thread_stop()                           # libera la región de desplazamiento (0.2.6)
     try:
         os.execv(sys.executable, [sys.executable, dst] + sys.argv[1:])
     except OSError as e:
