@@ -2,260 +2,6 @@
 # Cada edicion de este archivo sube la version: x.y.z donde Y y Z solo llegan hasta el 9 y X no tiene limites.
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
-# ==== CHANGELOG ====
-# ## 0.3.4
-#
-# - Interfaz de 26 líneas, banner incluido (sus 5 filas), en todo el script y en todos los sistemas. Cada
-#   pantalla se dibuja para caber en 26 líneas, sea cual sea el alto real del terminal (antes se usaba el alto
-#   medido y solo en iOS las pistas). DLPY_LINES=N cambia las 26; DLPY_LINES=0 vuelve a usar el alto del
-#   terminal. DLPY_ROWS=N sigue forzando el tope de filas de las listas.
-#   · El espacio ocupado arriba cuenta el banner y también los comentarios fijados (los que se repintan tras
-#     limpiar), que antes no se descontaban.
-#   · Lista de formatos, pista predeterminada y pistas adicionales: su tope sale de las 26 líneas.
-#   · Versiones (--versiones y recuperación tras un fallo): ahora limpia la pantalla y muestra las versiones
-#     más nuevas que caben; «m» baja el teclado (iOS) y muestra todas. Elegir un número sigue valiendo
-#     para cualquiera, se vea o no.
-#   · «Ya descargado»: la fila de idiomas se corta en 3 líneas como máximo («+N» con los que sobran).
-#   · No cambian: la descarga (panel de 3 líneas), --sistema y el modo debug, que son informes o salida
-#     corrida.
-#
-# ## 0.3.3
-#
-# - iOS (a-Shell): «m» (lista completa de formatos) oculta el teclado antes de dibujarla (hideKeyboard,
-#   con una pausa de 0,3 s para que el terminal tome su alto nuevo), así se ve y se desliza entera. Al
-#   volver a escribir sale el teclado como siempre.
-# - Interfaz ajustada a las filas que se ven con el teclado abierto (en iOS el terminal mide lo que queda
-#   sobre el teclado; esa es la medida). Todas las pantallas caben sin desplazarse, salvo la lista completa
-#   de «m» y la descarga, que ocultan el teclado y sí se deslizan:
-#   · Lista de formatos: el tope de filas descuenta lo que ocupa cada pantalla de verdad (alto real de la
-#     tarjeta, líneas del título, de la leyenda y de la ayuda) en vez de un 16 fijo. Con título de una
-#     línea entra una fila más. DLPY_ROWS=N sigue forzando el tope.
-#   · Pista predeterminada y pistas adicionales (videos con muchos idiomas): si no caben, salen primero las
-#     compatibles y la original, «AUDIO · +N más» en la cabecera y «m» muestra todas (con el teclado
-#     oculto). Solo en iOS; en el resto de sistemas se listan todas como antes.
-#   · La cuenta regresiva de la pista predeterminada se apaga al pedir «m».
-# - short_pick(first=True): para listas ordenadas de mejor a peor (pistas) elige las primeras.
-#
-# ## 0.3.2
-#
-# - Las variables DLPY_* se quedan en el último valor usado (DLPY_DEV, DLPY_DEBUG, DLPY_ANIM, DLPY_ROWS...).
-#   En a-Shell lo que se pone con «export DLPY_X=valor» se pierde tras algunas sesiones. Ahora, al abrir:
-#   · las que están definidas se guardan en ~/.dlpy_env.json (solo si cambió algo);
-#   · las que no están definidas se recuperan de ahí, antes de que el script las lea.
-#   Para apagar una, ponla explícitamente (DLPY_DEBUG=0); quitarla con «unset» no basta, porque se recupera.
-#   DLPY_FORGET=1 olvida lo guardado (y guarda lo que esté definido ese día). No se guardan las que son de
-#   una sola ejecución (DLPY_MOVED, DLPY_ORIGIN, DLPY_ACTION, DLPY_ANDROID_ACTION). Con --selftest no se
-#   lee ni se guarda nada.
-#
-# ## 0.3.1
-#
-# - Consola limpia desde que abre: lo primero que hace el script (antes de cargar nada más) es borrar la
-#   pantalla, así no se ve el comando que lo lanzó ni restos de la sesión anterior mientras arranca. Luego
-#   sigue el borrado con banner de siempre. Solo en un terminal interactivo, y no en debug, --selftest,
-#   --sistema ni --2shortcuts. DLPY_EARLYCLEAR=0 lo apaga.
-# - Lista corta de formatos: una sola opción por calidad, la mejor en soporte nativo (marca ✓). Ya no salen
-#   varias filas de la misma calidad (p. ej. 1080p mp4 y 1080p webm, o m4a 128k y opus 130k): en video
-#   cuenta como misma calidad la misma resolución/fps y el mismo rango (SDR; HDR o 10 bits cuentan aparte); en audio, el mismo idioma
-#   y un bitrate parecido (±12 %). Entre las candidatas gana la compatible y luego la de más bitrate (en
-#   Android/Linux/Windows, a igual resolución, h264 antes que vp9/hevc, como «b»); la fila de «b» (★) siempre
-#   es la que representa su calidad. «m» sigue mostrando la lista completa, con todas.
-#
-# ## 0.3.0
-#
-# - Arreglo: con la 0.2.9 el script se congelaba en iOS (a-Shell) al salir la primera pregunta (el banner
-#   seguía animado porque su hilo es aparte; el principal quedaba atascado). La causa es el bloqueo de
-#   entrada del arranque, que cambia el modo del terminal (cbreak) durante todo el arranque y lo
-#   restaura justo antes de la pregunta: en a-Shell eso ya había congelado el script otras veces.
-#   Ahora viene APAGADO por omisión; DLPY_LOCK=1 lo enciende (solo para pruebas). No se toca el modo
-#   del terminal salvo en las cuentas regresivas, como en la 0.2.8.
-#   Lo demás de la 0.2.9 sigue igual (lista corta con compatibles, predeterminada resaltada, ventana
-#   de Enter fantasma de 1 s).
-#
-# ## 0.2.9
-#
-# - Lista corta de formatos: primero los compatibles con la plataforma (los de la marca ✓: en iPhone y Mac
-#   los de Apple, en Android los de Android), los mejores de cada bloque. El resto sale con «m», con la
-#   lista completa. Mismo tope de filas que antes (según el alto del terminal), así que ocupa las mismas
-#   líneas; si ninguno es compatible, se muestran los mejores de todos como hasta ahora. La fila de «b»
-#   (★) siempre entra.
-# - La respuesta predeterminada (la que vale con Enter o al acabar la cuenta) se ve resaltada:
-#   · Preguntas s/n: la opción por omisión va en naranja/blanco en negrita y la otra en gris.
-#   · Pista predeterminada: la pista original lleva «▸» en el margen y «Enter = original» sale resaltado.
-#   · Pregunta de bits: la opción por omisión lleva «▸» y va en negrita; «Enter = N» resaltado.
-#   · Los avisos «Enter = todas» y «Enter = convertir» también salen resaltados.
-#   Ninguno añade columnas ni líneas.
-# - iOS (a-Shell): desde el arranque y hasta la primera pregunta el terminal queda sin eco y sin línea (el
-#   mismo modo de las cuentas regresivas), así los Enter fantasma y lo que se teclee en ese tramo ni se
-#   escriben en pantalla ni se guardan. Al salir la primera pregunta se descarta lo pendiente y el
-#   terminal vuelve a su modo normal. Ctrl-C sigue funcionando y al salir siempre se restaura.
-#   DLPY_LOCK=0 lo apaga. (Sustituye a la pausa de 0,25 s de la 0.2.7, DLPY_SETTLE, que se quita.)
-# - Enter fantasma en los primeros segundos de la ejecución: la ventana baja de 3 s a 1 s (0.2.8).
-#
-# ## 0.2.8
-#
-# - Lista completa con «m»: ahora se puede deslizar. El banner anclado (región de desplazamiento) tiraba
-#   las filas que salían por arriba y no dejaba subir; al pedir la lista completa se suelta el ancla
-#   ANTES de imprimirla (el banner queda fijo arriba y sube con el resto), así todo queda en el historial
-#   del terminal. En la lista corta y en el resto de pantallas el banner sigue anclado y animado.
-# - Enter fantasma: además de «vacío a menos de 0,4 s del prompt», un Enter vacío en los primeros 3 s
-#   de la ejecución también se toma por fantasma (en las preguntas con cuenta regresiva y en las demás).
-#
-# ## 0.2.7
-#
-# - Opción inválida o vacía: ya no se dibujan líneas nuevas. Se borra la línea que escribiste y el
-#   prompt vuelve a salir en el mismo sitio; tras una opción inválida el «▸» pasa a «✗» en rojo con lo
-#   que vale (p. ej. «✗ 1-12, b, m o q ▸»). Vale para la lista de formatos, la pista predeterminada,
-#   las pistas adicionales, las preguntas s/n, la pregunta de bits y los menús de versiones. En debug o
-#   sin terminal interactivo se imprime el aviso de siempre.
-# - Enter fantasma (Atajos): el Enter que llega solo al abrir ya no deja una línea «▸» vacía por cada
-#   vez; se borra y se vuelve a pedir en el mismo renglón.
-# - Al abrir desde Atajos en iOS hay una pausa de 0,25 s antes de la primera barra, para que lo que
-#   llegue al terminal al arrancar no se cuele entre los cuadros de «Comprobando…». DLPY_SETTLE=0 la quita.
-#   (No pude probarlo en un iPhone: si aún salen líneas apiladas, avísame.)
-# - Actualizaciones una vez al día: la búsqueda de una versión nueva de DLpy (GitHub) y la de las
-#   dependencias (yt-dlp en PyPI, runtime de JavaScript, yt-dlp-ejs y paquetes del sistema) solo se
-#   hacen si pasaron 24 h desde la última que llegó a comprobarse, o si cambió el propio dlpy.py
-#   (otra versión o archivo editado). Sin conexión no cuenta como comprobada y se reintenta al
-#   siguiente arranque. Los demás días el arranque no imprime esas líneas ✓. Si dijiste que no a una
-#   actualización, se vuelve a preguntar en la siguiente comprobación (≤ 24 h) o con --actualizar.
-#   Siguen revisándose siempre (sin red): que yt-dlp esté instalado. DLPY_CHECK_HOURS=N cambia las
-#   24 h (0 = comprobar en cada arranque). La fecha se guarda en state/checks.json.
-# - --selftest: pruebas nuevas de la secuencia de borrado y del cálculo de «toca comprobar».
-#
-# ## 0.2.6
-#
-# - Banner en tarjeta (el de dlpy_card_test.py): borde redondeado con el degradado naranja→magenta→naranja
-#   y, al arrancar, un destello que le da una vuelta de 2,5 s (se apaga solo; con DLPY_ANIM=0 y en debug
-#   sale fijo).
-#   · Durante la descarga la tarjeta sigue viva: el mismo hilo del panel (≈7 fps) la repinta en las
-#     filas 1 a 5 (guarda y restaura el cursor) con una vuelta de destello cada 5 s; al terminar el
-#     destello se apaga y queda fija. Solo se anima justo después de clear_screen y si el terminal
-#     tiene alto para no desplazarse (5 filas de tarjeta + 16); si no, la tarjeta queda fija.
-#   · El contenido de la tarjeta (espacio, porcentajes) se calcula una vez y se reutiliza en cada cuadro
-#     (antes la vuelta de arranque recorría los archivos en cada cuadro).
-#   · La barra de almacenamiento late cuando se llena (cada escala por su cuenta): ≥ 80 % ámbar con
-#     latido de 1,2 s; crítico en rojo con latido de 0,7 s si el equipo llega a 92 % o DLpy a su límite
-#     (100 %). Es un doble pulso («lub-dub») sobre la escala y su etiqueta; la fila se redibuja en
-#     cada cuadro del hilo de la tarjeta. Sin animación o sin truecolor queda el color fijo.
-#     DLPY_BEAT=0 quita solo el latido y deja el color.
-#   · Arreglo: el «iPhone N %» de la tarjeta se medía en rutas del contenedor de la app (daban cifras
-#     que no eran las del iPhone y mantenían el latido encendido); ahora se mide en «/» con el
-#     «usado» que informa shutil.disk_usage, y solo si falla se prueban las otras rutas.
-#   · TEST (DLPY_CARDLIVE=0 lo apaga y vuelve al comportamiento anterior): un hilo propio anima la
-#     tarjeta todo el tiempo (preguntas, listas y descarga) a ≈10 fps, y la vuelta de arranque ya no
-#     bloquea el script. Al salir queda fija.
-#   · La tarjeta queda anclada arriba con una región de desplazamiento (DECSTBM): lo que se escribe
-#     debajo (listas, preguntas, descarga) se desplaza sin tocarla, así que el banner se anima en
-#     TODAS las pantallas, también con listas largas. Se vuelve a anclar tras cada clear_screen y si
-#     cambia el alto del terminal (p. ej. al salir el teclado), y se libera al salir o al reiniciar.
-#     DLPY_CARDPIN=0 lo apaga: entonces la tarjeta solo se anima mientras la pantalla no se acerque a
-#     desplazarse (estima la fila del cursor; ahora también cuenta el Enter de cada input()).
-#   · Fila 1: «▍DLpy vX» y el estado de debug. Fila 2: dónde corre. Fila 3: barra de dos escalas en una
-#     sola línea: arriba (gris) el espacio usado del equipo y abajo (degradado) lo que ocupa DLpy del
-#     límite de limpieza, con «iPhone 77 %» y «DLpy 42 %» a los lados.
-#   · Si DLpy pasa del límite, el porcentaje sale en ámbar y el desglose va dentro de la tarjeta.
-#   · La tarjeta ocupa 5 líneas (antes 3): la lista de formatos descuenta 2 filas más (list_cap).
-#   · Terminal de menos de 30 columnas: se usa el banner de antes.
-# - El % del panel de descarga, al cambiar, fluye en degradado y se apaga hacia blanco en 1,6 s (antes
-#   pasaba de naranja a blanco en medio segundo). El efecto no se reinicia hasta que termina el anterior.
-#
-# ## 0.2.5
-#
-# - Instalación de paquetes (pip) unificada: una sola lógica de reintento para PEP 668
-#   (--break-system-packages) en Android y escritorio, con subprocess sin shell y los argumentos
-#   en lista (sin armar comillas a mano). iOS (a-Shell) sigue usando su «pip» con os.system.
-#   Pip ahora devuelve True/False según si la instalación salió bien.
-# - Cabeceras de sección: se corrigieron las que no coincidían con el código de debajo (listado de
-#   versiones, comparar versiones, limpieza interna) y se añadieron las que faltaban, más un
-#   índice de secciones al inicio. No se movió ni cambió ninguna otra línea de código.
-# - --selftest: 2 pruebas nuevas de los argumentos de pip.
-#
-# ## 0.2.4
-#
-# - Mismas líneas en cada pantalla (la lógica no cambia, solo cómo se ve):
-#   · Banner de 2 líneas + separador: «DLpy vX» y debajo dónde corre + espacio usado. El desglose
-#     del espacio solo sale si se pasa del límite.
-#   · Títulos de máximo 2 líneas (con «…» si no caben).
-#   · Lista de formatos con tope de filas según el alto del terminal: «AUDIO · +N más» en la
-#     cabecera y «m» las muestra todas (DLPY_ROWS=N fuerza el tope; 0 = sin tope).
-#     ★, en el margen izquierdo, marca la fila que elige «b».
-#   · «Ya descargado» con filas fijas (Video, Audio, Archivo, Fecha, Origen, Convertido, Bitrate;
-#     «—» si falta el dato) y «Convertido» en 2 líneas como máximo.
-#   · Un solo bloque «✓ Elegido» (formato y pistas de audio) en vez de varios avisos seguidos.
-# - Animaciones nuevas (se apagan con DLPY_ANIM=0 y en debug; ninguna cambia el número de líneas):
-#   · Las filas de las listas entran una a una y sus tamaños «cuentan» hasta el valor final.
-#   · Al elegir, la fila elegida se repite un instante en blanco antes de limpiar.
-#   · Al terminar una pista el % y los MB suben hasta el valor final y «·» → «○» → «✓».
-#   · Cuenta regresiva s/n: el degradado se acorta y pasa a magenta; los últimos 3 s el número late.
-#   · Los avisos (ámbar y rojo) laten dos veces y quedan fijos.
-#   · La barra de descarga se tiñe de ámbar si la velocidad cae a menos de la mitad y vuelve al
-#     degradado al recuperarse.
-#
-# ## 0.2.3
-#
-# - Toda la interfaz con el estilo «Aurora» de dlpy_test_panel.py (un solo estilo en todas las pantallas):
-#   · Paleta única: degradado naranja→magenta, menta (éxito), ámbar (aviso), rojo (error) y gris.
-#     Sustituye a los cian/verde/amarillo/azul de antes (también --versiones, diffs y --sistema).
-#   · Banner «▍DLpy vX» con degradado en vez de la barra inversa; títulos «▍…» y secciones «━━ TÍTULO ━━».
-#   · Listas de formatos y pistas: número naranja, columnas en gris y marcas a la derecha
-#     (✓ compatible · ◆ original · ▸ predeterminada) en lugar de puntos de color.
-#   · Descarga y conversión: panel de 3 líneas por pista (nombre · paso · %, barra a todo el ancho y
-#     velocidad · tiempo · MB con gráfica) que al terminar queda en «✓ nombre … tamaño».
-#     Las esperas cortas (analizar, buscar versiones) usan una barra de una línea con el mismo estilo.
-#   · Preguntas s/n: «▍¿Pregunta?» y « [S] Sí  [n] No ▸ » con cuenta regresiva en degradado.
-#   · Avisos «▸ n.º · …» en gris, tamaños «48 MB» y mensajes con la misma paleta.
-#   · DLPY_TRUECOLOR=0: colores básicos · DLPY_ANIM=0: sin animación · DLPY_CLASSIC=1: barra «█░».
-#   · La lógica no cambia: solo se modifica cómo se ve.
-#
-# ## 0.2.2
-#
-# - «Ya descargado» rediseñado para pantallas angostas:
-#   · Filas con las etiquetas alineadas: Video, Audio, Archivo, Fecha, Origen, Convertido, Bitrate.
-#   · Audio resumido en una fila (códec y bitrate) y otra con los idiomas, marcando ◆ original y
-#     ▸ predeterminada, sin tabla ni puntos de color; «✓ Compatible con Apple» al final.
-#   · El nombre del archivo solo sale si no es el del título y «Entregado» solo si es otra hora.
-#   · Origen: sitio y canal. Convertido: códec y bits de origen → salida, audio convertido, motor
-#     (VideoToolbox, x265, x264) y tiempo. Bitrate: el del video de origen → el del convertido,
-#     con el porcentaje de cambio (si no se pudo leer del archivo, se estima y lleva «~»).
-#   · La pregunta final es «¿Descargar de nuevo? (s/N)» para que no se parta en dos líneas.
-#   · Las descargas anteriores a la 0.2.2 solo muestran los datos que ya tenían guardados.
-#
-# ## 0.2.1
-#
-# - Bits del video (cualquier profundidad: 6, 8, 9, 10, 12, 14, 16…):
-#   · Se detectan también «8 bits», «6 bits», «main12», etc. en los datos del formato. Si los
-#     datos no lo dicen, antes de preguntar se lee el stream con ffmpeg (si hay) y, como último
-#     recurso, el archivo ya descargado.
-#   · Al convertir (cuando hay que recodificar el video) SIEMPRE se pregunta si conservar los
-#     bits originales, también en conversiones rápidas, con un aviso de qué cambia en cada caso
-#     (calidad, HDR, tiempo y compatibilidad con Apple). Con 11 o más bits ofrece 3 opciones:
-#     la original, 10 bits (lo que reproduce Apple) u 8 bits.
-#   · 12 bits: se codifica con x265 (main12); si no está disponible cae a 10 y luego a 8 con aviso.
-#     Origen de 8 bits o menos: sale a 8 (el mínimo de HEVC/H.264) y no se pregunta.
-#   · La lista de formatos y «Ya descargado» muestran los bits siempre que se conocen (8b, 10b…).
-#
-# ## 0.2.0
-#
-# - --versiones: las etiquetas de los orígenes de GitHub («GitHub» y «GitHub main») se pintan
-#   en azul para distinguirlas de backup e instalada, que siguen en gris.
-#
-# ## 0.1.9
-#
-# - Al instalar una versión más vieja que la actual (--versiones o recuperación tras un fallo)
-#   pregunta «¿Quedarte en la X hasta que salga una más nueva? (s/N)». Con N (predeterminada)
-#   no se bloquea la actualización: en el próximo arranque se vuelve a ofrecer la de GitHub.
-#   Con S se conserva el comportamiento anterior (no se ofrece hasta que salga una más nueva).
-# - --versiones vuelve a mostrar la lista como en la 0.1.7 (la más nueva arriba, numerada 1);
-#   se revierte el cambio de orden de la 0.1.8.
-# - Se mantiene de la 0.1.8: el título del último enlace al preguntar «¿Usarlo?».
-#
-# ## 0.1.8
-#
-# - Al ofrecer el último enlace, ahora también muestra su título (se guarda en
-#   last_link.json al analizar el enlace; si el último enlace se guardó con una versión
-#   anterior no hay título guardado y solo se muestra el enlace, como antes).
-#
-# ==== FIN CHANGELOG ====
 # DLpy - descargador para a-Shell mini basado en yt-dlp
 # Uso: python dlpy.py [LINK]
 #   Sin LINK: ofrece usar el último enlace.
@@ -271,12 +17,9 @@
 #   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
 #   DLPY_CHECK_HOURS=N: cada cuántas horas busca actualizaciones (24 por omisión; 0 = en cada arranque) (0.2.7).
 #   DLPY_LOCK=1: (pruebas, apagado desde 0.3.0) bloquea el teclado desde el arranque hasta la primera pregunta en iOS.
-#   DLPY_*: se recuerdan entre sesiones en ~/.dlpy_env.json (el último valor usado); DLPY_FORGET=1 las olvida (0.3.2).
-#   DLPY_EARLYCLEAR=0: no borra la consola al abrir (0.3.1).
-#   DLPY_LINES=N: líneas de la interfaz, banner incluido (26 por omisión; 0 = alto del terminal) (0.3.4).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.3.4"
+VERSION = "0.3.1"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz (estilo Aurora) · Terminal: ancho y texto ·
@@ -307,45 +50,6 @@ import textwrap
 import threading
 import unicodedata
 import urllib.parse
-
-# ─────────────────────── Variables DLPY_* recordadas (0.3.2) ───────────────────────
-ENV_FILE = os.path.join(os.path.expanduser("~"), ".dlpy_env.json")
-ENV_SKIP = {"DLPY_MOVED", "DLPY_ORIGIN", "DLPY_ACTION", "DLPY_ANDROID_ACTION", "DLPY_FORGET"}   # de una sola ejecución
-
-
-def persist_env(env=None, path=None):
-    """Las DLPY_* definidas se guardan en `path`; las no definidas se recuperan de ahí (en a-Shell las
-    «export» se pierden entre sesiones). DLPY_FORGET=1 olvida lo guardado. Devuelve lo que quedó guardado."""
-    env = os.environ if env is None else env
-    path = path or ENV_FILE
-    try:
-        disk = {}
-        try:
-            with open(path, "r", encoding="utf-8") as fh:
-                data = json.load(fh)
-            if isinstance(data, dict):
-                disk = {k: v for k, v in data.items() if isinstance(k, str) and isinstance(v, str)
-                        and k.startswith("DLPY_") and k not in ENV_SKIP}
-        except (OSError, ValueError):
-            pass
-        forget = (env.get("DLPY_FORGET") or "").strip().lower() not in ("", "0", "no", "false")
-        merged = {} if forget else dict(disk)
-        merged.update({k: v for k, v in env.items() if k.startswith("DLPY_") and k not in ENV_SKIP})
-        for k, v in merged.items():
-            if k not in env:
-                env[k] = v
-        if merged != disk:
-            tmp = path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as fh:
-                json.dump(merged, fh, ensure_ascii=False, indent=1, sort_keys=True)
-            os.replace(tmp, path)
-        return merged
-    except Exception:
-        return {}
-
-
-if not any(a.lstrip("-") == "selftest" for a in sys.argv[1:]):
-    persist_env()
 
 # ─────────────────────── Plataforma ───────────────────────
 PLATFORMS = ("ios", "android", "macos", "linux", "windows")
@@ -2071,10 +1775,6 @@ def kv(label, value, flag=None):
 
 def legend(keys):
     """«✓ compatible iPhone   ◆ pista original» (marca de color + texto gris)."""
-    print("\n".join("  " + ln for ln in _legend_lines(keys)))
-
-
-def _legend_lines(keys):
     w = term_width() - 2
     lines, cur, curlen = [], [], 0
     for k in keys:
@@ -2088,7 +1788,7 @@ def _legend_lines(keys):
         curlen += add
     if cur:
         lines.append("   ".join(cur))
-    return lines
+    print("\n".join("  " + ln for ln in lines))
 
 
 ROW_PLAIN = {}      # n.º → texto plano de la fila impresa (para el destello al elegir, 0.2.4)
@@ -2914,14 +2614,11 @@ class DownloadUI:
 
 
 # ───────────────────── Terminal: teclado y cuenta regresiva ─────────────────────
-def hide_keyboard(settle=0.0):
-    """iOS (a-Shell): baja el teclado. `settle` espera (s) a que el terminal tome su alto nuevo (0.3.3)."""
+def hide_keyboard():
     if not IS_IOS:
         return
     try:
         os.system("hideKeyboard >/dev/null 2>&1")
-        if settle:
-            time.sleep(settle)
     except Exception as _ign:
         ignore("hide_keyboard", _ign)
 
@@ -3407,51 +3104,17 @@ def video_row(n, f):
                      human_size(f.get("filesize") or f.get("filesize_approx"))]}
 
 
-UI_LINES = int(os.environ.get("DLPY_LINES", "26").strip() or 26) if os.environ.get("DLPY_LINES", "26").strip().isdigit() else 26
-
-
-def ui_lines():
-    """Líneas de la interfaz, banner incluido (0.3.4): 26 siempre; DLPY_LINES=0 usa el alto del terminal."""
-    if UI_LINES:
-        return UI_LINES
-    try:
-        return shutil.get_terminal_size((80, 24)).lines
-    except (OSError, ValueError):
-        return 24
-
-
-def pinned_lines():
-    """Líneas que ocupan los comentarios fijados tras limpiar la pantalla (0.3.4)."""
-    if not ROAST:
-        return 0
-    try:
-        return sum(len(wrap_text(plat_text(t), max(8, term_width() - 2))) for t in PINNED)
-    except Exception:
-        return len(PINNED)
-
-
-def banner_height():
-    """Líneas ocupadas arriba (0.3.4): la tarjeta (5 si aún no hay) más los comentarios fijados."""
-    body = CARD.get("body")
-    return ((len(body) + 2) if (body and CARD.get("fresh")) else 5) + pinned_lines()
-
-
-def list_cap(overhead=16):
-    """Filas máximas de la lista de formatos (0.2.4) dentro de las 26 líneas de la interfaz (0.3.4).
-    `overhead` = líneas de la pantalla que no son filas (16 = caso más alto: título de 2 líneas).
+def list_cap():
+    """Filas máximas de la lista de formatos según el alto del terminal (0.2.4).
     DLPY_ROWS=N lo fuerza; DLPY_ROWS=0 = sin tope."""
     env = os.environ.get("DLPY_ROWS", "").strip()
     if env.isdigit():
         return int(env) or 10 ** 6
-    return max(8, ui_lines() - overhead)
-
-
-def visible_cap(overhead, lines=None):
-    """Filas de una lista que caben en las 26 líneas de la interfaz (0.3.4). None solo con DLPY_ROWS=0."""
-    env = os.environ.get("DLPY_ROWS", "").strip()
-    if env.isdigit():
-        return int(env) or None
-    return max(4, (ui_lines() if lines is None else lines) - overhead)
+    try:
+        lines = shutil.get_terminal_size((80, 24)).lines
+    except (OSError, ValueError):
+        lines = 24
+    return max(8, lines - 16)          # la tarjeta del banner ocupa 5 líneas (0.2.6)
 
 
 def audio_quality_keys(audios):
@@ -3490,18 +3153,17 @@ def best_per_quality(rows, keys, rank, keep=None):
     return sorted(out)
 
 
-def short_pick(rows, take, keep=None, uniq=None, first=False):
+def short_pick(rows, take, keep=None, uniq=None):
     """Índices de las filas de la lista corta (0.2.9): primero las compatibles con la plataforma (marca
     «apple»), las mejores (las últimas); si ninguna lo es, las mejores de todas. La fila `keep` (la de
     «b») siempre entra. Salen en el orden de la lista. `uniq` (0.3.1): solo se eligen entre esos índices
-    (una fila por calidad); `keep` entra aunque no esté. `first` (0.3.3): listas de mejor a peor, se
-    eligen las primeras en vez de las últimas."""
+    (una fila por calidad); `keep` entra aunque no esté."""
     cand = list(range(len(rows))) if uniq is None else [i for i in uniq if 0 <= i < len(rows)]
     pool = [i for i in cand if "apple" in rows[i]["flags"]] or cand
     take = max(0, take)
-    idx = (pool[:take] if first else pool[-take:]) if take else []
+    idx = pool[-take:] if take else []
     if keep is not None and 0 <= keep < len(rows) and keep not in idx:
-        idx = [keep] + ((idx[:-1] if first else idx[1:]) if len(idx) >= take else idx)
+        idx = [keep] + (idx[1:] if len(idx) >= take else idx)
     return sorted(idx)
 
 
@@ -3571,44 +3233,24 @@ def track_row(n, t):
 
 
 def ask_default_track(tracks, original):
-    """Devuelve (pista, sin_respuesta). sin_respuesta=True omite las pistas extra.
-    iOS (0.3.3): si no caben todas con el teclado abierto salen las mejores y «m» muestra el resto."""
+    """Devuelve (pista, sin_respuesta). sin_respuesta=True omite las pistas extra."""
+    clear_screen()
+    header("ELEGIR PISTA PREDETERMINADA", gap=False)
+    m_info("Se detectaron varios idiomas.")
+    legend(["apple", "orig"])
     trows = [track_row(i, t) for i, t in enumerate(tracks, 1)]
     for r, t in zip(trows, tracks):
         if t is original:
             r["flags"].add("default")            # ▸ en el margen: la que vale con Enter o al acabar la cuenta
-    orig_i = next((i for i, t in enumerate(tracks) if t is original), None)
-    keys = ["apple", "orig"]
-    cd = countdown_supported()
-    txt0 = "n.º · m más · {Enter = original}" + (f" · {WAIT_SECONDS} s" if cd else "")
-    cap = visible_cap(banner_height() + 3 + len(_legend_lines(keys))
-                      + len(wrap_text(plat_text(txt0), term_width() - 2)) + 1)
-    vis = short_pick(trows, cap, orig_i, None, True) if cap is not None and len(trows) > cap else None
-
-    def draw(full):
-        """Pantalla de pistas; devuelve True si quedan filas ocultas (se ven con «m»)."""
-        if full:
-            hide_keyboard(0.3)
-        clear_screen()
-        if full and CARD["pin"]:
-            card_thread_stop()          # lista completa: se suelta el banner anclado para poder deslizar
-        hid = vis is not None and not full
-        header("ELEGIR PISTA PREDETERMINADA" + (f" · +{len(trows) - len(vis)} más" if hid else ""), gap=False)
-        m_info("Se detectaron varios idiomas.")
-        legend(keys)
-        print_rows([trows[i] for i in vis] if hid else trows, keys, TRACK_HEAD)
-        txt = "n.º · " + ("m más · " if hid else "") + "{Enter = original}"
-        if cd and not full:
-            txt += f" · {WAIT_SECONDS} s"
-        hint(txt)
-        return hid
-
-    hid = draw(False)
-    full = False
+    print_rows(trows, ["apple", "orig"], TRACK_HEAD)
+    txt = "n.º · {Enter = original}"
+    if countdown_supported():
+        txt += f" · {WAIT_SECONDS} s"
+    hint(txt)
     cur = PROMPT
     while True:
         try:
-            raw = timed_input(cur, None if full else WAIT_SECONDS)
+            raw = timed_input(cur)
         except (EOFError, KeyboardInterrupt):
             return original, True
         if raw is None:
@@ -3617,17 +3259,12 @@ def ask_default_track(tracks, original):
         typed, raw = raw, raw.strip()
         if not raw:
             return original, False
-        if raw.lower() == "m" and hid:
-            hid, full = draw(True), True
-            cur = PROMPT
-            continue
         if raw.isdigit() and 1 <= int(raw) <= len(tracks):
             chosen = tracks[int(raw) - 1]
             m_ok(f"Predeterminada: {chosen['lang']} · {track_label(chosen)}")
             return chosen, False
-        cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(tracks)}" + (", m" if hid else "") + " o Enter"),
-                           f"Opción inválida: escribe un número del 1 al {len(tracks)}"
-                           + (", m" if hid else "") + " o Enter.")
+        cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(tracks)} o Enter"),
+                           f"Opción inválida: escribe un número del 1 al {len(tracks)} o Enter.")
 
 
 def ask_extra_tracks(tracks, primary):
@@ -3642,27 +3279,11 @@ def ask_extra_tracks(tracks, primary):
     if not r:                                   # None (sin respuesta) o No
         return [primary]
 
-    orows = [track_row(i, t) for i, t in enumerate(others, 1)]
-    keys = ["apple", "orig"]
-    txt0 = "n.º separados por espacio (ej. 1 2 4) · m más · {Enter = todas}"
-    cap = visible_cap(banner_height() + 2 + len(_legend_lines(keys))
-                      + len(wrap_text(plat_text(txt0), term_width() - 2)) + 1)
-    vis = short_pick(orows, cap, None, None, True) if cap is not None and len(orows) > cap else None
-
-    def draw(full):
-        if full:
-            hide_keyboard(0.3)
-        clear_screen()
-        if full and CARD["pin"]:
-            card_thread_stop()
-        hid = vis is not None and not full
-        header("ELEGIR PISTAS DE AUDIO ADICIONAL" + (f" · +{len(orows) - len(vis)} más" if hid else ""), gap=False)
-        legend(keys)
-        print_rows([orows[i] for i in vis] if hid else orows, keys, TRACK_HEAD)
-        hint("n.º separados por espacio (ej. 1 2 4) · " + ("m más · " if hid else "") + "{Enter = todas}")
-        return hid
-
-    hid = draw(False)
+    clear_screen()
+    header("ELEGIR PISTAS DE AUDIO ADICIONAL", gap=False)
+    legend(["apple", "orig"])
+    print_rows([track_row(i, t) for i, t in enumerate(others, 1)], ["apple", "orig"], TRACK_HEAD)
+    hint("n.º separados por espacio (ej. 1 2 4) · {Enter = todas}")
     cur = PROMPT
     while True:
         try:
@@ -3673,16 +3294,11 @@ def ask_extra_tracks(tracks, primary):
         if not raw:
             chosen = others
             break
-        if raw.lower() == "m" and hid:
-            hid = draw(True)
-            cur = PROMPT
-            continue
         toks = [x for x in re.split(r"[\s,]+", raw) if x]
         bad = [x for x in toks if not (x.isdigit() and 1 <= int(x) <= len(others))]
         if bad:
-            cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(others)}" + (", m" if hid else "")),
-                               f"Opción inválida: {' '.join(bad)} (usa números del 1 al {len(others)}"
-                               + (" o m" if hid else "") + ").")
+            cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(others)}"),
+                               f"Opción inválida: {' '.join(bad)} (usa números del 1 al {len(others)}).")
             continue
         chosen = [others[int(x) - 1] for x in toks]
         break
@@ -4810,10 +4426,9 @@ def kv_rows(rows):
             print(" " * (lw + 3) + ln)
 
 
-def audio_rows(tracks, room=None):
+def audio_rows(tracks):
     """Filas de audio: una con códec y bitrate y, si hay varias pistas, otra con los idiomas
-    (◆ original, ▸ predeterminada). Devuelve (filas, hay_marcas). `room` (0.3.4): caracteres máximos de
-    la fila de idiomas; si sobran se cortan con «+N»."""
+    (◆ original, ▸ predeterminada). Devuelve (filas, hay_marcas)."""
     if not tracks:
         return [("Audio", "sin pistas de audio")], False
     codecs = sorted({str(t.get("codec") or "?") for t in tracks})
@@ -4835,11 +4450,6 @@ def audio_rows(tracks, room=None):
             tok += "▸"
             marks = True
         toks.append(tok)
-    if room and len(" ".join(toks)) > room:
-        keep = len(toks)
-        while keep > 1 and len(" ".join(toks[:keep])) + len(f" +{len(toks) - keep}") > room:
-            keep -= 1
-        toks = toks[:keep] + [f"+{len(toks) - keep}"]
     return [("Audio", f"{len(tracks)} pistas · {codec}"), ("", " ".join(toks))], marks
 
 
@@ -4908,7 +4518,7 @@ def show_existing(path, entry, title=None):
         elif meta.get("kind") == "audio":
             vrow = ("Video", "solo audio")
         tracks = meta.get("tracks") or []
-        arows, marks = audio_rows(tracks, 3 * max(8, term_width() - 13))
+        arows, marks = audio_rows(tracks)
         if meta.get("kind") == "audio" and tracks:
             apple = all(t.get("apple") for t in tracks)
         rows += [vrow] + arows
@@ -6928,14 +6538,14 @@ def _wrap_tokens(tokens, indent, width, sep="  "):
     return lines
 
 
-def format_version_rows(rows, cur, upd, crashes, diffs_by_ver, width=None, start=1):
+def format_version_rows(rows, cur, upd, crashes, diffs_by_ver, width=None):
     """Líneas de la lista numerada de versiones (con colores si el terminal los admite)."""
     width = width or safe_width()
     count = {}
     for c in crashes:
         count[c["version"]] = count.get(c["version"], 0) + 1
     out = []
-    for i, row in enumerate(rows, start):
+    for i, row in enumerate(rows, 1):
         ver = row["ver"]
         head = f"{i}  {ver}"
         toks = [(head, paint(str(i), "orange", True) + "  " + paint(ver, "white", True))]
@@ -7200,63 +6810,26 @@ def offer_recovery(crashed, why):
         diffs_by_ver = {r["ver"]: row_diffs(r) for r in shown}
     finally:
         cbar.stop()
-    crashes = load_crashes()
-    per = [format_version_rows([r], VERSION, main_ver, crashes, diffs_by_ver, start=i)
-           for i, r in enumerate(shown, 1)]
-    legend_txt = "✓ actual · ⬆ la de actualizar · ✖ crasheó · ≠ difiere · = idénticas"
-
-    def draw(full):
-        """Pantalla de versiones dentro de las 26 líneas (0.3.4); True si quedan ocultas (se ven con «m»)."""
-        if full:
-            hide_keyboard(0.3)
-        clear_screen()
-        if full and CARD["pin"]:
-            card_thread_stop()          # lista completa: se suelta el banner anclado para poder deslizar
-        header("VERSIONES", gap=False)
-        w = max(8, term_width() - 4)
-        used = (banner_height() + 1 + 1 + 1                       # banner, cabecera, nota de «más», prompt
-                + (len(wrap_text(plat_text(why), w)) if why else 0)
-                + (1 if main is None else 0)
-                + len(wrap_text(plat_text(legend_txt), w)))
-        k, tot = 0, 0
-        for ls in per:
-            if not full and k >= 1 and tot + len(ls) > ui_lines() - used:
-                break
-            tot += len(ls)
-            k += 1
-        if why:
-            m_warn(why)
-        if main is None:
-            note("Sin conexión: no se sabe cuál usaría al actualizar.")
-        for ls in per[:k]:
-            for ln in ls:
-                print(ln)
-        if k < len(per):
-            note(f"(+{len(per) - k} más: «m»)")
-        elif len(rows) > len(shown):
-            note(f"(+{len(rows) - len(shown)} más antiguas sin mostrar)")
-        print_version_legend()
-        return k < len(per)
-
-    def vprompt(hid):
-        return "¿Instalar? Nº · m más (Enter = no) ▸ " if hid else "¿Instalar alguna? Número (Enter = no) ▸ "
-
-    hid = draw(False)
-    cur = vprompt(hid)
+    header("VERSIONES")
+    if why:
+        m_warn(why)
+    if main is None:
+        note("Sin conexión: no se sabe cuál usaría al actualizar.")
+    for ln in format_version_rows(shown, VERSION, main_ver, load_crashes(), diffs_by_ver):
+        print(ln)
+    if len(rows) > len(shown):
+        note(f"(+{len(rows) - len(shown)} más antiguas sin mostrar)")
+    print_version_legend()
+    cur = "¿Instalar alguna? Número (Enter = no) ▸ "
     while True:
         try:
             ans = ask_line(cur)
         except (EOFError, KeyboardInterrupt):
             return False
-        if (ans or "").strip().lower() == "m" and hid:
-            hid = draw(True)
-            cur = vprompt(hid)
-            continue
         n = parse_menu_choice(ans, len(shown))
         if n is None:
-            cur = retry_prompt(cur, ans, bad_prompt(f"1-{len(shown)}" + (", m" if hid else "") + " o Enter"),
-                               f"Escribe un número de 1 a {len(shown)}" + (" (o m)" if hid else "")
-                               + " (o Enter para no volver).")
+            cur = retry_prompt(cur, ans, bad_prompt(f"1-{len(shown)} o Enter"),
+                               f"Escribe un número de 1 a {len(shown)} (o Enter para no volver).")
             continue
         break
     if n == 0:
@@ -8369,36 +7942,6 @@ def selftest():
     check("lista corta: «b» siempre entra", short_pick(_sr, 2, 0), [0, 4])
     check("lista corta: sin compatibles", short_pick([{"flags": set()}] * 4, 2), [2, 3])
     check("lista corta: vacía", short_pick([], 3), [])
-    check("lista corta: primeras (first)", short_pick(_sr, 1, None, None, True), [1])
-    check("lista corta: first con «b» al final", short_pick(_sr, 2, 4, None, True), [1, 4])
-    _rows_env = os.environ.pop("DLPY_ROWS", None)
-    check("visible_cap con lines", visible_cap(12, 28), 16)
-    check("visible_cap 26 líneas", visible_cap(12) if UI_LINES == 26 else 14, 14)
-    check("visible_cap mínimo", visible_cap(12, 10), 4)
-    check("list_cap 26 líneas", list_cap(16) if UI_LINES == 26 else 10, 10)
-    check("list_cap con overhead", list_cap(10) >= 8, True)
-    if _rows_env is not None:
-        os.environ["DLPY_ROWS"] = _rows_env
-    import tempfile as _tf
-    _ed = _tf.mkdtemp()
-    _ep = os.path.join(_ed, "e.json")
-    persist_env({"DLPY_DEV": "1", "DLPY_ROWS": "12", "HOME": "x", "DLPY_MOVED": "1"}, _ep)
-    _e = {}
-    persist_env(_e, _ep)
-    check("env: se recuperan las guardadas (sin las de una ejecución)", _e, {"DLPY_DEV": "1", "DLPY_ROWS": "12"})
-    _e = {"DLPY_DEV": "0"}
-    persist_env(_e, _ep)
-    check("env: lo definido manda y se guarda", _e, {"DLPY_DEV": "0", "DLPY_ROWS": "12"})
-    _e = {}
-    persist_env(_e, _ep)
-    check("env: queda el último valor", _e.get("DLPY_DEV"), "0")
-    _e = {"DLPY_FORGET": "1"}
-    persist_env(_e, _ep)
-    check("env: FORGET olvida", _e, {"DLPY_FORGET": "1"})
-    _e = {}
-    persist_env(_e, _ep)
-    check("env: tras olvidar no hay nada", _e, {})
-    shutil.rmtree(_ed, ignore_errors=True)
     check("lista corta: solo únicas", short_pick(_sr, 9, None, [3, 4]), [3, 4])
     check("lista corta: «b» fuera de únicas entra", short_pick(_sr, 2, 0, [3, 4]), [0, 4])
     _vq = [{"height": 1080, "ext": "webm", "vcodec": "vp9"}, {"height": 1080, "ext": "mp4", "vcodec": "avc1"},
@@ -9332,10 +8875,7 @@ def main():
     for r in a_rows + v_rows:
         if r["n"] == best_n:
             r["flags"].add("best")
-    n_head = (3 if a_rows else 0) + (2 if v_rows else 0)         # cabeceras + encabezados de columnas
-    cap = list_cap(banner_height() + len(title_lines(title, term_width() - 1))
-                   + len(_legend_lines(["apple", "orig"])) + n_head + 1       # +1: la línea en blanco
-                   + len(wrap_text(plat_text("n.º · b ★ mejor · m más · q salir"), term_width() - 2)) + 1)  # +1: prompt
+    cap = list_cap()
     a_keep = best_n - 1 if bk == "a" and best_n else None
     v_keep = best_n - len(audios) - 1 if bk == "v" and best_n else None
     # lista corta: una sola fila por calidad, la mejor en soporte nativo (0.3.1)
@@ -9358,8 +8898,6 @@ def main():
 
     def show_list(full):
         """Pantalla de la lista; devuelve True si quedan filas ocultas (se ven con «m»)."""
-        if full:
-            hide_keyboard(0.3)          # iOS: lista completa con el teclado abajo para poder deslizar (0.3.3)
         clear_screen()
         if full and CARD["pin"]:
             card_thread_stop()          # lista completa: se suelta el banner anclado para poder deslizar (0.2.8)

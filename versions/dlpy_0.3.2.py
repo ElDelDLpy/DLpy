@@ -3,39 +3,6 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
-# ## 0.3.4
-#
-# - Interfaz de 26 líneas, banner incluido (sus 5 filas), en todo el script y en todos los sistemas. Cada
-#   pantalla se dibuja para caber en 26 líneas, sea cual sea el alto real del terminal (antes se usaba el alto
-#   medido y solo en iOS las pistas). DLPY_LINES=N cambia las 26; DLPY_LINES=0 vuelve a usar el alto del
-#   terminal. DLPY_ROWS=N sigue forzando el tope de filas de las listas.
-#   · El espacio ocupado arriba cuenta el banner y también los comentarios fijados (los que se repintan tras
-#     limpiar), que antes no se descontaban.
-#   · Lista de formatos, pista predeterminada y pistas adicionales: su tope sale de las 26 líneas.
-#   · Versiones (--versiones y recuperación tras un fallo): ahora limpia la pantalla y muestra las versiones
-#     más nuevas que caben; «m» baja el teclado (iOS) y muestra todas. Elegir un número sigue valiendo
-#     para cualquiera, se vea o no.
-#   · «Ya descargado»: la fila de idiomas se corta en 3 líneas como máximo («+N» con los que sobran).
-#   · No cambian: la descarga (panel de 3 líneas), --sistema y el modo debug, que son informes o salida
-#     corrida.
-#
-# ## 0.3.3
-#
-# - iOS (a-Shell): «m» (lista completa de formatos) oculta el teclado antes de dibujarla (hideKeyboard,
-#   con una pausa de 0,3 s para que el terminal tome su alto nuevo), así se ve y se desliza entera. Al
-#   volver a escribir sale el teclado como siempre.
-# - Interfaz ajustada a las filas que se ven con el teclado abierto (en iOS el terminal mide lo que queda
-#   sobre el teclado; esa es la medida). Todas las pantallas caben sin desplazarse, salvo la lista completa
-#   de «m» y la descarga, que ocultan el teclado y sí se deslizan:
-#   · Lista de formatos: el tope de filas descuenta lo que ocupa cada pantalla de verdad (alto real de la
-#     tarjeta, líneas del título, de la leyenda y de la ayuda) en vez de un 16 fijo. Con título de una
-#     línea entra una fila más. DLPY_ROWS=N sigue forzando el tope.
-#   · Pista predeterminada y pistas adicionales (videos con muchos idiomas): si no caben, salen primero las
-#     compatibles y la original, «AUDIO · +N más» en la cabecera y «m» muestra todas (con el teclado
-#     oculto). Solo en iOS; en el resto de sistemas se listan todas como antes.
-#   · La cuenta regresiva de la pista predeterminada se apaga al pedir «m».
-# - short_pick(first=True): para listas ordenadas de mejor a peor (pistas) elige las primeras.
-#
 # ## 0.3.2
 #
 # - Las variables DLPY_* se quedan en el último valor usado (DLPY_DEV, DLPY_DEBUG, DLPY_ANIM, DLPY_ROWS...).
@@ -273,10 +240,9 @@
 #   DLPY_LOCK=1: (pruebas, apagado desde 0.3.0) bloquea el teclado desde el arranque hasta la primera pregunta en iOS.
 #   DLPY_*: se recuerdan entre sesiones en ~/.dlpy_env.json (el último valor usado); DLPY_FORGET=1 las olvida (0.3.2).
 #   DLPY_EARLYCLEAR=0: no borra la consola al abrir (0.3.1).
-#   DLPY_LINES=N: líneas de la interfaz, banner incluido (26 por omisión; 0 = alto del terminal) (0.3.4).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.3.4"
+VERSION = "0.3.2"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz (estilo Aurora) · Terminal: ancho y texto ·
@@ -2071,10 +2037,6 @@ def kv(label, value, flag=None):
 
 def legend(keys):
     """«✓ compatible iPhone   ◆ pista original» (marca de color + texto gris)."""
-    print("\n".join("  " + ln for ln in _legend_lines(keys)))
-
-
-def _legend_lines(keys):
     w = term_width() - 2
     lines, cur, curlen = [], [], 0
     for k in keys:
@@ -2088,7 +2050,7 @@ def _legend_lines(keys):
         curlen += add
     if cur:
         lines.append("   ".join(cur))
-    return lines
+    print("\n".join("  " + ln for ln in lines))
 
 
 ROW_PLAIN = {}      # n.º → texto plano de la fila impresa (para el destello al elegir, 0.2.4)
@@ -2914,14 +2876,11 @@ class DownloadUI:
 
 
 # ───────────────────── Terminal: teclado y cuenta regresiva ─────────────────────
-def hide_keyboard(settle=0.0):
-    """iOS (a-Shell): baja el teclado. `settle` espera (s) a que el terminal tome su alto nuevo (0.3.3)."""
+def hide_keyboard():
     if not IS_IOS:
         return
     try:
         os.system("hideKeyboard >/dev/null 2>&1")
-        if settle:
-            time.sleep(settle)
     except Exception as _ign:
         ignore("hide_keyboard", _ign)
 
@@ -3407,51 +3366,17 @@ def video_row(n, f):
                      human_size(f.get("filesize") or f.get("filesize_approx"))]}
 
 
-UI_LINES = int(os.environ.get("DLPY_LINES", "26").strip() or 26) if os.environ.get("DLPY_LINES", "26").strip().isdigit() else 26
-
-
-def ui_lines():
-    """Líneas de la interfaz, banner incluido (0.3.4): 26 siempre; DLPY_LINES=0 usa el alto del terminal."""
-    if UI_LINES:
-        return UI_LINES
-    try:
-        return shutil.get_terminal_size((80, 24)).lines
-    except (OSError, ValueError):
-        return 24
-
-
-def pinned_lines():
-    """Líneas que ocupan los comentarios fijados tras limpiar la pantalla (0.3.4)."""
-    if not ROAST:
-        return 0
-    try:
-        return sum(len(wrap_text(plat_text(t), max(8, term_width() - 2))) for t in PINNED)
-    except Exception:
-        return len(PINNED)
-
-
-def banner_height():
-    """Líneas ocupadas arriba (0.3.4): la tarjeta (5 si aún no hay) más los comentarios fijados."""
-    body = CARD.get("body")
-    return ((len(body) + 2) if (body and CARD.get("fresh")) else 5) + pinned_lines()
-
-
-def list_cap(overhead=16):
-    """Filas máximas de la lista de formatos (0.2.4) dentro de las 26 líneas de la interfaz (0.3.4).
-    `overhead` = líneas de la pantalla que no son filas (16 = caso más alto: título de 2 líneas).
+def list_cap():
+    """Filas máximas de la lista de formatos según el alto del terminal (0.2.4).
     DLPY_ROWS=N lo fuerza; DLPY_ROWS=0 = sin tope."""
     env = os.environ.get("DLPY_ROWS", "").strip()
     if env.isdigit():
         return int(env) or 10 ** 6
-    return max(8, ui_lines() - overhead)
-
-
-def visible_cap(overhead, lines=None):
-    """Filas de una lista que caben en las 26 líneas de la interfaz (0.3.4). None solo con DLPY_ROWS=0."""
-    env = os.environ.get("DLPY_ROWS", "").strip()
-    if env.isdigit():
-        return int(env) or None
-    return max(4, (ui_lines() if lines is None else lines) - overhead)
+    try:
+        lines = shutil.get_terminal_size((80, 24)).lines
+    except (OSError, ValueError):
+        lines = 24
+    return max(8, lines - 16)          # la tarjeta del banner ocupa 5 líneas (0.2.6)
 
 
 def audio_quality_keys(audios):
@@ -3490,18 +3415,17 @@ def best_per_quality(rows, keys, rank, keep=None):
     return sorted(out)
 
 
-def short_pick(rows, take, keep=None, uniq=None, first=False):
+def short_pick(rows, take, keep=None, uniq=None):
     """Índices de las filas de la lista corta (0.2.9): primero las compatibles con la plataforma (marca
     «apple»), las mejores (las últimas); si ninguna lo es, las mejores de todas. La fila `keep` (la de
     «b») siempre entra. Salen en el orden de la lista. `uniq` (0.3.1): solo se eligen entre esos índices
-    (una fila por calidad); `keep` entra aunque no esté. `first` (0.3.3): listas de mejor a peor, se
-    eligen las primeras en vez de las últimas."""
+    (una fila por calidad); `keep` entra aunque no esté."""
     cand = list(range(len(rows))) if uniq is None else [i for i in uniq if 0 <= i < len(rows)]
     pool = [i for i in cand if "apple" in rows[i]["flags"]] or cand
     take = max(0, take)
-    idx = (pool[:take] if first else pool[-take:]) if take else []
+    idx = pool[-take:] if take else []
     if keep is not None and 0 <= keep < len(rows) and keep not in idx:
-        idx = [keep] + ((idx[:-1] if first else idx[1:]) if len(idx) >= take else idx)
+        idx = [keep] + (idx[1:] if len(idx) >= take else idx)
     return sorted(idx)
 
 
@@ -3571,44 +3495,24 @@ def track_row(n, t):
 
 
 def ask_default_track(tracks, original):
-    """Devuelve (pista, sin_respuesta). sin_respuesta=True omite las pistas extra.
-    iOS (0.3.3): si no caben todas con el teclado abierto salen las mejores y «m» muestra el resto."""
+    """Devuelve (pista, sin_respuesta). sin_respuesta=True omite las pistas extra."""
+    clear_screen()
+    header("ELEGIR PISTA PREDETERMINADA", gap=False)
+    m_info("Se detectaron varios idiomas.")
+    legend(["apple", "orig"])
     trows = [track_row(i, t) for i, t in enumerate(tracks, 1)]
     for r, t in zip(trows, tracks):
         if t is original:
             r["flags"].add("default")            # ▸ en el margen: la que vale con Enter o al acabar la cuenta
-    orig_i = next((i for i, t in enumerate(tracks) if t is original), None)
-    keys = ["apple", "orig"]
-    cd = countdown_supported()
-    txt0 = "n.º · m más · {Enter = original}" + (f" · {WAIT_SECONDS} s" if cd else "")
-    cap = visible_cap(banner_height() + 3 + len(_legend_lines(keys))
-                      + len(wrap_text(plat_text(txt0), term_width() - 2)) + 1)
-    vis = short_pick(trows, cap, orig_i, None, True) if cap is not None and len(trows) > cap else None
-
-    def draw(full):
-        """Pantalla de pistas; devuelve True si quedan filas ocultas (se ven con «m»)."""
-        if full:
-            hide_keyboard(0.3)
-        clear_screen()
-        if full and CARD["pin"]:
-            card_thread_stop()          # lista completa: se suelta el banner anclado para poder deslizar
-        hid = vis is not None and not full
-        header("ELEGIR PISTA PREDETERMINADA" + (f" · +{len(trows) - len(vis)} más" if hid else ""), gap=False)
-        m_info("Se detectaron varios idiomas.")
-        legend(keys)
-        print_rows([trows[i] for i in vis] if hid else trows, keys, TRACK_HEAD)
-        txt = "n.º · " + ("m más · " if hid else "") + "{Enter = original}"
-        if cd and not full:
-            txt += f" · {WAIT_SECONDS} s"
-        hint(txt)
-        return hid
-
-    hid = draw(False)
-    full = False
+    print_rows(trows, ["apple", "orig"], TRACK_HEAD)
+    txt = "n.º · {Enter = original}"
+    if countdown_supported():
+        txt += f" · {WAIT_SECONDS} s"
+    hint(txt)
     cur = PROMPT
     while True:
         try:
-            raw = timed_input(cur, None if full else WAIT_SECONDS)
+            raw = timed_input(cur)
         except (EOFError, KeyboardInterrupt):
             return original, True
         if raw is None:
@@ -3617,17 +3521,12 @@ def ask_default_track(tracks, original):
         typed, raw = raw, raw.strip()
         if not raw:
             return original, False
-        if raw.lower() == "m" and hid:
-            hid, full = draw(True), True
-            cur = PROMPT
-            continue
         if raw.isdigit() and 1 <= int(raw) <= len(tracks):
             chosen = tracks[int(raw) - 1]
             m_ok(f"Predeterminada: {chosen['lang']} · {track_label(chosen)}")
             return chosen, False
-        cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(tracks)}" + (", m" if hid else "") + " o Enter"),
-                           f"Opción inválida: escribe un número del 1 al {len(tracks)}"
-                           + (", m" if hid else "") + " o Enter.")
+        cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(tracks)} o Enter"),
+                           f"Opción inválida: escribe un número del 1 al {len(tracks)} o Enter.")
 
 
 def ask_extra_tracks(tracks, primary):
@@ -3642,27 +3541,11 @@ def ask_extra_tracks(tracks, primary):
     if not r:                                   # None (sin respuesta) o No
         return [primary]
 
-    orows = [track_row(i, t) for i, t in enumerate(others, 1)]
-    keys = ["apple", "orig"]
-    txt0 = "n.º separados por espacio (ej. 1 2 4) · m más · {Enter = todas}"
-    cap = visible_cap(banner_height() + 2 + len(_legend_lines(keys))
-                      + len(wrap_text(plat_text(txt0), term_width() - 2)) + 1)
-    vis = short_pick(orows, cap, None, None, True) if cap is not None and len(orows) > cap else None
-
-    def draw(full):
-        if full:
-            hide_keyboard(0.3)
-        clear_screen()
-        if full and CARD["pin"]:
-            card_thread_stop()
-        hid = vis is not None and not full
-        header("ELEGIR PISTAS DE AUDIO ADICIONAL" + (f" · +{len(orows) - len(vis)} más" if hid else ""), gap=False)
-        legend(keys)
-        print_rows([orows[i] for i in vis] if hid else orows, keys, TRACK_HEAD)
-        hint("n.º separados por espacio (ej. 1 2 4) · " + ("m más · " if hid else "") + "{Enter = todas}")
-        return hid
-
-    hid = draw(False)
+    clear_screen()
+    header("ELEGIR PISTAS DE AUDIO ADICIONAL", gap=False)
+    legend(["apple", "orig"])
+    print_rows([track_row(i, t) for i, t in enumerate(others, 1)], ["apple", "orig"], TRACK_HEAD)
+    hint("n.º separados por espacio (ej. 1 2 4) · {Enter = todas}")
     cur = PROMPT
     while True:
         try:
@@ -3673,16 +3556,11 @@ def ask_extra_tracks(tracks, primary):
         if not raw:
             chosen = others
             break
-        if raw.lower() == "m" and hid:
-            hid = draw(True)
-            cur = PROMPT
-            continue
         toks = [x for x in re.split(r"[\s,]+", raw) if x]
         bad = [x for x in toks if not (x.isdigit() and 1 <= int(x) <= len(others))]
         if bad:
-            cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(others)}" + (", m" if hid else "")),
-                               f"Opción inválida: {' '.join(bad)} (usa números del 1 al {len(others)}"
-                               + (" o m" if hid else "") + ").")
+            cur = retry_prompt(cur, typed, bad_prompt(f"1-{len(others)}"),
+                               f"Opción inválida: {' '.join(bad)} (usa números del 1 al {len(others)}).")
             continue
         chosen = [others[int(x) - 1] for x in toks]
         break
@@ -4810,10 +4688,9 @@ def kv_rows(rows):
             print(" " * (lw + 3) + ln)
 
 
-def audio_rows(tracks, room=None):
+def audio_rows(tracks):
     """Filas de audio: una con códec y bitrate y, si hay varias pistas, otra con los idiomas
-    (◆ original, ▸ predeterminada). Devuelve (filas, hay_marcas). `room` (0.3.4): caracteres máximos de
-    la fila de idiomas; si sobran se cortan con «+N»."""
+    (◆ original, ▸ predeterminada). Devuelve (filas, hay_marcas)."""
     if not tracks:
         return [("Audio", "sin pistas de audio")], False
     codecs = sorted({str(t.get("codec") or "?") for t in tracks})
@@ -4835,11 +4712,6 @@ def audio_rows(tracks, room=None):
             tok += "▸"
             marks = True
         toks.append(tok)
-    if room and len(" ".join(toks)) > room:
-        keep = len(toks)
-        while keep > 1 and len(" ".join(toks[:keep])) + len(f" +{len(toks) - keep}") > room:
-            keep -= 1
-        toks = toks[:keep] + [f"+{len(toks) - keep}"]
     return [("Audio", f"{len(tracks)} pistas · {codec}"), ("", " ".join(toks))], marks
 
 
@@ -4908,7 +4780,7 @@ def show_existing(path, entry, title=None):
         elif meta.get("kind") == "audio":
             vrow = ("Video", "solo audio")
         tracks = meta.get("tracks") or []
-        arows, marks = audio_rows(tracks, 3 * max(8, term_width() - 13))
+        arows, marks = audio_rows(tracks)
         if meta.get("kind") == "audio" and tracks:
             apple = all(t.get("apple") for t in tracks)
         rows += [vrow] + arows
@@ -6928,14 +6800,14 @@ def _wrap_tokens(tokens, indent, width, sep="  "):
     return lines
 
 
-def format_version_rows(rows, cur, upd, crashes, diffs_by_ver, width=None, start=1):
+def format_version_rows(rows, cur, upd, crashes, diffs_by_ver, width=None):
     """Líneas de la lista numerada de versiones (con colores si el terminal los admite)."""
     width = width or safe_width()
     count = {}
     for c in crashes:
         count[c["version"]] = count.get(c["version"], 0) + 1
     out = []
-    for i, row in enumerate(rows, start):
+    for i, row in enumerate(rows, 1):
         ver = row["ver"]
         head = f"{i}  {ver}"
         toks = [(head, paint(str(i), "orange", True) + "  " + paint(ver, "white", True))]
@@ -7200,63 +7072,26 @@ def offer_recovery(crashed, why):
         diffs_by_ver = {r["ver"]: row_diffs(r) for r in shown}
     finally:
         cbar.stop()
-    crashes = load_crashes()
-    per = [format_version_rows([r], VERSION, main_ver, crashes, diffs_by_ver, start=i)
-           for i, r in enumerate(shown, 1)]
-    legend_txt = "✓ actual · ⬆ la de actualizar · ✖ crasheó · ≠ difiere · = idénticas"
-
-    def draw(full):
-        """Pantalla de versiones dentro de las 26 líneas (0.3.4); True si quedan ocultas (se ven con «m»)."""
-        if full:
-            hide_keyboard(0.3)
-        clear_screen()
-        if full and CARD["pin"]:
-            card_thread_stop()          # lista completa: se suelta el banner anclado para poder deslizar
-        header("VERSIONES", gap=False)
-        w = max(8, term_width() - 4)
-        used = (banner_height() + 1 + 1 + 1                       # banner, cabecera, nota de «más», prompt
-                + (len(wrap_text(plat_text(why), w)) if why else 0)
-                + (1 if main is None else 0)
-                + len(wrap_text(plat_text(legend_txt), w)))
-        k, tot = 0, 0
-        for ls in per:
-            if not full and k >= 1 and tot + len(ls) > ui_lines() - used:
-                break
-            tot += len(ls)
-            k += 1
-        if why:
-            m_warn(why)
-        if main is None:
-            note("Sin conexión: no se sabe cuál usaría al actualizar.")
-        for ls in per[:k]:
-            for ln in ls:
-                print(ln)
-        if k < len(per):
-            note(f"(+{len(per) - k} más: «m»)")
-        elif len(rows) > len(shown):
-            note(f"(+{len(rows) - len(shown)} más antiguas sin mostrar)")
-        print_version_legend()
-        return k < len(per)
-
-    def vprompt(hid):
-        return "¿Instalar? Nº · m más (Enter = no) ▸ " if hid else "¿Instalar alguna? Número (Enter = no) ▸ "
-
-    hid = draw(False)
-    cur = vprompt(hid)
+    header("VERSIONES")
+    if why:
+        m_warn(why)
+    if main is None:
+        note("Sin conexión: no se sabe cuál usaría al actualizar.")
+    for ln in format_version_rows(shown, VERSION, main_ver, load_crashes(), diffs_by_ver):
+        print(ln)
+    if len(rows) > len(shown):
+        note(f"(+{len(rows) - len(shown)} más antiguas sin mostrar)")
+    print_version_legend()
+    cur = "¿Instalar alguna? Número (Enter = no) ▸ "
     while True:
         try:
             ans = ask_line(cur)
         except (EOFError, KeyboardInterrupt):
             return False
-        if (ans or "").strip().lower() == "m" and hid:
-            hid = draw(True)
-            cur = vprompt(hid)
-            continue
         n = parse_menu_choice(ans, len(shown))
         if n is None:
-            cur = retry_prompt(cur, ans, bad_prompt(f"1-{len(shown)}" + (", m" if hid else "") + " o Enter"),
-                               f"Escribe un número de 1 a {len(shown)}" + (" (o m)" if hid else "")
-                               + " (o Enter para no volver).")
+            cur = retry_prompt(cur, ans, bad_prompt(f"1-{len(shown)} o Enter"),
+                               f"Escribe un número de 1 a {len(shown)} (o Enter para no volver).")
             continue
         break
     if n == 0:
@@ -8369,16 +8204,6 @@ def selftest():
     check("lista corta: «b» siempre entra", short_pick(_sr, 2, 0), [0, 4])
     check("lista corta: sin compatibles", short_pick([{"flags": set()}] * 4, 2), [2, 3])
     check("lista corta: vacía", short_pick([], 3), [])
-    check("lista corta: primeras (first)", short_pick(_sr, 1, None, None, True), [1])
-    check("lista corta: first con «b» al final", short_pick(_sr, 2, 4, None, True), [1, 4])
-    _rows_env = os.environ.pop("DLPY_ROWS", None)
-    check("visible_cap con lines", visible_cap(12, 28), 16)
-    check("visible_cap 26 líneas", visible_cap(12) if UI_LINES == 26 else 14, 14)
-    check("visible_cap mínimo", visible_cap(12, 10), 4)
-    check("list_cap 26 líneas", list_cap(16) if UI_LINES == 26 else 10, 10)
-    check("list_cap con overhead", list_cap(10) >= 8, True)
-    if _rows_env is not None:
-        os.environ["DLPY_ROWS"] = _rows_env
     import tempfile as _tf
     _ed = _tf.mkdtemp()
     _ep = os.path.join(_ed, "e.json")
@@ -9332,10 +9157,7 @@ def main():
     for r in a_rows + v_rows:
         if r["n"] == best_n:
             r["flags"].add("best")
-    n_head = (3 if a_rows else 0) + (2 if v_rows else 0)         # cabeceras + encabezados de columnas
-    cap = list_cap(banner_height() + len(title_lines(title, term_width() - 1))
-                   + len(_legend_lines(["apple", "orig"])) + n_head + 1       # +1: la línea en blanco
-                   + len(wrap_text(plat_text("n.º · b ★ mejor · m más · q salir"), term_width() - 2)) + 1)  # +1: prompt
+    cap = list_cap()
     a_keep = best_n - 1 if bk == "a" and best_n else None
     v_keep = best_n - len(audios) - 1 if bk == "v" and best_n else None
     # lista corta: una sola fila por calidad, la mejor en soporte nativo (0.3.1)
@@ -9358,8 +9180,6 @@ def main():
 
     def show_list(full):
         """Pantalla de la lista; devuelve True si quedan filas ocultas (se ven con «m»)."""
-        if full:
-            hide_keyboard(0.3)          # iOS: lista completa con el teclado abajo para poder deslizar (0.3.3)
         clear_screen()
         if full and CARD["pin"]:
             card_thread_stop()          # lista completa: se suelta el banner anclado para poder deslizar (0.2.8)
