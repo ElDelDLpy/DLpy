@@ -3,11 +3,6 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
-# ## 0.4.4
-#
-# - Formatos sin resolución con id numérico corto (los MP4 «1», «2», «3» de Instagram) también se nombran por su
-#   id: «id1», «id2», «id3». Antes salían como «?» y el menú de --scm / --scb los fundía en una sola opción.
-#
 # ## 0.4.3
 #
 # - --scb instala yt-dlp si no está (antes el JSON solo decía «yt-dlp no está instalado»). Instalar tarda más que
@@ -413,7 +408,7 @@
 #   --noupdates: esta ejecución no busca actualizaciones (ni de DLpy ni de dependencias); también --no-updates (0.3.7).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 
-VERSION = "0.4.4"
+VERSION = "0.4.3"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz (estilo Aurora) · Terminal: ancho y texto ·
@@ -3526,8 +3521,6 @@ def format_tag(f):
     if res and res.lower() not in ("unknown", "none", "?"):
         return res
     fid = str(f.get("format_id") or "")
-    if re.fullmatch(r"\d{1,4}", fid):
-        return "id" + fid                       # 0.4.4: «1», «2», «3» → «id1», «id2», «id3»
     return fid if re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,9}", fid) else "?"
 
 
