@@ -3,6 +3,26 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.6.0
+#
+# - Solo iOS (a-Shell): se quita el soporte multiplataforma (unas 800 líneas menos). Fuera: detección de plataforma
+#   (DLPY_PLATFORM, WSL, Termux), permiso de almacenamiento y «compartir a Termux» (--instalar-android,
+#   termux-url-opener, reubicación a ~), entrega y notificaciones de Android y de escritorio, teclado de Windows
+#   (msvcrt), rutas de Descargas de escritorio, tabla de códecs «no Apple», instalador de paquetes del sistema
+#   (apt / brew / winget / pkg), copia del código a la carpeta de origen y el portapapeles de escritorio.
+#   PLATFORM, IS_IOS, APPLE_MODE y PLAT_LABEL quedan como constantes («ios», True, True, «Apple»).
+#   --sistema ya no muestra el «Modo». Los DLPY_ACTION / DLPY_ANDROID_ACTION viejos se siguen ignorando.
+# - Releases: --versiones suma los Releases de GitHub como un origen más («Release», instalable y comparable con
+#   versions/, main y los backups). La búsqueda de actualizaciones mira también el Release más nuevo y ofrece el
+#   que tenga la versión más alta entre ese y main. La versión sale de la etiqueta («v0.6.0» o «0.6.0») y el código,
+#   del adjunto «dlpy.py» o «dlpy_x.y.z.py»; sin adjunto, del dlpy.py de esa etiqueta. Se ignoran borradores y
+#   prereleases. Una consulta más a la API de GitHub por comprobación (cada 24 h).
+# - Orden del archivo: las constantes de rutas (estado, versiones, fallos, atajo) están todas en «Rutas»;
+#   los ayudantes de changelog (changelog_block_from_md, insert_changelog_block, script_variants) pasaron a
+#   «Changelog y backup», late_updates a «Actualizaciones desde GitHub», shortcut_copy a «Enlace y portapapeles»,
+#   y copy_file / move_file, ask, los formateadores de tamaño y kbps_text / fmt_kbps a «Utilidades».
+#   El índice de secciones de la cabecera se rehizo con las secciones reales.
+#
 # ## 0.5.0
 #
 # - Menú de --scm / --scb más claro (solo cambia el texto de «video_labels» / «track_labels»; el número sigue
@@ -462,20 +482,25 @@
 #     entregar el archivo, y la respuesta por omisión es No (también al acabar la cuenta regresiva) (0.3.7).
 #   --noupdates: esta ejecución no busca actualizaciones (ni de DLpy ni de dependencias); también --no-updates (0.3.7).
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
+#   Desde la 0.6.0 solo corre en iOS (a-Shell): lo anterior sobre Android, Linux, macOS y Windows ya no aplica.
+#   --versiones y --actualizar buscan también en los Releases de GitHub (0.6.0).
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
-#   Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz (estilo Aurora) · Terminal: ancho y texto ·
-#   Mensajes y debug · Comentarios inteligentes · Pantalla: banner, títulos y listas · Barras y paneles de
-#   progreso · Terminal: teclado y cuenta regresiva · Utilidades · Formatos y pistas · Post-proceso ·
-#   Compatibilidad Apple: conversión · Bits, HDR y sondeo · Ya descargado · JSON / índice · Enlace y
-#   portapapeles · Dependencias · Actualizaciones desde GitHub · YouTube: runtime de JavaScript ·
-#   Dependencias del sistema · Changelog y backup · Limpieza de almacenamiento · Control de versión ·
-#   DEV · Versiones en GitHub y en backups · Comparar versiones · Fallos · Pantalla de versiones ·
-#   Recuperación tras un fallo · Caché de streams · Reanudación de descargas · Limpieza interna ·
-#   Entrega del archivo · Atajo de iOS · Análisis tolerante · Error «no eres un bot» · Modo atajo · Autoprueba ·
-#   Funciones disponibles según el sistema · Principal
+#   Variables DLPY_* recordadas · Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz · Terminal:
+#   ancho y texto · Mensajes y debug · Comentarios inteligentes (humor según el uso) · Pantalla: banner,
+#   títulos y listas · Barras y paneles de progreso · Terminal: teclado y cuenta regresiva · Utilidades ·
+#   Formatos y pistas: etiquetas y selección · Post-proceso: pista predeterminada · Compatibilidad Apple:
+#   conversión opcional · Bits, HDR y sondeo del video · Ya descargado: reutilizar o convertir · JSON /
+#   índice · Enlace y portapapeles · Dependencias · Actualizaciones desde GitHub · YouTube: runtime de
+#   JavaScript + yt-dlp-ejs · Rechazos recordados · Changelog y backup · Limpieza de almacenamiento ·
+#   Control de versión · DEV: snapshot a Documents (a-Shell) · Versiones en GitHub, Releases y backups
+#   (listado) · Comparar versiones: huellas y diferencias · Fallos: historial y avisos · Pantalla de
+#   versiones y orígenes · Recuperación tras un fallo · Caché de streams (24 h) · Reanudación de descargas ·
+#   Limpieza de la carpeta interna · Entrega del archivo (Atajos) · Atajo de iOS (--2shortcuts) · Análisis
+#   tolerante (equivalente al yt-dlp en bruto) · Error «no eres un bot» · Modo atajo (--scm / --scb) ·
+#   Autoprueba · Funciones disponibles según el sistema · Principal
 
 import atexit
 import math
@@ -555,94 +580,19 @@ def persist_env(env=None, path=None, legacy=None):
 
 
 # ─────────────────────── Plataforma ───────────────────────
-PLATFORMS = ("ios", "android", "macos", "linux", "windows")
+# Desde la 0.6.0 DLpy solo corre en iOS (a-Shell): sin detección de plataforma ni ramas para otros sistemas.
+PLATFORM = "ios"
+IS_IOS = True
+APPLE_MODE = True          # códecs nativos de Apple + conversión opcional
+PLAT_LABEL = "Apple"
+ANSI_OK = True             # a-Shell entiende las secuencias ANSI
 
 
-def detect_platform(env=None, plat=None):
-    """Modo de ejecución: «ios» (a-Shell), «android» (Termux), «macos», «linux» o
-    «windows». BSD y otros Unix usan el modo «linux». env/plat solo se inyectan en
-    las pruebas; DLPY_PLATFORM=<modo> fuerza uno."""
-    real = env is None
+def platform_name(env=None):
+    """Texto corto para el banner: en qué app corre DLpy."""
     env = os.environ if env is None else env
-    forced = (env.get("DLPY_PLATFORM") or "").strip().lower()
-    if forced in PLATFORMS:
-        return forced
-    plat = (sys.platform if plat is None else plat) or ""
-    home = env.get("HOME") or ""
-    if (env.get("TERMUX_VERSION") or "com.termux" in (env.get("PREFIX") or "")
-            or "com.termux" in home or plat.startswith("android")
-            or (real and hasattr(sys, "getandroidapilevel"))):
-        return "android"
-    if plat.startswith(("ios", "ipados")):
-        return "ios"
-    if plat == "darwin":
-        # a-Shell corre en un Python «darwin»: se distingue por su entorno y su sandbox
-        machine = ""
-        if real and hasattr(os, "uname"):
-            machine = os.uname().machine.lower()
-        if ("a-shell" in (env.get("APPNAME") or "").lower()
-                or "/var/mobile/" in home or "/containers/data/application/" in home.lower()
-                or machine.startswith(("iphone", "ipad"))
-                or (real and shutil.which("hideKeyboard"))):
-            return "ios"
-        return "macos"
-    if plat.startswith(("win", "cygwin", "msys")):
-        return "windows"
-    return "linux"
-
-
-def is_wsl(env=None):
-    """Linux dentro de Windows (WSL). Con env inyectado solo mira WSL_DISTRO_NAME."""
-    real = env is None
-    env = os.environ if env is None else env
-    if env.get("WSL_DISTRO_NAME") or env.get("WSL_INTEROP"):
-        return True
-    if real and sys.platform.startswith("linux"):
-        try:
-            with open("/proc/version", "r", encoding="utf-8", errors="ignore") as fh:
-                return "microsoft" in fh.read().lower()
-        except OSError:
-            return False
-    return False
-
-
-def platform_name(mode=None, env=None):
-    """Texto corto para el banner: en qué sistema corre DLpy."""
-    real = env is None
-    env = os.environ if env is None else env
-    mode = mode or PLATFORM
-    try:
-        if mode == "ios":
-            app = (env.get("APPNAME") or "").lower()
-            return ("a-Shell mini" if "mini" in app else "a-Shell") + " · iOS"
-        if mode == "android":
-            ver = env.get("TERMUX_VERSION")
-            return ("Termux " + ver if ver else "Termux") + " · Android"
-        if mode == "macos":
-            import platform as _pl
-            ver = _pl.mac_ver()[0].split(".")[0] if real else ""
-            return "macOS" + (" " + ver if ver else "")
-        if mode == "windows":
-            build = getattr(sys, "getwindowsversion", lambda: None)() if real else None
-            n = "11" if build is not None and build.build >= 22000 else \
-                ("10" if build is not None else "")
-            return "Windows" + (" " + n if n else "")
-        name = "Linux"
-        if is_wsl(env):
-            name += " · WSL"
-        distro = env.get("WSL_DISTRO_NAME") or ""
-        if real and not distro:
-            try:
-                with open("/etc/os-release", "r", encoding="utf-8", errors="ignore") as fh:
-                    m = re.search(r'(?m)^NAME="?([^"\n]+)"?', fh.read())
-                distro = m.group(1) if m else ""
-            except OSError:
-                distro = ""
-        if sys.platform.startswith(("freebsd", "openbsd", "netbsd", "dragonfly")) and real:
-            name = sys.platform.rstrip("0123456789").capitalize()
-        return name + (" · " + distro if distro else "")
-    except Exception:
-        return mode
+    app = (env.get("APPNAME") or "").lower()
+    return ("a-Shell mini" if "mini" in app else "a-Shell") + " · iOS"
 
 
 def machine_name():
@@ -653,233 +603,25 @@ def machine_name():
         return "?"
 
 
-def env_file_path(home=None, plat=None):
-    """Dónde se guardan las DLPY_* (0.3.5). iOS: dentro de la carpeta oculta de dlpy_files (en a-Shell «~» es
-    la raíz del contenedor y ahí no se puede escribir). Resto: ~/.dlpy_env.json, porque la ruta de dlpy_files
-    puede depender de esas mismas variables (DLPY_FILES_DIR, DLPY_DOWNLOAD_DIR)."""
+def env_file_path(home=None):
+    """Dónde se guardan las DLPY_* (0.3.5): dentro de la carpeta oculta de dlpy_files (en a-Shell «~» es
+    la raíz del contenedor y ahí no se puede escribir)."""
     home = home or os.path.expanduser("~")
-    if (plat or detect_platform()) == "ios":
-        return os.path.join(home, "Documents", "dlpy_files", INTERNAL_NAME, ENV_NAME)
-    return os.path.join(home, ".dlpy_env.json")
+    return os.path.join(home, "Documents", "dlpy_files", INTERNAL_NAME, ENV_NAME)
 
 
 ENV_FILE = env_file_path()
 if not any(a.lstrip("-") == "selftest" for a in sys.argv[1:]):
     persist_env(path=ENV_FILE, legacy=LEGACY_ENV_FILE)
 
-PLATFORM = detect_platform()
-IS_ANDROID = PLATFORM == "android"
-IS_IOS = PLATFORM == "ios"
-IS_MAC = PLATFORM == "macos"
-IS_LINUX = PLATFORM == "linux"
-IS_WINDOWS = PLATFORM == "windows"
-IS_DESKTOP = PLATFORM in ("macos", "linux", "windows")
-APPLE_MODE = PLATFORM in ("ios", "macos")     # códecs nativos de Apple + conversión opcional
-PLAT_LABEL = {"ios": "Apple", "macos": "Apple", "android": "Android",
-              "linux": "Linux", "windows": "Windows"}[PLATFORM]
-
-
-def enable_windows_ansi():
-    """Windows: activa las secuencias ANSI de la consola (colores, barras). Fuera
-    de Windows no hace nada. Devuelve False si la consola no las admite."""
-    if os.name != "nt":
-        return True
-    try:
-        import ctypes
-        k32 = ctypes.windll.kernel32
-        ok = True
-        for std in (-11, -12):                         # stdout, stderr
-            h = k32.GetStdHandle(std)
-            mode = ctypes.c_uint32()
-            if k32.GetConsoleMode(h, ctypes.byref(mode)):
-                ok = bool(k32.SetConsoleMode(h, mode.value | 0x0004)) and ok
-        return ok
-    except Exception:
-        return False
-
-
-def force_utf8_output():
-    """Barras, puntos y flechas son Unicode: evita UnicodeEncodeError en consolas
-    cp1252 (Windows) o con locale C."""
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            enc = (getattr(stream, "encoding", "") or "").lower().replace("-", "")
-            if enc != "utf8":
-                stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, ValueError, OSError):
-            pass
-
-
-ANSI_OK = enable_windows_ansi()
-force_utf8_output()
-
-
-def desktop_downloads_dir(mode=None, env=None, home=None):
-    """Carpeta Descargas del escritorio: XDG en Linux (XDG_DOWNLOAD_DIR o
-    user-dirs.dirs), carpeta conocida de Windows y ~/Downloads en el resto."""
-    mode = mode or PLATFORM
-    real = env is None
-    env = os.environ if env is None else env
-    home = home or os.path.expanduser("~")
-    custom = env.get("XDG_DOWNLOAD_DIR")
-    if mode == "linux":
-        if custom:
-            return custom
-        cfg = os.path.join(env.get("XDG_CONFIG_HOME") or os.path.join(home, ".config"),
-                           "user-dirs.dirs")
-        try:
-            with open(cfg, "r", encoding="utf-8", errors="ignore") as fh:
-                m = re.search(r'(?m)^XDG_DOWNLOAD_DIR=(?:"([^"\n]*)"|(\S+))', fh.read())
-            if m:
-                path = (m.group(1) or m.group(2)).replace("$HOME", home)
-                if path and os.path.abspath(path) != os.path.abspath(home):
-                    return path
-        except OSError:
-            pass
-    elif mode == "windows" and real and os.name == "nt":
-        try:
-            import winreg
-            key = r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key) as k:
-                path, _ = winreg.QueryValueEx(k, "{374DE290-123F-4565-9164-ACA4A8AF4A5B}")
-            path = os.path.expandvars(path)
-            if path and "%" not in path:
-                return path
-        except (OSError, ImportError):
-            pass
-    return os.path.join(home, "Downloads")
-
-
-def copy_file(src, dst):
-    """Como shutil.copy2, pero el chmod/utime del destino es opcional: el
-    almacenamiento compartido de Android los rechaza (EPERM)."""
-    shutil.copyfile(src, dst)
-    try:
-        st = os.stat(src)
-        os.utime(dst, ns=(st.st_atime_ns, st.st_mtime_ns))
-    except OSError:
-        pass
-    return dst
-
-
-def move_file(src, dst):
-    """Como shutil.move, pero copiando con copy_file cuando rename no basta
-    (otro sistema de archivos). Devuelve el destino final."""
-    if os.path.isdir(dst):
-        dst = os.path.join(dst, os.path.basename(src.rstrip(os.sep)))
-    try:
-        os.rename(src, dst)
-        return dst
-    except OSError:
-        pass
-    if os.path.isdir(src) and not os.path.islink(src):
-        shutil.copytree(src, dst, copy_function=copy_file)
-        shutil.rmtree(src)
-    else:
-        copy_file(src, dst)
-        os.unlink(src)
-    return dst
-
-
-def _writable_dir(path):
-    try:
-        os.makedirs(path, exist_ok=True)
-        return os.access(path, os.W_OK)
-    except OSError:
-        return False
-
-
-def _early_say(color, msg):
-    """Mensaje con el mismo punto de color que m_info/m_ok/m_warn, para usar antes de que
-    existan los ayudantes de la interfaz (se llama al importar, en Android)."""
-    env = os.environ.get("DLPY_COLOR")
-    on = (env.strip().lower() not in ("0", "no", "false", "") if env is not None
-          else sys.stdout.isatty() and not os.environ.get("NO_COLOR") and ANSI_OK)
-    tc = os.environ.get("DLPY_TRUECOLOR", "1").strip().lower() not in ("0", "no", "false", "")
-    rgb = {"green": (61, 220, 151), "yellow": (255, 196, 61), "blue": (255, 138, 61)}[color]
-    code = f"38;2;{rgb[0]};{rgb[1]};{rgb[2]}" if tc else {"green": "92", "yellow": "93", "blue": "93"}[color]
-    print((f"\x1b[{code}m●\x1b[0m" if on else "●") + " " + msg)
-
-
-def ensure_storage_access(shared_root, download_dir):
-    """Android: pide el permiso de almacenamiento con termux-setup-storage (solo una
-    vez si se rechaza) y espera a que aparezca ~/storage/shared. Usa print porque
-    corre antes de definir la interfaz. Devuelve True si Descargas quedó escribible."""
-    import subprocess
-    def ok():
-        return os.path.isdir(shared_root) and _writable_dir(download_dir)
-    marker = os.path.join(HOME, ".dlpy", "storage_asked")
-    if ok():
-        try:
-            os.remove(marker)
-        except OSError:
-            pass
-        return True
-    if (os.environ.get("DLPY_NO_STORAGE_SETUP") or "--selftest" in sys.argv[1:]
-            or os.path.exists(marker) or not shutil.which("termux-setup-storage")):
-        return False
-    try:
-        os.makedirs(os.path.dirname(marker), exist_ok=True)
-        with open(marker, "w") as f:
-            f.write(str(int(time.time())))
-    except OSError:
-        pass
-    _early_say("blue", "DLpy necesita acceso al almacenamiento: acepta el permiso de Android...")
-    try:
-        subprocess.run(["termux-setup-storage"], stdin=subprocess.DEVNULL,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
-    except (OSError, subprocess.SubprocessError):
-        pass
-    end = time.time() + 45
-    while time.time() < end:
-        if ok():
-            try:
-                os.remove(marker)
-            except OSError:
-                pass
-            _early_say("green", "Acceso concedido.")
-            return True
-        time.sleep(0.5)
-    _early_say("yellow", "No se concedió el acceso al almacenamiento; se usará ~/dlpy_files.")
-    return False
-
 
 # ───────────────────────── Rutas ─────────────────────────
 HOME = os.path.expanduser("~")
-SHARED_OK = True                  # Android: ¿hay almacenamiento compartido?
-if IS_ANDROID:
-    # Completadas + backups: Descargas/DLpy (visible en la galería y otras apps)
-    _shared_root = os.path.join(HOME, "storage", "shared")   # lo crea termux-setup-storage
-    if not os.environ.get("DLPY_DOWNLOAD_DIR") and not os.environ.get("DLPY_FILES_DIR"):
-        ensure_storage_access(_shared_root, os.path.join(_shared_root, "Download"))
-    # Descargas terminadas: la carpeta Descargas de Android. Lo demás de DLpy
-    # (backups, changelog) va en Descargas/DLpy para no mezclarlo con tus archivos.
-    DOWNLOAD_DIR = os.environ.get("DLPY_DOWNLOAD_DIR") or os.path.join(_shared_root, "Download")
-    FILES_DIR = os.environ.get("DLPY_FILES_DIR") or os.path.join(DOWNLOAD_DIR, "DLpy")
-    _custom = os.environ.get("DLPY_DOWNLOAD_DIR") or os.environ.get("DLPY_FILES_DIR")
-    if (not _custom and not os.path.isdir(_shared_root)) \
-            or not _writable_dir(DOWNLOAD_DIR) or not _writable_dir(FILES_DIR):
-        SHARED_OK = False
-        FILES_DIR = DOWNLOAD_DIR = os.path.join(HOME, "dlpy_files")
-    OLD_DATA_DIR = os.path.join(HOME, ".dlpy", "sin_legado")      # no hay legado en Android
-    SHORTCUTS_DIR = os.environ.get("DLPY_HOME") or os.path.join(HOME, ".dlpy")
-elif IS_DESKTOP:
-    # Linux / macOS / Windows: como Android. Descargas terminadas en la carpeta
-    # Descargas del sistema; backups y changelog en Descargas/DLpy.
-    DOWNLOAD_DIR = os.environ.get("DLPY_DOWNLOAD_DIR") or desktop_downloads_dir(PLATFORM, None, HOME)
-    FILES_DIR = os.environ.get("DLPY_FILES_DIR") or os.path.join(DOWNLOAD_DIR, "DLpy")
-    _probe = "--selftest" not in sys.argv[1:] and "--sistema" not in sys.argv[1:]
-    if _probe and (not _writable_dir(DOWNLOAD_DIR) or not _writable_dir(FILES_DIR)):
-        SHARED_OK = False
-        FILES_DIR = DOWNLOAD_DIR = os.path.join(HOME, "dlpy_files")
-    OLD_DATA_DIR = os.path.join(HOME, ".dlpy", "sin_legado")      # no hay legado en escritorio
-    SHORTCUTS_DIR = os.environ.get("DLPY_HOME") or os.path.join(HOME, ".dlpy")
-else:
-    # Completadas + backups únicamente
-    FILES_DIR = os.path.join(HOME, "Documents", "dlpy_files")
-    DOWNLOAD_DIR = FILES_DIR      # iOS: las descargas terminadas viven en dlpy_files
-    OLD_DATA_DIR = os.path.join(HOME, "Documents", "dlpy_data")  # legado → migrar
-    SHORTCUTS_DIR = os.environ.get("SHORTCUTS") or os.path.join(HOME, "Library", "Shortcuts")
+# Completadas + backups únicamente
+FILES_DIR = os.path.join(HOME, "Documents", "dlpy_files")
+DOWNLOAD_DIR = FILES_DIR      # las descargas terminadas viven en dlpy_files
+OLD_DATA_DIR = os.path.join(HOME, "Documents", "dlpy_data")  # legado → migrar
+SHORTCUTS_DIR = os.environ.get("SHORTCUTS") or os.path.join(HOME, "Library", "Shortcuts")
 # Índice, estado, caché, trabajo temporal, changelog, variables DLPY_* (0.3.5: carpeta oculta dentro de dlpy_files)
 INTERNAL_DIR = os.path.join(FILES_DIR, INTERNAL_NAME)
 LEGACY_INTERNAL_DIRS = [os.path.join(SHORTCUTS_DIR, "dlpy_internal"),     # hasta la 0.3.4
@@ -895,6 +637,15 @@ CRASHES_JSON_FILE = os.path.join(INTERNAL_DIR, "crashes_dlpy.json")      # 0.3.6
 LAST_FILE = os.path.join(STATE_DIR, "last_link.json")
 VERSION_FILE = os.path.join(STATE_DIR, "version.json")
 DOWNGRADE_FILE = os.path.join(STATE_DIR, "downgrades.json")   # bajadas de versión (historial y pendiente)
+UPDATE_STATE_FILE = os.path.join(STATE_DIR, "update.json")
+CHECK_FILE = os.path.join(STATE_DIR, "checks.json")
+DEPS_STATE_FILE = os.path.join(STATE_DIR, "deps.json")      # rechazos recordados
+RUNNING_FILE = os.path.join(STATE_DIR, "running.json")      # ejecución en curso
+CRASH_FILE = os.path.join(STATE_DIR, "crash.json")          # último fallo
+CRASH_LOG_FILE = os.path.join(STATE_DIR, "crash_log.json")  # historial de fallos (con huella del código)
+RECOVERED_FILE = os.path.join(STATE_DIR, "recovered.json")  # versión recuperada tras un fallo
+GOOD_FILE = os.path.join(STATE_DIR, "good_versions.json")   # versiones que ya terminaron bien
+SHORTCUT_JSON = os.path.join(STATE_DIR, "shortcut_analysis.json")      # copia legible de la última salida
 SNAPSHOT_FILE = os.path.join(SCRIPT_DIR, "script_snapshot.py")
 CHANGELOG_FILE = os.path.join(SCRIPT_DIR, "changelog.md")
 BACKUP_DIR = os.path.join(FILES_DIR, "backups")
@@ -909,6 +660,7 @@ MAX_NAME_BYTES = 120
 INTERNAL_TTL = 24 * 3600          # entrega temporal al atajo
 STREAM_CACHE_TTL = 24 * 3600      # reutilización de pistas/formatos
 VER_DIR_RE = re.compile(r"^\d+\.\d+\.\d+(-\d+)?$")
+VER_FILE_RE = re.compile(r"^dlpy_(\d+\.\d+\.\d+)\.py$")
 
 # Bloque del changelog dentro del .py (tolerante con espacios, mayúsculas y CRLF)
 CL_RE = re.compile(r"(?m)^#[ \t]*={3,}[ \t]*CHANGELOG[ \t]*={3,}[ \t]*\r?\n(.*?)"
@@ -935,12 +687,7 @@ APPLE_ACODEC = ("mp4a", "aac", "alac", "mp3", "ac-3", "ec-3", "ac3", "eac3", "fl
 APPLE_VEXT = ("mp4", "m4v", "mov")
 APPLE_AEXT = ("m4a", "mp4", "mp3", "aac", "wav", "aiff", "caf", "flac")
 GUESS_VEXT = APPLE_VEXT      # contenedores donde se asume avc1/mp4a si yt-dlp no da códecs
-if not APPLE_MODE:
-    # En Android, Linux y Windows «compatible» = reproducible de forma nativa (sin AV1: depende del chip)
-    APPLE_VCODEC = ("avc1", "h264", "vp9", "vp09", "hvc1", "hev1", "hevc")
-    APPLE_ACODEC = ("mp4a", "aac", "opus", "vorbis", "mp3", "flac")
-    APPLE_VEXT = ("mp4", "m4v", "webm", "mkv", "3gp")
-    APPLE_AEXT = ("m4a", "mp4", "mp3", "aac", "opus", "ogg", "webm", "flac", "wav", "mka")
+
 
 
 def has(codec):
@@ -1248,7 +995,7 @@ def _ioctl_cols():
 
 def term_width():
     """Ancho para el texto: columnas - 1 (la última no se usa para que el terminal no
-    salte de línea solo). Sin medición fiable se limita (iOS 40, Android 60);
+    salte de línea solo). Sin medición fiable se limita a 40;
     DLPY_WIDTH=N lo fuerza."""
     forced = _forced_width()
     if forced:
@@ -1256,11 +1003,10 @@ def term_width():
     cols, measured = _cols()
     w = cols - 1
     if not measured:
-        cap = 60 if IS_ANDROID else 40 if IS_IOS else 110
-        if IS_IOS:
-            ic = _ioctl_cols()
-            if ic:
-                w, cap = ic - 1, 110          # el terminal sabe su ancho: se usa entero
+        cap = 40
+        ic = _ioctl_cols()
+        if ic:
+            w, cap = ic - 1, 110              # el terminal sabe su ancho: se usa entero
         w = min(w, cap)
     return max(24, min(w, 110))
 
@@ -1280,14 +1026,6 @@ def nowrap(text):
 ACTIVE_BAR = None
 
 
-def plat_text(s):
-    """Adapta los textos con iPhone / a-Shell fuera de iOS."""
-    s = str(s)
-    if IS_ANDROID:
-        s = s.replace("a-Shell", "Termux").replace("iPhone", "teléfono")
-    elif IS_DESKTOP:
-        s = s.replace("a-Shell", "la terminal").replace("iPhone", "equipo")
-    return s
 
 
 _LAST_PULSE = [0.0]
@@ -1310,7 +1048,7 @@ def _pulse_line(color, text, mark=None):
 
 
 def _say(color, msg, mark=None, pulse=False):
-    lines = wrap_text(plat_text(msg), term_width() - 2)
+    lines = wrap_text(msg, term_width() - 2)
     b = ACTIVE_BAR
     if b is not None and b.th:
         with b.lock:                      # borra la barra, imprime y deja que se redibuje
@@ -1351,7 +1089,7 @@ def m_err(msg):
 
 def note(text):
     """Texto de apoyo en gris, sangrado 2 columnas (como los subtítulos de dpt)."""
-    for ln in wrap_text(plat_text(text), term_width() - 2):
+    for ln in wrap_text(text, term_width() - 2):
         print("  " + paint(ln, "gray"))
 
 
@@ -1359,7 +1097,7 @@ def hint(text):
     """Ayuda de un prompt: «▸ texto» (flecha naranja, texto gris). Lo que va entre llaves, como
     «{Enter = original}», sale resaltado en naranja y negrita: es lo que vale con Enter o al acabar
     la cuenta (0.2.9)."""
-    lines = wrap_text(plat_text(text), term_width() - 2)
+    lines = wrap_text(text, term_width() - 2)
     on, out = False, []
     for ln in lines:
         seg = []
@@ -1617,7 +1355,7 @@ def blink_alert(text, times=5, delay=0.5):
     if not ROAST:
         return
     try:
-        lines = wrap_text(plat_text(text), term_width() - 2)
+        lines = wrap_text(text, term_width() - 2)
         if len(lines) == 1 and sys.stdout.isatty() and USE_COLOR:
             for i in range(times):
                 mark = dot("red") if i % 2 == 0 else " "
@@ -1885,7 +1623,7 @@ def card_rows(inner):
     rows = [left_t + " " * gap + state]
     where = fit_text(f"  {platform_name()} · {machine_name()}", inner)
     rows.append(paint(where, "gray") + " " * max(0, inner - dwidth(where)))
-    left = f"{plat_text('iPhone')} {phone * 100:.0f}% " if phone is not None else ""
+    left = f"iPhone {phone * 100:.0f}% " if phone is not None else ""
     right = f" DLpy {mine * 100:.0f}%"
     n = inner - 2 - len(left) - len(right)
     if n < 6:                                   # sin sitio para etiquetas: solo la barra
@@ -2426,13 +2164,6 @@ def drain_pending_input(max_wait=0.08):
     if NESTED_IOS:
         return                            # recién actualizada en el mismo proceso: no se lee stdin
     try:
-        if IS_DESKTOP and not sys.stdin.isatty():
-            return                        # tubería o archivo: son las respuestas, no se tocan
-        if os.name == "nt":
-            import msvcrt
-            while msvcrt.kbhit():
-                msvcrt.getwch()
-            return
         import select
         fd = sys.stdin.fileno()
         end = time.time() + max_wait
@@ -3219,8 +2950,6 @@ class DownloadUI:
 # ───────────────────── Terminal: teclado y cuenta regresiva ─────────────────────
 def hide_keyboard(settle=0.0):
     """iOS (a-Shell): baja el teclado. `settle` espera (s) a que el terminal tome su alto nuevo (0.3.3)."""
-    if not IS_IOS:
-        return
     try:
         os.system("hideKeyboard >/dev/null 2>&1")
         if settle:
@@ -3237,12 +2966,9 @@ def countdown_supported():
         ignore("countdown_supported", _ign)
         return False
     try:
-        if os.name == "nt":
-            import msvcrt  # noqa: F401
-        else:
-            import termios, tty, select  # noqa: F401
+        import termios, tty, select  # noqa: F401
         return True
-    except ImportError as _ign:          # p. ej. modo windows forzado en otro sistema
+    except ImportError as _ign:
         ignore("countdown_supported", _ign)
         return False
 
@@ -3272,7 +2998,7 @@ def input_lock():
     """iOS (a-Shell): desde el arranque hasta la primera pregunta el terminal queda sin eco ni línea
     (cbreak: el mismo modo de la cuenta regresiva), así un Enter fantasma o lo que se teclee no se
     escribe ni se guarda (0.2.9). Lo suelta input_unlock() al salir la primera pregunta."""
-    if not (IS_IOS and LOCK_INPUT) or NESTED_IOS or INPUT_LOCK["fd"] is not None:
+    if not LOCK_INPUT or NESTED_IOS or INPUT_LOCK["fd"] is not None:
         return False
     try:
         if not (sys.stdin.isatty() and sys.stdout.isatty()):
@@ -3303,7 +3029,7 @@ def input_unlock(drain=True):
 
 
 class _PosixKeys:
-    """Teclado sin eco para la cuenta regresiva (iOS, Android, Linux, macOS)."""
+    """Teclado sin eco para la cuenta regresiva (a-Shell)."""
 
     def __init__(self):
         import termios, tty, select, codecs
@@ -3326,31 +3052,6 @@ class _PosixKeys:
         _restore_tty(self.fd, self.old)
 
 
-class _WinKeys:
-    """Teclado de la consola de Windows (msvcrt), sin eco."""
-
-    def __init__(self):
-        import msvcrt
-        self.m = msvcrt
-
-    def read(self, timeout):
-        end = None if timeout is None else time.time() + timeout
-        out = []
-        while True:
-            while self.m.kbhit():
-                ch = self.m.getwch()
-                if ch in ("\x00", "\xe0"):        # tecla especial (flechas…): 2.º código
-                    self.m.getwch()
-                    continue
-                out.append(ch)
-            if out:
-                return "".join(out)
-            if end is not None and time.time() >= end:
-                return ""
-            time.sleep(0.02)
-
-    def close(self):
-        pass
 
 
 def note_prompt(prompt):
@@ -3386,15 +3087,7 @@ def reexec_script():
         sys.stderr.flush()
     except Exception as _ign:
         ignore("reexec_script", _ign)
-    if not IS_IOS:                         # a-Shell: ni tcsetattr ni select sobre stdin aquí
-        try:
-            if os.name != "nt" and sys.stdin.isatty():
-                import termios
-                fd = sys.stdin.fileno()
-                _restore_tty(fd, termios.tcgetattr(fd))
-        except Exception as _ign:
-            ignore("reexec_script", _ign)
-        drain_pending_input(0.15)
+    # a-Shell: ni tcsetattr ni select sobre stdin aquí
     sys._dlpy_reexec = True
     runpy.run_path(SCRIPT_PATH, run_name="__main__")
 
@@ -3410,7 +3103,7 @@ def timed_input(prompt, seconds=WAIT_SECONDS, phantom=True, plain=None):
     input_unlock()                   # sale una pregunta: se habilita la entrada (0.2.9)
     drain_pending_input()
     try:
-        keys = _WinKeys() if os.name == "nt" else _PosixKeys()
+        keys = _PosixKeys()
     except Exception as _ign:
         ignore("timed_input", _ign)
         return ask_line(prompt, phantom, plain)
@@ -3491,6 +3184,37 @@ def timed_input(prompt, seconds=WAIT_SECONDS, phantom=True, plain=None):
 
 
 # ───────────────────────── Utilidades ─────────────────────────
+def copy_file(src, dst):
+    """Como shutil.copy2, pero el chmod/utime del destino es opcional
+    (algunos sistemas de archivos los rechazan)."""
+    shutil.copyfile(src, dst)
+    try:
+        st = os.stat(src)
+        os.utime(dst, ns=(st.st_atime_ns, st.st_mtime_ns))
+    except OSError:
+        pass
+    return dst
+
+
+def move_file(src, dst):
+    """Como shutil.move, pero copiando con copy_file cuando rename no basta
+    (otro sistema de archivos). Devuelve el destino final."""
+    if os.path.isdir(dst):
+        dst = os.path.join(dst, os.path.basename(src.rstrip(os.sep)))
+    try:
+        os.rename(src, dst)
+        return dst
+    except OSError:
+        pass
+    if os.path.isdir(src) and not os.path.islink(src):
+        shutil.copytree(src, dst, copy_function=copy_file)
+        shutil.rmtree(src)
+    else:
+        copy_file(src, dst)
+        os.unlink(src)
+    return dst
+
+
 def yes(ans, default=True):
     ans = ans.strip().lower()
     if ans == "":
@@ -3540,7 +3264,7 @@ def ask_yn(prompt, default=True, seconds=False, alt=None):
     EOFError/KeyboardInterrupt se propagan a quien llama."""
     plain = yn_prompt(prompt, default, alt)
     base = YN_SUFFIX_RE.sub("", str(prompt)).strip()
-    for i, ln in enumerate(wrap_text(plat_text(base), term_width() - 1)):
+    for i, ln in enumerate(wrap_text(base, term_width() - 1)):
         print((paint("▍", "orange") if i == 0 else " ") + paint(ln, "white", True))
     line = yn_line(default, alt)
     cur = line
@@ -3561,18 +3285,25 @@ def ask_yn(prompt, default=True, seconds=False, alt=None):
                            "Respuesta inválida: escribe s, n" + (f" o {alt[0]}." if alt else "."))
 
 
-WIN_RESERVED_RE = re.compile(r"^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$", re.I)
+def ask(msg, default=True, seconds=False):
+    """Pregunta s/n. seconds=número: cuenta regresiva y, si vence, se toma `default`."""
+    try:
+        r = ask_yn(msg, default, seconds=seconds)
+    except (EOFError, KeyboardInterrupt):
+        return False
+    if r is None:
+        m_info(f"Sin respuesta: se elige {'Sí' if default else 'No'}.")
+        return bool(default)
+    return bool(r)
 
 
-def safe_name(title, max_bytes=MAX_NAME_BYTES, windows=None):
+def safe_name(title, max_bytes=MAX_NAME_BYTES):
     s = unicodedata.normalize("NFC", title or "video")
     s = re.sub(r"[\x00-\x1f\x7f]", "", s)
     s = re.sub(r'[\\/:*?"<>|]', "_", s)
     s = re.sub(r"\s+", " ", s).strip(" .").lstrip(".")
     if not s:
         s = "video"
-    if (IS_WINDOWS if windows is None else windows) and WIN_RESERVED_RE.match(s):
-        s = "_" + s                    # CON, NUL, COM1… no se pueden usar como nombre
     b = s.encode("utf-8")
     if len(b) > max_bytes:
         s = b[:max_bytes].decode("utf-8", "ignore").rstrip(" .")
@@ -3590,6 +3321,32 @@ def human_size(n):
             return f"{n:.1f} {u}"
         n /= 1024
     return f"{n:.1f} TB"
+
+
+def kbps_text(k):
+    """«850 kbps», «2.1 Mbps»; None si no hay dato."""
+    return fmt_kbps(k) if k else None
+
+
+def fmt_kbps(k):
+    k = float(k)
+    return f"{k / 1000:.1f} Mbps" if k >= 1000 else f"{k:.0f} kbps"
+
+
+def precise_size(n):
+    """Como human_size pero con GB a 2 decimales y 0B explícito."""
+    n = int(n or 0)
+    if n < 1024:
+        return f"{n}B"
+    x = float(n)
+    for u in ("KB", "MB", "GB"):
+        x /= 1024
+        if x < 1024 or u == "GB":
+            return f"{x:.2f}{u}" if u == "GB" else f"{x:.1f}{u}"
+
+
+def _size_text(n):
+    return human_size(n) if n else "0B"
 
 
 def ffmpeg_available():
@@ -3745,7 +3502,7 @@ def pinned_lines():
     if not ROAST:
         return 0
     try:
-        return sum(len(wrap_text(plat_text(t), max(8, term_width() - 2))) for t in PINNED)
+        return sum(len(wrap_text(t, max(8, term_width() - 2))) for t in PINNED)
     except Exception:
         return len(PINNED)
 
@@ -3839,7 +3596,7 @@ def m_block(label, lines):
     lead = len(label) + 4
     out = []
     for ln in lines:
-        out += wrap_text(plat_text(ln), max(8, term_width() - lead))
+        out += wrap_text(ln, max(8, term_width() - lead))
     print(paint("✓", "mint") + " " + paint(label, "white", True) + "  " + out[0])
     for ln in out[1:]:
         print(" " * lead + ln)
@@ -3868,11 +3625,6 @@ def auto_best(audios, videos, orig_ids, can_merge, quiet=False):
                 apple = with_audio
             elif not quiet:
                 m_warn("Sin ffmpeg no se puede unir audio; el video quedará sin audio.")
-        if not APPLE_MODE:  # misma altura: h264 (decodifica en cualquier chip) antes que vp9/hevc
-            return "v", max(apple, key=lambda f: (
-                f.get("height") or 0,
-                (f.get("vcodec") or "").lower().startswith(("avc1", "h264")),
-                f.get("tbr") or 0))
         return "v", max(apple, key=lambda f: (f.get("height") or 0, f.get("tbr") or 0))
     best = max(audios, key=lambda f: (f["format_id"] in orig_ids, apple_audio(f), abr_of(f)))
     return "a", best
@@ -3902,7 +3654,7 @@ def ask_default_track(tracks, original):
     cd = countdown_supported()
     txt0 = "n.º · m más · {Enter = original}" + (f" · {WAIT_SECONDS} s" if cd else "")
     cap = visible_cap(banner_height() + 3 + len(_legend_lines(keys))
-                      + len(wrap_text(plat_text(txt0), term_width() - 2)) + 1)
+                      + len(wrap_text(txt0, term_width() - 2)) + 1)
     vis = short_pick(trows, cap, orig_i, None, True) if cap is not None and len(trows) > cap else None
 
     def draw(full):
@@ -3966,7 +3718,7 @@ def ask_extra_tracks(tracks, primary):
     keys = ["apple", "orig"]
     txt0 = "n.º separados por espacio (ej. 1 2 4) · m más · {Enter = todas}"
     cap = visible_cap(banner_height() + 2 + len(_legend_lines(keys))
-                      + len(wrap_text(plat_text(txt0), term_width() - 2)) + 1)
+                      + len(wrap_text(txt0, term_width() - 2)) + 1)
     vis = short_pick(orows, cap, None, None, True) if cap is not None and len(orows) > cap else None
 
     def draw(full):
@@ -4202,9 +3954,7 @@ def apple_plan(kind, fmt, selected, merge_ext):
     None si ya lo es; si no, un plan con lo que se recodifica o se remuxa.
     Si hay merge pero video + audios + contenedor resultante ya son
     compatibles, tampoco se ofrece conversión.
-    Fuera de iOS/macOS nunca se convierte (se reproduce casi todo de forma nativa)."""
-    if not APPLE_MODE:
-        return None
+"""
     if kind == "a":
         if apple_audio(fmt):
             return None
@@ -5255,9 +5005,6 @@ def estimate_video_kbps(path, info, tracks):
         return None
 
 
-def fmt_kbps(k):
-    k = float(k)
-    return f"{k / 1000:.1f} Mbps" if k >= 1000 else f"{k:.0f} kbps"
 
 
 def bitrate_change(a, b, est=False):
@@ -5418,27 +5165,10 @@ def show_existing(path, entry, title=None):
 
 # ───────────────────── Enlace y portapapeles ─────────────────────
 def clipboard_cmd():
-    """Orden que imprime el portapapeles de este sistema, o None si no hay."""
-    which = shutil.which
-    if IS_ANDROID:
-        return ["termux-clipboard-get"] if which("termux-clipboard-get") else None
-    if IS_IOS:
-        # iOS pide permiso de pegado cada vez: solo si se pide con DLPY_CLIPBOARD=1
-        on = os.environ.get("DLPY_CLIPBOARD", "").strip().lower() not in ("", "0", "no", "false")
-        return ["pbpaste"] if on else None
-    if IS_MAC:
-        return ["pbpaste"] if which("pbpaste") else None
-    ps = which("powershell") or which("pwsh") or which("powershell.exe")
-    if IS_WINDOWS or (IS_LINUX and is_wsl() and ps):
-        return [ps, "-NoProfile", "-Command", "Get-Clipboard"] if ps else None
-    if which("wl-paste") and os.environ.get("WAYLAND_DISPLAY"):
-        return ["wl-paste", "--no-newline"]
-    if os.environ.get("DISPLAY"):
-        if which("xclip"):
-            return ["xclip", "-selection", "clipboard", "-o"]
-        if which("xsel"):
-            return ["xsel", "-b", "-o"]
-    return None
+    """Orden que imprime el portapapeles, o None. iOS pide permiso de pegado cada vez:
+    solo se usa si se pide con DLPY_CLIPBOARD=1."""
+    on = os.environ.get("DLPY_CLIPBOARD", "").strip().lower() not in ("", "0", "no", "false")
+    return ["pbpaste"] if on and shutil.which("pbpaste") else None
 
 
 def clipboard_link():
@@ -5446,7 +5176,7 @@ def clipboard_link():
     cmd = clipboard_cmd()
     if not cmd:
         return None
-    out = termux_run(cmd, timeout=4)
+    out = run_cmd(cmd, timeout=4)
     t = (out or "").strip()
     return t if re.match(r"^https?://\S+$", t) else None
 
@@ -5484,6 +5214,25 @@ def get_link(cli_args):
     except (EOFError, KeyboardInterrupt):
         return None
     return link or None
+
+
+def shortcut_copy(text):
+    """Copia `text` al portapapeles (pbcopy). Respaldo de --scm (--shortcutclip) y de --scb cuando
+    el JSON no cabe en la URL."""
+    tmp = os.path.join(WORK_ROOT, "shortcut_clip.json")
+    try:
+        os.makedirs(WORK_ROOT, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return os.system("pbcopy < " + shlex.quote(tmp)) == 0
+    except OSError as _ign:
+        ignore("shortcut_copy", _ign)
+        return False
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError as _ign:
+            ignore("shortcut_copy", _ign)
 
 
 # ───────────────────── Dependencias ─────────────────────
@@ -5561,7 +5310,6 @@ def downgrade_span(stored, current):
 # ─────────── Actualizaciones desde GitHub ───────────
 UPDATE_URL = (os.environ.get("DLPY_UPDATE_URL")
               or "https://raw.githubusercontent.com/ElDelDLpy/DLpy/main/dlpy.py")
-UPDATE_STATE_FILE = os.path.join(STATE_DIR, "update.json")
 UPDATE_MAX_BYTES = 3 * 1024 * 1024
 
 
@@ -5624,21 +5372,6 @@ def fetch_remote_script(timeout=5, url=None):
         return None
 
 
-def sync_origin_copy(text, origin=None, script_path=None):
-    """Android: guarda también el código nuevo en la carpeta desde la que se abrió
-    DLpy (la de antes de moverse a ~). Devuelve la ruta escrita o None si no aplica."""
-    origin = origin or os.environ.get("DLPY_ORIGIN")
-    script_path = script_path or SCRIPT_PATH
-    if not origin or os.path.abspath(origin) == os.path.abspath(script_path):
-        return None
-    try:
-        if not os.path.isdir(os.path.dirname(origin)):
-            return None
-        write_text(origin, text)
-        return origin
-    except OSError as e:
-        m_warn(f"No se pudo actualizar también {origin}: {e}")
-        return None
 
 
 NO_UPDATES = {"on": False}            # --noupdates / --no-updates / DLPY_NO_UPDATE: esta ejecución no busca nada (0.3.7)
@@ -5648,7 +5381,6 @@ UPDATE_CHECKED = {"ok": False}        # ¿llegó a comprobarse la última versi�
 
 # Búsqueda de actualizaciones una vez al día (0.2.7): fecha de la última comprobación por clave
 # («script» = DLpy en GitHub, «deps» = dependencias) en state/checks.json.
-CHECK_FILE = os.path.join(STATE_DIR, "checks.json")
 try:
     CHECK_HOURS = float(os.environ.get("DLPY_CHECK_HOURS", "24").strip())
 except ValueError:
@@ -5711,9 +5443,13 @@ def check_update(force=False, late=False):
     cbar.start("Comprobando DLpy")
     try:
         text = fetch_remote_script(timeout=8 if force else 5)
+        rel = fetch_latest_release(timeout=8 if force else 5)
     finally:
         cbar.stop()
     remote = remote_script_version(text)
+    from_release = False
+    if rel and (not remote or vtuple(rel[0]) > vtuple(remote)):
+        remote, text, from_release = rel[0], rel[1], True      # el Release es más nuevo que main (0.6.0)
     if not remote:
         m_warn(f"DLpy {VERSION} · no se pudo comprobar la última versión")
         return False
@@ -5724,6 +5460,9 @@ def check_update(force=False, late=False):
     if crashed and vtuple(VERSION) > vtuple(crashed):
         clear_recovered()                  # ya pasaste la versión que falló
         rec, crashed = {}, None
+    if status == "igual" and from_release:
+        m_check(f"DLpy {VERSION} · última versión (Release)")
+        return False
     if status == "igual":
         row = origins_row(remote, text, github=False, backups=False)   # solo main ↔ instalada (sin versions/)
         st = row_state(row_diffs(row))
@@ -5753,7 +5492,7 @@ def check_update(force=False, late=False):
             return False
         m_warn(f"La {remote} de GitHub es la que falló en este equipo.")
     else:
-        m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}")
+        m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}" + (" (Release)" if from_release else ""))
     kind = show_crash_warning(remote, text)       # avisa si es idéntica a una que falló
     # a-Shell: esta pregunta va con input() normal (sin cbreak). Después la versión nueva corre en
     # este mismo proceso y cambiar el modo del terminal justo antes la congelaba.
@@ -5761,7 +5500,7 @@ def check_update(force=False, late=False):
         go = ask(f"¿Instalar la {remote} para la próxima vez? (s/N) ▸ ", default=False, seconds=WAIT_SECONDS)
     else:
         go = ask(f"¿Instalar la {remote} y ejecutarla ahora? (S/n) ▸ ", default=(kind != "igual"),
-                 seconds=False if IS_IOS else WAIT_SECONDS)
+                 seconds=False)
     if not go:
         note("Se volverá a preguntar en la próxima comprobación (cada 24 h) o con --actualizar.")
         return False
@@ -5772,9 +5511,6 @@ def check_update(force=False, late=False):
         return False
     clear_recovered()
     m_check(f"DLpy {remote} · instalada")
-    copied = sync_origin_copy(text)
-    if copied:
-        m_check(f"Código actualizado también en {copied}")
     if late:
         m_info(f"Se usará la {remote} la próxima vez que abras DLpy.")
         return False
@@ -5782,74 +5518,60 @@ def check_update(force=False, late=False):
     return True
 
 
+def late_updates():
+    """0.3.7: con --shortcutpick las actualizaciones no se buscan al abrir sino aquí, tras la descarga y justo
+    antes de entregar el archivo. La respuesta por omisión es No, también al acabar la cuenta regresiva, y una
+    versión nueva de DLpy no se reejecuta (reiniciaría la descarga): se usa la próxima vez."""
+    LATE_UPDATES["done"] = True
+    if NO_UPDATES["on"]:
+        return
+    try:
+        if check_due("script", script_sig()):
+            check_update(late=True)
+            if UPDATE_CHECKED["ok"]:
+                check_mark("script", script_sig())
+        if check_due("deps_late"):
+            check_dependencies(late=True)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        ignore("late_updates", e)
+
+
 def pip_args(pip_name, no_deps=None):
-    """Argumentos de «pip» (sin el ejecutable): -U y, en iOS/Android, --no-deps (0.2.5)."""
+    """Argumentos de «pip» (sin el ejecutable): -U y --no-deps (0.2.5)."""
     if no_deps is None:
-        no_deps = IS_ANDROID or IS_IOS
+        no_deps = True
     return ["install", "-U", pip_name] + (["--no-deps"] if no_deps else [])
 
 
 def pip_run(args):
-    """Lanza pip con `args`. Devuelve el código de salida o None si no se pudo lanzar (0.2.5).
-    iOS: a-Shell ejecuta sus comandos dentro de la app, así que se mantiene su «pip» con os.system
-    (argumentos entrecomillados). Android y escritorio: subprocess sin shell (vale en Windows)."""
-    if IS_IOS:
-        return os.system("pip " + " ".join(shlex.quote(a) for a in args))
-    import subprocess
-    try:
-        return subprocess.call([sys.executable or "python3", "-m", "pip"] + args)
-    except OSError as _ign:
-        ignore("pip_install", _ign)
-        return None
+    """Lanza pip con `args`. Devuelve el código de salida (0.2.5). a-Shell ejecuta sus comandos dentro de
+    la app, así que se usa su «pip» con os.system (argumentos entrecomillados)."""
+    return os.system("pip " + " ".join(shlex.quote(a) for a in args))
 
 
 def pip_install(pip_name):
-    """Instala/actualiza `pip_name`. True si salió bien. Reintenta con --break-system-packages
-    (PEP 668: Termux reciente y el Python del sistema en Linux/Homebrew); iOS no lo necesita."""
+    """Instala/actualiza `pip_name`. True si salió bien."""
     m_info(f"Instalando {pip_name}...")
-    ok = False
-    for extra in ([], ["--break-system-packages"]):
-        rc = pip_run(pip_args(pip_name) + extra)
-        if rc is None:
-            break
-        if rc == 0:
-            ok = True
-            break
-        if IS_IOS:
-            break
+    ok = pip_run(pip_args(pip_name)) == 0
     refresh_paths()
     return ok
 
 
-def ffmpeg_hint():
-    return {"android": "pkg install ffmpeg", "macos": "brew install ffmpeg",
-            "windows": "winget install Gyan.FFmpeg  (o https://ffmpeg.org/download.html)",
-            "linux": "sudo apt install ffmpeg  (o el gestor de tu distribución)",
-            "ios": "a-Shell lo incluye"}[PLATFORM]
 
 
-def ask(msg, default=True, seconds=False):
-    """Pregunta s/n. seconds=número: cuenta regresiva y, si vence, se toma `default`."""
-    try:
-        r = ask_yn(msg, default, seconds=seconds)
-    except (EOFError, KeyboardInterrupt):
-        return False
-    if r is None:
-        m_info(f"Sin respuesta: se elige {'Sí' if default else 'No'}.")
-        return bool(default)
-    return bool(r)
 
 
 # ─────────── YouTube: runtime de JavaScript + yt-dlp-ejs ───────────
 # Desde yt-dlp 2025.11.12 YouTube completo necesita un runtime de JavaScript
 # (deno, node, bun o quickjs) y el paquete yt-dlp-ejs en la versión exacta que
-# fija esa versión de yt-dlp. Con «--no-deps» (iOS/Android) ese paquete no se
+# fija esa versión de yt-dlp. Con «--no-deps» ese paquete no se
 # instalaba nunca.
 JS_REQUIRED_FROM = (2025, 11, 12)
 JS_RUNTIMES = (("deno", "deno"), ("node", "node"), ("bun", "bun"), ("quickjs", "qjs"))
-JS_INSTALL_HINT = {"android": "pkg install nodejs", "macos": "brew install deno",
-                   "windows": "winget install DenoLand.Deno", "linux": "sudo apt install nodejs  (o deno.com)",
-                   "ios": "no hay un runtime de JavaScript conocido para a-Shell"}
+JS_INSTALL_HINT = "no hay un runtime de JavaScript conocido para a-Shell"
+
 
 
 def ytdlp_needs_js(version=None):
@@ -5938,20 +5660,12 @@ def warn_youtube_js(link):
     if not ytdlp_needs_js() or js_runtime():
         return
     m_warn("YouTube necesita un runtime de JavaScript y no hay ninguno: pueden faltar formatos.")
-    note("Instálalo con: " + JS_INSTALL_HINT[PLATFORM])
+    note("Instálalo con: " + JS_INSTALL_HINT)
 
 
-# ─────────── Dependencias del sistema por plataforma ───────────
-# Lo que DLpy necesita fuera de pip según dónde corre: ffmpeg, un runtime de
-# JavaScript para YouTube y (solo Android) termux-api. Se revisa siempre y lo que
-# falta se instala con UNA sola pregunta, con el gestor de cada sistema.
-DEPS_STATE_FILE = os.path.join(STATE_DIR, "deps.json")      # rechazos recordados
-SYS_PKGS = {
-    "ffmpeg": {"android": "ffmpeg", "macos": "ffmpeg", "windows": "Gyan.FFmpeg",
-               "linux": "ffmpeg", "dnf": "ffmpeg-free"},
-    "js": {"android": "nodejs", "macos": "deno", "windows": "DenoLand.Deno", "linux": "nodejs"},
-    "termux-api": {"android": "termux-api"},
-}
+# ─────────── Rechazos recordados ───────────
+# En a-Shell ffmpeg viene integrado y no hay gestor de paquetes del sistema: solo se recuerda lo que
+# se rechazó de pip / yt-dlp-ejs (0.6.0: se quitó el instalador de paquetes del sistema).
 JS_LABELS = {"deno": "Deno", "node": "Node.js", "bun": "Bun", "quickjs": "QuickJS"}
 
 
@@ -5976,140 +5690,6 @@ def declined_clear(key):
         save_json(DEPS_STATE_FILE, d)
     except Exception as _ign:
         ignore("declined_clear", _ign)
-
-
-def system_install_cmds(keys, platform=None, which=None, root=None):
-    """Órdenes (lista de listas) que instalan `keys` con el gestor del sistema, o
-    None si no hay gestor / nada que instalar. Los parámetros solo se inyectan en
-    pruebas."""
-    platform = platform or PLATFORM
-    which = which or shutil.which
-
-    def pkgs(mgr=None):
-        out = []
-        for k in keys:
-            d = SYS_PKGS.get(k, {})
-            n = d.get(mgr) or d.get(platform)
-            if n and n not in out:
-                out.append(n)
-        return out
-
-    if platform == "android":
-        p = pkgs()
-        return [["pkg", "install", "-y"] + p] if p and which("pkg") else None
-    if platform == "macos":
-        p = pkgs()
-        return [["brew", "install"] + p] if p and which("brew") else None
-    if platform == "windows":
-        if not which("winget"):
-            return None
-        return [["winget", "install", "--id", n, "-e", "--accept-package-agreements",
-                 "--accept-source-agreements"] for n in pkgs()] or None
-    if platform == "linux":
-        if root is None:
-            root = hasattr(os, "geteuid") and os.geteuid() == 0
-        sudo = [] if root else (["sudo"] if which("sudo") else None)
-        if sudo is None:
-            return None
-        for exe, args in (("apt-get", ["apt-get", "install", "-y"]),
-                          ("dnf", ["dnf", "install", "-y"]),
-                          ("pacman", ["pacman", "-S", "--noconfirm"]),
-                          ("zypper", ["zypper", "--non-interactive", "install"]),
-                          ("apk", ["apk", "add"])):
-            if which(exe):
-                p = pkgs(exe)
-                return [sudo + args + p] if p else None
-    return None
-
-
-def system_keys():
-    """Qué necesita DLpy del sistema en ESTA plataforma."""
-    keys = ["ffmpeg"]
-    if not IS_IOS and ytdlp_needs_js():
-        keys.append("js")
-    if IS_ANDROID:
-        keys.append("termux-api")
-    return keys
-
-
-def system_state(key):
-    """(instalado, nombre, detalle) de una dependencia del sistema."""
-    if key == "ffmpeg":
-        if IS_IOS:
-            return True, "ffmpeg", "integrado en a-Shell"
-        return bool(shutil.which("ffmpeg")), "ffmpeg", ("instalado" if shutil.which("ffmpeg")
-                                                        else "falta (unir audio y video)")
-    if key == "js":
-        rt = js_runtime()
-        if rt:
-            return True, JS_LABELS.get(rt[0], rt[0]), "JavaScript para YouTube"
-        return False, "Runtime de JavaScript", "falta (YouTube)"
-    ok = bool(shutil.which("termux-notification"))
-    return ok, "termux-api", ("instalado" if ok else "falta (notificaciones y portapapeles)")
-
-
-def system_hint(key):
-    if key == "ffmpeg":
-        return ffmpeg_hint()
-    if key == "js":
-        return JS_INSTALL_HINT[PLATFORM]
-    return "pkg install termux-api"
-
-
-def check_system_packages(force=False):
-    """Línea ✓ por cada dependencia del sistema; ofrece instalar las que faltan
-    con una sola pregunta (y recuerda el «no», salvo con force)."""
-    declined = load_json(DEPS_STATE_FILE)
-    missing = []
-    for key in system_keys():
-        ok, name, detail = system_state(key)
-        if ok:
-            m_check(f"{name} · {detail}")
-            declined_clear(key)
-        else:
-            missing.append((key, name, detail))
-    ask_now = []
-    for key, name, detail in missing:
-        if declined.get(key) and not force:
-            m_warn(f"{name} · falta, rechazado (--actualizar lo pregunta)")
-        else:
-            m_warn(f"{name} · {detail}")
-            ask_now.append((key, name))
-    if not ask_now:
-        return
-    keys = [k for k, _n in ask_now]
-    cmds = system_install_cmds(keys)
-    if not cmds:
-        for key, name in ask_now:
-            note(f"{name}: instálalo con {system_hint(key)}")
-        return
-    shown = " && ".join(" ".join(c) for c in cmds)
-    names = ", ".join(n for _k, n in ask_now)
-    if not ask(f"¿Instalar {names} con «{shown}»? (S/n) ▸ ", seconds=WAIT_SECONDS):
-        for key in keys:
-            declined_set(key)
-        note("No se vuelve a preguntar; con --actualizar lo pregunta de nuevo.")
-        return
-    import subprocess
-    for c in cmds:
-        try:
-            subprocess.call(c)
-        except OSError as e:
-            m_warn(f"No se pudo lanzar el instalador: {e}")
-    failed = False
-    for key, name in ask_now:
-        ok, name2, detail = system_state(key)
-        if ok:
-            m_check(f"{name2} · instalado")
-            declined_clear(key)
-        else:
-            failed = True
-            m_warn(f"{name} · no se pudo instalar")
-            note(f"Instálalo con: {system_hint(key)}")
-    if "termux-api" in keys and shutil.which("termux-notification"):
-        note("Además necesitas la app Termux:API (F-Droid); el script no puede instalarla.")
-    if failed and IS_WINDOWS:
-        note("Si winget terminó bien, cierra y abre la terminal para que Windows encuentre lo instalado.")
 
 
 def check_dependencies(force=False, updates=True, late=False):
@@ -6172,7 +5752,6 @@ def check_dependencies(force=False, updates=True, late=False):
             m_warn(f"{pip_name} {cur or '?'} · no se pudo comprobar la última versión")
     if due:
         if not late:
-            check_system_packages(force)
             check_js_components(force)
         if net_ok:
             check_mark(key)
@@ -6351,6 +5930,63 @@ def save_snapshot():
         ignore("save_snapshot", _ign)
 
 
+def changelog_block_from_md(md_text):
+    """Bloque «# ==== CHANGELOG ==== … # ==== FIN CHANGELOG ====» (comentarios de
+    Python) reconstruido desde el texto de changelog.md, o None si no hay versiones."""
+    secs = parse_sections(md_text or "")
+    if not secs:
+        return None
+    out = ["# ==== CHANGELOG ===="]
+    vers = sorted(secs, key=vtuple, reverse=True)
+    for i, ver in enumerate(vers):
+        out.append(f"# ## {ver}")
+        out.append("#")
+        for ln in secs[ver].splitlines():
+            out.append(("# " + ln).rstrip())
+        if i < len(vers) - 1:
+            out.append("#")                  # separador entre versiones
+    out.append("# ==== FIN CHANGELOG ====")
+    return "\n".join(out) + "\n"
+
+
+def insert_changelog_block(code, block):
+    """Pone `block` donde lo tenía el script: justo tras los comentarios fijos del
+    principio (el último es «# Conservar en todo momento…»)."""
+    lines = code.splitlines(keepends=True)
+    at = 1
+    for i, ln in enumerate(lines[:12]):
+        if ln.startswith("# Conservar en todo momento"):
+            at = i + 1
+            break
+    if lines and not lines[at - 1].endswith("\n"):
+        lines[at - 1] += "\n"
+    return "".join(lines[:at]) + block + "".join(lines[at:])
+
+
+def script_variants(live=None, snapshot=None, md=None):
+    """(sin_changelog, con_changelog) del dlpy.py actual; con_changelog es None si
+    no hay de dónde sacarlo. Los parámetros solo se inyectan en pruebas."""
+    if live is None:
+        live = read_text(SCRIPT_PATH)
+    m = CL_RE.search(live)
+    if m:                                    # el .py todavía trae su changelog
+        return live[:m.start()] + live[m.end():], live
+    if snapshot is None and os.path.isfile(SNAPSHOT_FILE):
+        try:
+            snapshot = read_text(SNAPSHOT_FILE)
+        except OSError as _ign:
+            ignore("script_variants", _ign)
+    if snapshot and CL_RE.search(snapshot) and remote_script_version(snapshot) == VERSION:
+        return live, snapshot                # copia completa de esta misma versión
+    if md is None and os.path.isfile(CHANGELOG_FILE):
+        try:
+            md = read_text(CHANGELOG_FILE)
+        except OSError as _ign:
+            ignore("script_variants", _ign)
+    block = changelog_block_from_md(md)
+    return live, (insert_changelog_block(live, block) if block else None)
+
+
 # ───────────────────── Limpieza de almacenamiento ─────────────────────
 try:
     CLEAN_LIMIT = int(float(os.environ.get("DLPY_CLEAN_LIMIT_MB", "1024")) * 1024 * 1024)
@@ -6457,20 +6093,8 @@ def storage_groups():
     return {"dl": dl, "cache": cache, "bak": bak}
 
 
-def _size_text(n):
-    return human_size(n) if n else "0B"
 
 
-def precise_size(n):
-    """Como human_size pero con GB a 2 decimales y 0B explícito."""
-    n = int(n or 0)
-    if n < 1024:
-        return f"{n}B"
-    x = float(n)
-    for u in ("KB", "MB", "GB"):
-        x /= 1024
-        if x < 1024 or u == "GB":
-            return f"{x:.2f}{u}" if u == "GB" else f"{x:.1f}{u}"
 
 
 def storage_report():
@@ -6554,13 +6178,6 @@ def ensure_dirs():
     for d in (FILES_DIR, DOWNLOAD_DIR, BACKUP_DIR, INTERNAL_DIR, STATE_DIR, SCRIPT_DIR,
               STREAM_CACHE_DIR, WORK_ROOT, DELIVERY_DIR):
         os.makedirs(d, exist_ok=True)
-    if IS_ANDROID:                  # que la galería no indexe temporales ni entregas (0.3.5)
-        nm = os.path.join(INTERNAL_DIR, ".nomedia")
-        if not os.path.exists(nm):
-            try:
-                open(nm, "a").close()
-            except OSError as _ign:
-                ignore("ensure_dirs", _ign)
 
 
 def _move_legacy(src, dst):
@@ -7002,12 +6619,6 @@ def check_version():
 
 
 # ───────────────────── DEV: snapshot a Documents (a-Shell) ─────────────────────
-VER_FILE_RE = re.compile(r"^dlpy_(\d+\.\d+\.\d+)\.py$")
-RUNNING_FILE = os.path.join(STATE_DIR, "running.json")      # ejecución en curso
-CRASH_FILE = os.path.join(STATE_DIR, "crash.json")          # último fallo
-CRASH_LOG_FILE = os.path.join(STATE_DIR, "crash_log.json")  # historial de fallos (con huella del código)
-RECOVERED_FILE = os.path.join(STATE_DIR, "recovered.json")  # versión recuperada tras un fallo
-GOOD_FILE = os.path.join(STATE_DIR, "good_versions.json")   # versiones que ya terminaron bien
 
 
 def dev_copy_to_documents(text, home=None, script_path=None, version=None):
@@ -7034,9 +6645,6 @@ def dev_sync_version():
     a ~/Documents/dlpy_<versión>.py. Sin DLPY_DEV, o en otra plataforma, no toca nada."""
     if not DEV:
         return
-    if not IS_IOS:
-        dbg("dev", f"snapshot a Documents/dlpy_{VERSION}.py: solo en a-Shell (iOS)")
-        return
     try:
         src = SCRIPT_PATH
         if (os.path.isfile(SNAPSHOT_FILE)
@@ -7055,7 +6663,7 @@ def dev_sync_version():
         dbg("dev", f"Documents/dlpy_{VERSION}.py {'ya está al día' if state == 'igual' else 'es este mismo script: no se copia'}")
 
 
-# ───────────────────── Versiones en GitHub y en backups (listado) ─────────────────────
+# ───────────────────── Versiones en GitHub, Releases y backups (listado) ─────────────────────
 def github_repo_info(url=None):
     """(dueño, repo, rama) del enlace raw.githubusercontent.com de actualización, o None."""
     m = re.match(r"https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/", url or UPDATE_URL)
@@ -7118,6 +6726,77 @@ def remote_versions_full(timeout=8, url=None):
     if data is None:
         return None
     return parse_versions_listing(data, info), parse_listing_shas(data)
+
+
+def _releases_data(timeout=8, url=None):
+    """(respuesta JSON de la API de GitHub para /releases, info) o (None, info) si falla (0.6.0)."""
+    info = github_repo_info(url)
+    if not info:
+        return None, None
+    import urllib.request
+    api = f"https://api.github.com/repos/{info[0]}/{info[1]}/releases?per_page=30"
+    req = urllib.request.Request(api, headers={
+        "User-Agent": "DLpy-updater", "Accept": "application/vnd.github+json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.load(r), info
+    except Exception as _ign:
+        ignore("remote_releases", _ign)
+        return None, info
+
+
+REL_TAG_RE = re.compile(r"^[vV]?(\d+\.\d+\.\d+)$")
+
+
+def parse_releases(data, info):
+    """[(versión, url)] de la respuesta de la API de GitHub para /releases, de la más nueva a la más vieja
+    (0.6.0). La versión sale de la etiqueta («v0.6.0» o «0.6.0») o del nombre del archivo adjunto; el código,
+    del adjunto «dlpy.py» o «dlpy_x.y.z.py» y, si el release no trae ninguno, del dlpy.py de esa etiqueta.
+    Ignora borradores y prereleases."""
+    owner, repo, _branch = info
+    out, seen = [], set()
+    for it in data if isinstance(data, list) else []:
+        if not isinstance(it, dict) or it.get("draft") or it.get("prerelease"):
+            continue
+        tag = str(it.get("tag_name") or "")
+        m = REL_TAG_RE.match(tag)
+        ver, url = (m.group(1) if m else None), None
+        for a in it.get("assets") or []:
+            if not isinstance(a, dict):
+                continue
+            name = str(a.get("name") or "")
+            am = VER_FILE_RE.match(name)
+            if (name == "dlpy.py" or am) and a.get("browser_download_url"):
+                ver = ver or (am.group(1) if am else None)
+                url = str(a["browser_download_url"])
+                break
+        if not ver or ver in seen:
+            continue
+        if not url:
+            if not tag:
+                continue
+            url = f"https://raw.githubusercontent.com/{owner}/{repo}/{urllib.parse.quote(tag)}/dlpy.py"
+        seen.add(ver)
+        out.append((ver, url))
+    out.sort(key=lambda x: vtuple(x[0]), reverse=True)
+    return out
+
+
+def remote_releases(timeout=8, url=None):
+    """[(versión, url)] de los Releases de GitHub, o None si no se pudieron leer (0.6.0)."""
+    data, info = _releases_data(timeout, url)
+    return parse_releases(data, info) if data is not None else None
+
+
+def fetch_latest_release(timeout=5, url=None):
+    """(versión, texto, url) del Release más nuevo con un dlpy.py válido, o None (0.6.0)."""
+    rels = remote_releases(timeout, url)
+    for _ver, ref in (rels or [])[:3]:
+        text = fetch_remote_script(timeout, ref)
+        real = remote_script_version(text) if text else None
+        if real:
+            return real, text, ref
+    return None
 
 
 def backup_versions():
@@ -7194,16 +6873,16 @@ def compare_texts(a, b):
     return "changelog"
 
 
-ORIGIN_ORDER = ("github", "main", "backup", "instalada")
-ORIGIN_LABEL = {"github": "GitHub", "main": "GitHub main",
+ORIGIN_ORDER = ("github", "release", "main", "backup", "instalada")
+ORIGIN_LABEL = {"github": "GitHub", "release": "Release", "main": "GitHub main",
                 "backup": "backup", "instalada": "instalada"}
-SELECTABLE = ("github", "main", "backup")      # la instalada no se «instala»
+SELECTABLE = ("github", "release", "main", "backup")      # la instalada no se «instala»
 _TEXT_CACHE = {}
 
 
-def collect_versions(gh=None, shas=None, main=None, backups=None, installed=None):
+def collect_versions(gh=None, shas=None, main=None, backups=None, installed=None, releases=None):
     """[{'ver', 'srcs': [{'origin', 'ref', 'sha', 'label'}]}] de la más nueva a la más
-    vieja. Una misma versión junta TODOS sus orígenes (GitHub versions/, la de
+    vieja. Una misma versión junta TODOS sus orígenes (GitHub versions/, Releases, la de
     actualización `main`, backups e instalada) para poder compararlos."""
     table = {}
 
@@ -7213,6 +6892,8 @@ def collect_versions(gh=None, shas=None, main=None, backups=None, installed=None
 
     for ver, ref in gh or []:
         add(ver, "github", ref, (shas or {}).get(ver))
+    for ver, ref in releases or []:
+        add(ver, "release", ref)
     if main:
         add(main[0], "main", main[1], main[2] if len(main) > 2 else None)
     for ver, ref in sorted(backups or [], key=lambda x: os.path.basename(os.path.dirname(x[1]))):
@@ -7478,7 +7159,7 @@ def format_version_rows(rows, cur, upd, crashes, diffs_by_ver, width=None, start
         head = f"{i}  {ver}"
         toks = [(head, paint(str(i), "orange", True) + "  " + paint(ver, "white", True))]
         for s in row["srcs"]:
-            toks.append((s["label"], paint(s["label"], "orange" if s["origin"] in ("github", "main") else "gray")))
+            toks.append((s["label"], paint(s["label"], "orange" if s["origin"] in ("github", "release", "main") else "gray")))
         out += _wrap_tokens(toks, 2, width, " · ")
         flags = []
         if ver == cur:
@@ -7693,7 +7374,6 @@ def install_recovered(ver, text, crashed, hold=True):
     except Exception as e:
         m_err(f"No se pudo instalar la {ver}: {e}")
         return False
-    sync_origin_copy(text)
     if version_move(VERSION, ver) == "baja":          # downgrade a propósito: lo anota check_version al arrancar
         mark_downgrade_pending(VERSION, ver, "recuperacion" if crashed else "manual", hold)
     if crashed and hold:
@@ -7705,7 +7385,7 @@ def install_recovered(ver, text, crashed, hold=True):
 
 
 def offer_recovery(crashed, why):
-    """Lista TODAS las versiones (GitHub versions/, la de actualización, backups
+    """Lista TODAS las versiones (GitHub versions/, Releases, la de actualización, backups
     y la instalada) marcando actual, la que instalaría al actualizar, fallos y
     diferencias entre orígenes de una misma versión, y deja elegir una. Si se instala,
     la ejecuta y termina (SystemExit). False si no se hizo nada.
@@ -7715,6 +7395,7 @@ def offer_recovery(crashed, why):
     cbar.start("Buscando versiones")
     try:
         full = remote_versions_full()
+        releases = remote_releases()
         main_text = fetch_remote_script(timeout=8)
     finally:
         cbar.stop()
@@ -7725,11 +7406,11 @@ def offer_recovery(crashed, why):
         _TEXT_CACHE[UPDATE_URL] = main_text
         main = (main_ver, UPDATE_URL, git_blob_sha(main_text.encode("utf-8")))
     backups = backup_versions()
-    if remote is None and backups:
+    if remote is None and releases is None and backups:
         m_warn("No se pudo leer GitHub: uso las versiones guardadas en este equipo.")
-    rows = collect_versions(remote, shas, main, backups, (VERSION, SCRIPT_PATH))
+    rows = collect_versions(remote, shas, main, backups, (VERSION, SCRIPT_PATH), releases)
     if not any(s["origin"] in SELECTABLE for r in rows for s in r["srcs"]):
-        m_warn("No hay versiones guardadas para recuperar (versions/ de GitHub o backups).")
+        m_warn("No hay versiones guardadas para recuperar (versions/ o Releases de GitHub, o backups).")
         return False
     shown = rows[:20]
     cbar = Bar()
@@ -7753,9 +7434,9 @@ def offer_recovery(crashed, why):
         header("VERSIONES", gap=False)
         w = max(8, term_width() - 4)
         used = (banner_height() + 1 + 1 + 1                       # banner, cabecera, nota de «más», prompt
-                + (len(wrap_text(plat_text(why), w)) if why else 0)
+                + (len(wrap_text(why, w)) if why else 0)
                 + (1 if main is None else 0)
-                + len(wrap_text(plat_text(legend_txt), w)))
+                + len(wrap_text(legend_txt, w)))
         k, tot = 0, 0
         for ls in per:
             if not full and k >= 1 and tot + len(ls) > ui_lines() - used:
@@ -7888,7 +7569,7 @@ def run_guarded(entry):
         return 0
     nested = getattr(sys, "_dlpy_guarded", False)     # tras actualizar/restaurar (runpy)
     global NESTED_IOS
-    NESTED_IOS = bool(nested and IS_IOS)
+    NESTED_IOS = bool(nested)
     sys._dlpy_guarded = True
     try:
         if not nested:
@@ -8029,7 +7710,7 @@ def save_stream_to_cache(vkey, format_id, src_path):
             m_info(f"Caché stream {format_id}: {human_size(size)}")
     except Exception as e:
         CACHE_STATS["failed"] += 1
-        if DEBUG or not IS_IOS:
+        if DEBUG:
             m_warn(f"No se pudo cachear stream {format_id}: {e}")
 
 
@@ -8190,7 +7871,7 @@ def cleanup_internal():
     cleanup_stream_cache()
 
 
-# ───────────────────── Entrega del archivo (iOS, Android y escritorio) ─────────────────────
+# ───────────────────── Entrega del archivo (Atajos) ─────────────────────
 def settle_file(path, wait=6.0):
     """Antes de entregar: espera a que el archivo deje de crecer, lo fuerza a disco (fsync) y avisa si está
     vacío. Un convertido recién escrito por ffmpeg a veces no se abría en el atajo."""
@@ -8225,178 +7906,18 @@ def unique_path(src):
     return os.path.abspath(dst)
 
 
-def termux_run(args, timeout=8):
-    """Ejecuta un comando de Termux:API sin que pueda colgar el script."""
+def run_cmd(args, timeout=8):
+    """Ejecuta una orden externa sin que pueda colgar el script. Devuelve su salida o None si falla."""
     import subprocess
     try:
         r = subprocess.run(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE, text=True, timeout=timeout)
         return r.stdout if r.returncode == 0 else None
     except Exception as _ign:
-        ignore("termux_run", _ign)
+        ignore("run_cmd", _ign)
         return None
 
 
-def android_open(final):
-    """Abre el archivo con la app de Android que lo reproduzca (termux-open).
-    Devuelve True si el sistema aceptó abrirlo."""
-    import mimetypes
-    exe = shutil.which("termux-open")
-    if not exe:
-        m_warn("No se puede abrir solo: falta termux-open (pkg install termux-tools).")
-        return False
-    mime = mimetypes.guess_type(final)[0]
-    tries = []
-    if mime:
-        tries.append([exe, "--view", "--content-type", mime, final])
-    tries.append([exe, final])
-    for cmd in tries:
-        dbg("abrir android", cmd)
-        if termux_run(cmd, timeout=10) is not None:
-            return True
-    return False
-
-
-def deliver_android(final, title):
-    """Equivalente Android del Atajo: el archivo ya está en su carpeta final;
-    se avisa la ruta, se registra en la galería, se notifica y se abre."""
-    shown = final.replace(HOME, "~", 1) if final.startswith(HOME) else final
-    dbg("entrega android", {"archivo": final, "titulo": title})
-    m_ok(f"Guardado en: {shown}")
-    if shutil.which("termux-media-scan"):
-        termux_run(["termux-media-scan", final])
-    if shutil.which("termux-notification"):
-        termux_run(["termux-notification", "--id", "dlpy", "--title", "DLpy · descarga lista",
-                    "--content", str(title)[:120],
-                    "--action", "termux-open " + shlex.quote(final)])
-    action = delivery_action()
-    if action == "share" and shutil.which("termux-share"):
-        termux_run(["termux-share", "-a", "send", final], timeout=10)
-    elif action in ("none", "no", "0", "off", "false"):
-        return
-    elif action != "share":
-        if android_open(final):
-            m_info("Abriendo en Android...")
-        else:
-            m_warn("No se pudo abrir el archivo solo.")
-            note("Si Termux estaba en segundo plano: Ajustes ▸ Apps ▸ Termux ▸ "
-                 "Mostrar sobre otras apps. También puedes tocar la notificación.")
-
-
-def has_display():
-    """¿Hay un entorno gráfico donde abrir archivos y notificar?"""
-    if IS_WINDOWS or IS_MAC:
-        return True
-    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
-
-
-def delivery_action():
-    """open (por defecto), share o none. DLPY_ANDROID_ACTION se sigue aceptando."""
-    return (os.environ.get("DLPY_ACTION") or os.environ.get("DLPY_ANDROID_ACTION")
-            or "open").strip().lower()
-
-
-def desktop_open(path, reveal=False):
-    """Abre `path` con la app por defecto (o su carpeta con reveal=True).
-    Devuelve (True, "") o (False, motivo)."""
-    import subprocess
-    if IS_WINDOWS:
-        try:
-            if reveal:
-                subprocess.Popen(["explorer", "/select,", os.path.normpath(path)])
-            else:
-                os.startfile(path)                     # noqa: P204 (solo existe en Windows)
-            return True, ""
-        except (OSError, AttributeError) as e:
-            return False, str(e)
-    if IS_MAC:
-        cmd = ["open", "-R", path] if reveal else ["open", path]
-    else:
-        if not has_display():
-            return False, "no hay pantalla gráfica (SSH o servidor)"
-        exe = shutil.which("xdg-open") or (shutil.which("wslview") if is_wsl() else None)
-        if not exe:
-            return False, "falta xdg-open (paquete xdg-utils)"
-        cmd = [exe, os.path.dirname(path) if reveal else path]
-    dbg("abrir escritorio", cmd)
-    try:
-        proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL, start_new_session=True)
-    except OSError as e:
-        return False, str(e)
-    try:
-        code = proc.wait(timeout=1.5)         # si sigue vivo, la app ya se abrió
-    except subprocess.TimeoutExpired:
-        return True, ""
-    return (code == 0), ("el sistema devolvió código %s" % code if code else "")
-
-
-def desktop_notify(title, text):
-    """Notificación del escritorio si el sistema la ofrece. True si se envió."""
-    import subprocess
-    title, text = str(title)[:120], str(text)[:200]
-    if IS_MAC and shutil.which("osascript"):
-        def q(s):
-            return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
-        return termux_run(["osascript", "-e",
-                           f"display notification {q(text)} with title {q(title)}"]) is not None
-    if IS_LINUX and has_display() and shutil.which("notify-send"):
-        return termux_run(["notify-send", title, text]) is not None
-    if IS_WINDOWS:
-        ps = shutil.which("powershell") or shutil.which("pwsh")
-        if not ps:
-            return False
-        script = ("Add-Type -AssemblyName System.Windows.Forms,System.Drawing;"
-                  "$n=New-Object System.Windows.Forms.NotifyIcon;"
-                  "$n.Icon=[System.Drawing.SystemIcons]::Information;$n.Visible=$true;"
-                  "$n.ShowBalloonTip(5000,$env:DLPY_N_T,$env:DLPY_N_B,"
-                  "[System.Windows.Forms.ToolTipIcon]::Info);Start-Sleep 6;$n.Dispose()")
-        try:
-            subprocess.Popen([ps, "-NoProfile", "-WindowStyle", "Hidden", "-Command", script],
-                             env={**os.environ, "DLPY_N_T": title, "DLPY_N_B": text},
-                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
-            return True
-        except OSError as _ign:
-            ignore("desktop_notify", _ign)
-    return False
-
-
-def deliver_desktop(final, title):
-    """Equivalente de escritorio del Atajo / Termux: el archivo ya está en su carpeta
-    final; se avisa la ruta, se notifica y se abre con la app por defecto."""
-    shown = final.replace(HOME, "~", 1) if final.startswith(HOME) and not IS_WINDOWS else final
-    dbg("entrega escritorio", {"archivo": final, "titulo": title, "modo": PLATFORM})
-    m_ok(f"Guardado en: {shown}")
-    desktop_notify("DLpy · descarga lista", title)
-    action = delivery_action()
-    if action in ("none", "no", "0", "off", "false"):
-        return
-    ok, why = desktop_open(final, reveal=(action == "share"))
-    if ok:
-        m_info("Abriendo la carpeta..." if action == "share" else "Abriendo con la app por defecto...")
-    else:
-        m_info("No se abrió solo" + (f": {why}" if why else "") + ".")
-
-
-def late_updates():
-    """0.3.7: con --shortcutpick las actualizaciones no se buscan al abrir sino aquí, tras la descarga y justo
-    antes de entregar el archivo. La respuesta por omisión es No, también al acabar la cuenta regresiva, y una
-    versión nueva de DLpy no se reejecuta (reiniciaría la descarga): se usa la próxima vez."""
-    LATE_UPDATES["done"] = True
-    if NO_UPDATES["on"]:
-        return
-    try:
-        if check_due("script", script_sig()):
-            check_update(late=True)
-            if UPDATE_CHECKED["ok"]:
-                check_mark("script", script_sig())
-        if check_due("deps_late"):
-            check_dependencies(late=True)
-    except KeyboardInterrupt:
-        pass
-    except Exception as e:
-        ignore("late_updates", e)
 
 
 def deliver(final, title):
@@ -8408,10 +7929,6 @@ def deliver(final, title):
 
 
 def _deliver_platform(final, title):
-    if IS_ANDROID:
-        return deliver_android(final, title)
-    if IS_DESKTOP:
-        return deliver_desktop(final, title)
     settle_file(final)                     # el convertido recién escrito: completo y en disco antes de avisar
     path = unique_path(final)
     m_info(f"Enviando a {SHORTCUT_NAME}...")
@@ -8447,9 +7964,8 @@ def mark_delivered(final, when=None):
 
 
 def reopen_question():
-    """Texto de la pregunta «¿Abrir otra vez…?» según la plataforma."""
-    return (f"¿Abrir otra vez con Atajos? (S/n) ▸ " if IS_IOS
-            else "¿Abrir otra vez el archivo? (S/n) ▸ ")
+    """Texto de la pregunta «¿Abrir otra vez…?»."""
+    return "¿Abrir otra vez con Atajos? (S/n) ▸ "
 
 
 def deliver_existing(old_file, old_entry, title):
@@ -8495,69 +8011,15 @@ def wants_2shortcuts(args):
     return False
 
 
-def changelog_block_from_md(md_text):
-    """Bloque «# ==== CHANGELOG ==== … # ==== FIN CHANGELOG ====» (comentarios de
-    Python) reconstruido desde el texto de changelog.md, o None si no hay versiones."""
-    secs = parse_sections(md_text or "")
-    if not secs:
-        return None
-    out = ["# ==== CHANGELOG ===="]
-    vers = sorted(secs, key=vtuple, reverse=True)
-    for i, ver in enumerate(vers):
-        out.append(f"# ## {ver}")
-        out.append("#")
-        for ln in secs[ver].splitlines():
-            out.append(("# " + ln).rstrip())
-        if i < len(vers) - 1:
-            out.append("#")                  # separador entre versiones
-    out.append("# ==== FIN CHANGELOG ====")
-    return "\n".join(out) + "\n"
 
 
-def insert_changelog_block(code, block):
-    """Pone `block` donde lo tenía el script: justo tras los comentarios fijos del
-    principio (el último es «# Conservar en todo momento…»)."""
-    lines = code.splitlines(keepends=True)
-    at = 1
-    for i, ln in enumerate(lines[:12]):
-        if ln.startswith("# Conservar en todo momento"):
-            at = i + 1
-            break
-    if lines and not lines[at - 1].endswith("\n"):
-        lines[at - 1] += "\n"
-    return "".join(lines[:at]) + block + "".join(lines[at:])
 
 
-def script_variants(live=None, snapshot=None, md=None):
-    """(sin_changelog, con_changelog) del dlpy.py actual; con_changelog es None si
-    no hay de dónde sacarlo. Los parámetros solo se inyectan en pruebas."""
-    if live is None:
-        live = read_text(SCRIPT_PATH)
-    m = CL_RE.search(live)
-    if m:                                    # el .py todavía trae su changelog
-        return live[:m.start()] + live[m.end():], live
-    if snapshot is None and os.path.isfile(SNAPSHOT_FILE):
-        try:
-            snapshot = read_text(SNAPSHOT_FILE)
-        except OSError as _ign:
-            ignore("script_variants", _ign)
-    if snapshot and CL_RE.search(snapshot) and remote_script_version(snapshot) == VERSION:
-        return live, snapshot                # copia completa de esta misma versión
-    if md is None and os.path.isfile(CHANGELOG_FILE):
-        try:
-            md = read_text(CHANGELOG_FILE)
-        except OSError as _ign:
-            ignore("script_variants", _ign)
-    block = changelog_block_from_md(md)
-    return live, (insert_changelog_block(live, block) if block else None)
 
 
 def send_code_to_shortcut():
     """`--2shortcuts` (iOS): manda el dlpy.py actual al atajo, que lo reconoce por la
     primera línea (#!dlpy.py). Pregunta si va con o sin changelog."""
-    if not IS_IOS:
-        m_warn("--2shortcuts solo aplica en iOS (a-Shell): usa tu atajo de Atajos.")
-        return 1
     ensure_dirs()
     clear_screen()                  # mismo encabezado que el resto del script
     try:
@@ -8775,7 +8237,6 @@ def run_download(ydl, yt_dlp, info, link, fmt_id):
 SHORTCUT_SCHEMA = 1
 DASHES = "-\u2013\u2014"                       # raya normal, en y em (el teclado de iOS convierte «--» en «—»)
 VALUE_FLAGS = {"shortcutpick"}                 # banderas con valor: «--bandera valor» o «--bandera=valor»
-SHORTCUT_JSON = os.path.join(STATE_DIR, "shortcut_analysis.json")      # copia legible de la última salida
 SC_URL_MAX = 30000                     # largo máximo de la URL shortcuts://; si pasa, el JSON va por el portapapeles
 try:
     SC_TIMEOUT = float(os.environ.get("DLPY_SC_TIMEOUT", "90") or 90)     # tope del análisis para el atajo (s; 0 = sin tope)
@@ -8915,11 +8376,6 @@ def shortcut_kbps(f):
     return v if v > 0 else None
 
 
-def kbps_text(k):
-    """«850 kbps», «2.1 Mbps»; None si no hay dato."""
-    if not k:
-        return None
-    return f"{k / 1000:.1f} Mbps" if k >= 1000 else f"{k:.0f} kbps"
 
 
 def size_estimate(kbps, secs):
@@ -9041,9 +8497,8 @@ def build_shortcut_payload(info, link, can_merge, old_file=None, old_entry=None,
     for f in videos:
         groups.setdefault(shortcut_quality_key(f), []).append(f)
 
-    def rank(f):        # misma preferencia que la lista corta: con audio si no hay ffmpeg, compatible, h264, bitrate
+    def rank(f):        # misma preferencia que la lista corta: con audio si no hay ffmpeg, compatible, bitrate
         return (has(f.get("acodec")) if not can_merge else False, bool(apple_video(f)),
-                (not APPLE_MODE) and (f.get("vcodec") or "").lower().startswith(("avc1", "h264")),
                 f.get("tbr") or 0)
 
     picked = [bf if bk == "v" and any(x is bf for x in g) else max(g, key=rank) for g in groups.values()]
@@ -9242,25 +8697,6 @@ def collect_with_timeout(link, secs=None, fn=None):
     return box.get("data") or shortcut_error("crash", "el análisis no devolvió nada", link)
 
 
-def shortcut_copy(text):
-    """Copia `text` al portapapeles (iOS / macOS: pbcopy). Respaldo de --scm (--shortcutclip) y de --scb cuando
-    el JSON no cabe en la URL."""
-    if not (IS_IOS or IS_MAC):
-        return False
-    tmp = os.path.join(WORK_ROOT, "shortcut_clip.json")
-    try:
-        os.makedirs(WORK_ROOT, exist_ok=True)
-        with open(tmp, "w", encoding="utf-8") as fh:
-            fh.write(text)
-        return os.system("pbcopy < " + shlex.quote(tmp)) == 0
-    except OSError as _ign:
-        ignore("shortcut_copy", _ign)
-        return False
-    finally:
-        try:
-            os.remove(tmp)
-        except OSError as _ign:
-            ignore("shortcut_copy", _ign)
 
 
 def write_shortcut_json(data):
@@ -9338,9 +8774,7 @@ def shortcut_send(data, name=None):
 
 def shortcut_back(flags, pos):
     """`--scb LINK` (iOS): analiza en primer plano (sin el límite de espera de Atajos) y al acabar AVISA al atajo
-    «DLpy» con el JSON (éxito o error), sin animaciones ni mensajes (0.4.0). Fuera de iOS imprime el JSON como --scm."""
-    if not IS_IOS:
-        return shortcut_mode(flags, pos)
+    «DLpy» con el JSON (éxito o error), sin animaciones ni mensajes (0.4.0)."""
     link = pos[0] if pos else None
     val = flags.get("scb")
     name = val.strip() if isinstance(val, str) and val.strip() else SHORTCUT_NAME
@@ -9417,8 +8851,8 @@ def selftest():
     check("wrap palabra larga", wrap_text("x" * 20, 8), ["x" * 8, "x" * 8, "x" * 4])
     check("wrap emoji 2 columnas", all(dwidth(x) <= 10 for x in wrap_text("🫣 hola 🫣 mundo 🫣 otra vez", 10)), True)
     check("dwidth ansi", dwidth("\x1b[92m●\x1b[0m ab"), 4)
-    check("pip args escritorio", pip_args("yt-dlp", no_deps=False), ["install", "-U", "yt-dlp"])
-    check("pip args móvil", pip_args("yt-dlp", no_deps=True), ["install", "-U", "yt-dlp", "--no-deps"])
+    check("pip args sin --no-deps", pip_args("yt-dlp", no_deps=False), ["install", "-U", "yt-dlp"])
+    check("pip args con --no-deps", pip_args("yt-dlp", no_deps=True), ["install", "-U", "yt-dlp", "--no-deps"])
     _bar = Bar(panel=True)
     _bar.label, _bar.indet, _bar.pct, _bar.step = "1440p60", False, 12.4, "1/3"
     for _w in (30, 39, 49, 62, 80):
@@ -9671,8 +9105,7 @@ def selftest():
     persist_env({"DLPY_DEV": "1"}, os.path.join(_blk, "env.json"))      # «carpeta» que es un archivo
     check("env: el fallo queda anotado", bool(ENV_STATE["error"]), True)
     check("env: ruta iOS dentro de la carpeta oculta",
-          env_file_path("/h", "ios"), os.path.join("/h", "Documents", "dlpy_files", ".dlpy_internal", "env.json"))
-    check("env: ruta no-iOS", env_file_path("/h", "linux"), os.path.join("/h", ".dlpy_env.json"))
+          env_file_path("/h"), os.path.join("/h", "Documents", "dlpy_files", ".dlpy_internal", "env.json"))
     check("internal oculta dentro de files", (os.path.dirname(INTERNAL_DIR) == FILES_DIR,
                                               os.path.basename(INTERNAL_DIR).startswith(".")), (True, True))
     check("archivos: qué cuenta como descarga en dlpy_files",
@@ -9708,45 +9141,10 @@ def selftest():
     check("toca: sin firma", due_from({"t": 1000, "sig": None}, None, 1000 + 60, 24), False)
     check("toca: reloj hacia atrás", due_from({"t": 5000, "sig": "a"}, "a", 1000, 24), True)
     check("toca: 0 horas = siempre", due_from({"t": 1000, "sig": "a"}, "a", 1001, 0), True)
-    check("plat termux env", detect_platform({"TERMUX_VERSION": "0.118"}, "linux"), "android")
-    check("plat termux prefix", detect_platform({"PREFIX": "/data/data/com.termux/files/usr"}, "linux"), "android")
-    check("plat termux home", detect_platform({"HOME": "/data/data/com.termux/files/home"}, "linux"), "android")
-    check("plat android sys", detect_platform({}, "android"), "android")
-    check("plat a-shell", detect_platform({"APPNAME": "a-Shell"}, "darwin"), "ios")
-    check("plat ios sys", detect_platform({}, "ios"), "ios")
-    check("plat linux", detect_platform({}, "linux"), "linux")
-    check("plat bsd", detect_platform({}, "freebsd14"), "linux")
-    check("plat windows", detect_platform({}, "win32"), "windows")
-    check("plat cygwin", detect_platform({}, "cygwin"), "windows")
-    check("plat macos", detect_platform({"HOME": "/Users/ana"}, "darwin"), "macos")
-    check("plat ios sandbox", detect_platform(
-        {"HOME": "/private/var/mobile/Containers/Data/Application/AB12/Documents"}, "darwin"), "ios")
-    check("plat forzada macos", detect_platform({"DLPY_PLATFORM": "macos"}, "linux"), "macos")
-    check("plat forzada windows", detect_platform({"DLPY_PLATFORM": "Windows"}, "linux"), "windows")
-    check("plat forzada inválida", detect_platform({"DLPY_PLATFORM": "beos"}, "linux"), "linux")
-    check("nombre ios", platform_name("ios", {"APPNAME": "a-Shell-mini"}), "a-Shell mini · iOS")
-    check("nombre android", platform_name("android", {"TERMUX_VERSION": "0.118"}), "Termux 0.118 · Android")
-    check("nombre linux", platform_name("linux", {}), "Linux")
-    check("nombre wsl", platform_name("linux", {"WSL_DISTRO_NAME": "Ubuntu"}), "Linux · WSL · Ubuntu")
-    check("nombre macos", platform_name("macos", {}), "macOS")
-    check("nombre windows", platform_name("windows", {}), "Windows")
-    with tempfile.TemporaryDirectory() as _xd:
-        os.makedirs(os.path.join(_xd, ".config"))
-        with open(os.path.join(_xd, ".config", "user-dirs.dirs"), "w") as _f:
-            _f.write('XDG_DOWNLOAD_DIR="$HOME/Descargas"\n')
-        check("descargas linux xdg", desktop_downloads_dir("linux", {}, _xd), os.path.join(_xd, "Descargas"))
-        check("descargas linux env", desktop_downloads_dir("linux", {"XDG_DOWNLOAD_DIR": "/x/d"}, _xd), "/x/d")
-        check("descargas linux defecto", desktop_downloads_dir("linux", {}, _xd + "/otro"),
-              os.path.join(_xd, "otro", "Downloads"))
-        check("descargas macos", desktop_downloads_dir("macos", {}, _xd), os.path.join(_xd, "Downloads"))
-        check("descargas windows", desktop_downloads_dir("windows", {}, _xd), os.path.join(_xd, "Downloads"))
-    check("modo coherente", (IS_ANDROID, IS_IOS, IS_MAC, IS_LINUX, IS_WINDOWS).count(True), 1)
-    check("modo apple", APPLE_MODE, PLATFORM in ("ios", "macos"))
-    check("safe_name CON", safe_name("CON", windows=True), "_CON")
-    check("safe_name nul.txt", safe_name("nul.txt", windows=True), "_nul.txt")
-    check("safe_name com1", safe_name("com1", windows=True), "_com1")
-    check("safe_name console ok", safe_name("console", windows=True), "console")
-    check("safe_name CON fuera de windows", safe_name("CON", windows=False), "CON")
+    check("nombre a-Shell", platform_name({"APPNAME": "a-Shell"}), "a-Shell · iOS")
+    check("nombre a-Shell mini", platform_name({"APPNAME": "a-Shell-mini"}), "a-Shell mini · iOS")
+    check("modo iOS", (PLATFORM, IS_IOS, APPLE_MODE), ("ios", True, True))
+    check("safe_name CON no cambia", safe_name("CON"), "CON")
     check("ejs_pin fijo", ejs_pin(["brotli; extra == 'default'", "yt-dlp-ejs==0.8.0; extra == 'default'"]),
           "yt-dlp-ejs==0.8.0")
     check("ejs_pin sin versión", ejs_pin(["yt-dlp-ejs"]), "yt-dlp-ejs")
@@ -9765,8 +9163,6 @@ def selftest():
     _caps = capabilities()
     check("capabilities forma", all(len(c) == 3 and c[1] in ("ok", "no", "part", "na") and c[2] for c in _caps), True)
     check("capabilities cubre ffmpeg", any("ffmpeg" in c[0] for c in _caps), True)
-    check("plat forzada ios", detect_platform({"DLPY_PLATFORM": "ios", "TERMUX_VERSION": "1"}, "linux"), "ios")
-    check("plat forzada android", detect_platform({"DLPY_PLATFORM": "android"}, "darwin"), "android")
     _sp = [("137", "mp4", 1000), ("140", "m4a", 50)]
     check("resume_key estable", resume_key("v", _sp), resume_key("v", list(_sp)))
     check("resume_key prefijo", resume_key("v", _sp).startswith(RESUME_PREFIX), True)
@@ -9775,8 +9171,6 @@ def selftest():
     check("resume_key otro video", resume_key("v", _sp) != resume_key("w", _sp), True)
     check("resume_key sin tamaño", resume_key("v", [("18", "mp4", None)]), resume_key("v", [("18", "mp4", 0)]))
 
-    check("root_move_target fuera", root_move_target("/sdcard/Download/x.py", "/h/u"), "/h/u/dlpy.py")
-    check("root_move_target raíz", root_move_target("/h/u/otro.py", "/h/u"), None)
     _u = shortcut_run_url({"file_path": "/a b/dlpy.py", "kind": "script"}, "DLpy")
     check("shortcut url inicio", _u.startswith("shortcuts://run-shortcut?name=DLpy&input=text&text="), True)
     check("shortcut url payload",
@@ -9854,6 +9248,32 @@ def selftest():
     _info = ("o", "r", "main")
     check("github_repo_info raw", github_repo_info("https://raw.githubusercontent.com/o/r/main/dlpy.py"), _info)
     check("github_repo_info otro host", github_repo_info("https://example.com/dlpy.py"), None)
+    _rel = [{"tag_name": "v0.7.5", "assets": [{"name": "dlpy.py", "browser_download_url": "https://h/dl/dlpy.py"}]},
+            {"tag_name": "0.7.6", "assets": []},
+            {"tag_name": "v0.7.7", "prerelease": True, "assets": []},
+            {"tag_name": "v0.7.8", "draft": True, "assets": []},
+            {"tag_name": "nightly", "assets": [{"name": "dlpy_0.7.9.py", "browser_download_url": "https://h/dl/dlpy_0.7.9.py"},
+                                                {"name": "notas.txt", "browser_download_url": "https://h/dl/notas.txt"}]},
+            {"tag_name": "v0.7.5", "assets": []}, {"tag_name": "beta"}, "x"]
+    check("releases: orden, etiquetas, adjuntos, sin borradores ni prereleases", parse_releases(_rel, _info),
+          [("0.7.9", "https://h/dl/dlpy_0.7.9.py"), ("0.7.6", "https://raw.githubusercontent.com/o/r/0.7.6/dlpy.py"),
+           ("0.7.5", "https://h/dl/dlpy.py")])
+    check("releases: respuesta inválida", (parse_releases(None, _info), parse_releases({"message": "limit"}, _info)), ([], []))
+    _rr = collect_versions([("0.7.6", "https://h/g")], {}, ("0.7.6", "https://h/m"), [], None, [("0.7.6", "https://h/r")])
+    check("collect release: orden de orígenes", [s_["origin"] for s_ in _rr[0]["srcs"]], ["github", "release", "main"])
+    check("collect release: etiqueta", [s_["label"] for s_ in _rr[0]["srcs"]], ["GitHub", "Release", "GitHub main"])
+    check("collect release: se puede instalar", "release" in SELECTABLE, True)
+    _svr = (globals()["remote_releases"], globals()["fetch_remote_script"])
+    try:
+        globals()["remote_releases"] = lambda *a, **k: [("9.9.9", "https://h/r"), ("9.9.8", "https://h/r2")]
+        globals()["fetch_remote_script"] = lambda timeout=5, url=None: '#!dlpy.py\nVERSION = "9.9.9"\n'
+        check("último release", fetch_latest_release(), ("9.9.9", '#!dlpy.py\nVERSION = "9.9.9"\n', "https://h/r"))
+        globals()["fetch_remote_script"] = lambda timeout=5, url=None: None
+        check("último release: sin script válido", fetch_latest_release(), None)
+        globals()["remote_releases"] = lambda *a, **k: None
+        check("último release: sin red", fetch_latest_release(), None)
+    finally:
+        (globals()["remote_releases"], globals()["fetch_remote_script"]) = _svr
     _listing = [{"name": "dlpy_0.7.5.py", "type": "file"}, {"name": "dlpy_0.7.10.py", "type": "file"},
                 {"name": "README.md", "type": "file"}, {"name": "dlpy_0.7.4_abc1234.py", "type": "file"},
                 {"name": "dlpy_0.7.3.py", "type": "dir"}, "basura"]
@@ -10039,30 +9459,6 @@ def selftest():
     check("hold: dijo no quedarse (historial)", downgrade_hold("0.1.1", {"history": [dict(_pend, hold=False)]}), None)
     check("downgrade: registro conserva hold=False", make_downgrade_record("0.1.3", "0.1.1", dict(_pend, hold=False), 5).get("hold"), False)
     check("hold: datos dañados", downgrade_hold("0.1.1", {"pending": "x", "history": [1]}), None)
-    _all = ["ffmpeg", "js", "termux-api"]
-    _has = lambda *names: (lambda x: "/bin/" + x if x in names else None)
-    check("sys_cmds android", system_install_cmds(_all, "android", _has("pkg")),
-          [["pkg", "install", "-y", "ffmpeg", "nodejs", "termux-api"]])
-    check("sys_cmds android sin pkg", system_install_cmds(_all, "android", _has()), None)
-    check("sys_cmds macos", system_install_cmds(_all, "macos", _has("brew")),
-          [["brew", "install", "ffmpeg", "deno"]])
-    check("sys_cmds macos solo termux-api", system_install_cmds(["termux-api"], "macos", _has("brew")), None)
-    check("sys_cmds windows", [c[3] for c in system_install_cmds(_all, "windows", _has("winget"))],
-          ["Gyan.FFmpeg", "DenoLand.Deno"])
-    check("sys_cmds linux dnf", system_install_cmds(_all, "linux", _has("dnf"), True),
-          [["dnf", "install", "-y", "ffmpeg-free", "nodejs"]])
-    check("sys_cmds linux apt sudo", system_install_cmds(["ffmpeg"], "linux", _has("apt-get", "sudo"), False),
-          [["sudo", "apt-get", "install", "-y", "ffmpeg"]])
-    check("sys_cmds linux sin sudo", system_install_cmds(["ffmpeg"], "linux", _has("apt-get"), False), None)
-    check("sys_cmds ios", system_install_cmds(_all, "ios", _has("pkg", "brew")), None)
-    with tempfile.TemporaryDirectory() as _td:
-        _o = os.path.join(_td, "dlpy.py")
-        check("origin_copy escribe", sync_origin_copy("#!dlpy.py\nx\n", _o, "/h/u/dlpy.py"), _o)
-        check("origin_copy contenido", read_text(_o), "#!dlpy.py\nx\n")
-        check("origin_copy mismo archivo", sync_origin_copy("x", _o, _o), None)
-        check("origin_copy sin carpeta", sync_origin_copy("x", os.path.join(_td, "no", "dlpy.py"), "/h/u/dlpy.py"), None)
-        check("origin_copy sin origen", sync_origin_copy("x", "", "/h/u/dlpy.py"), None)
-
     with tempfile.TemporaryDirectory() as _td:
         _a, _b = os.path.join(_td, "a.bin"), os.path.join(_td, "b.bin")
         with open(_a, "wb") as _f:
@@ -10095,12 +9491,8 @@ def selftest():
     check("auto_best video", auto_best([], [v1, v2], set(), True)[1]["format_id"], "v2")
     a1 = {"format_id": "a1", "ext": "m4a", "acodec": "mp4a.40.2", "abr": 128}
     a2 = {"format_id": "a2", "ext": "webm", "acodec": "opus", "abr": 160}
-    # Apple: opus no es nativo (gana m4a); resto: ambos valen y gana el de más bitrate
-    check("auto_best audio", auto_best([a1, a2], [], set(), True), ("a", a1 if APPLE_MODE else a2))
-    if not APPLE_MODE:
-        vp = dict(v1, format_id="vp", ext="webm", vcodec="vp9", acodec="none", height=1080, tbr=3000)
-        h2 = dict(v1, format_id="h2", acodec="none", height=1080, tbr=2000)
-        check("auto_best h264", auto_best([], [vp, h2], set(), True)[1]["format_id"], "h2")
+    # opus no es nativo en Apple: gana m4a
+    check("auto_best audio", auto_best([a1, a2], [], set(), True), ("a", a1))
 
     for txt in ("unable to download video data: http error 403: forbidden",
                 "requested format is not available", "http error 410: gone"):
@@ -10267,7 +9659,6 @@ def capabilities():
     hay instalado. Estados: ok (funciona), no (no funciona), part (parcial), na (no
     aplica en este sistema)."""
     R = []
-    which = shutil.which
 
     def add(name, st, why):
         R.append((name, st, why))
@@ -10276,26 +9667,11 @@ def capabilities():
         "ok" if is_installed("yt_dlp") else "no",
         "yt-dlp está instalado." if is_installed("yt_dlp") else
         "Falta yt-dlp: DLpy ofrece instalarlo con pip (Python puro, no compila nada).")
-    if IS_IOS:
-        add("Unir audio y video (ffmpeg)", "ok",
-            "ffmpeg viene integrado en a-Shell; DLpy no puede comprobarlo desde Python.")
-    elif which("ffmpeg"):
-        add("Unir audio y video (ffmpeg)", "ok", f"ffmpeg encontrado en {which('ffmpeg')}.")
-    else:
-        add("Unir audio y video (ffmpeg)", "no",
-            "No hay ffmpeg: sin él solo se bajan formatos con audio incluido. "
-            "DLpy ofrece instalarlo (" + ffmpeg_hint() + ").")
-    if APPLE_MODE:
-        if IS_IOS or which("ffmpeg"):
-            add("Convertir a formato nativo", "ok",
-                "Recodifica a HEVC/AAC si el resultado no lo reproduce QuickTime/Fotos "
-                "(usa VideoToolbox si ffmpeg lo trae; si no, libx265/libx264).")
-        else:
-            add("Convertir a formato nativo", "no", "Necesita ffmpeg.")
-    else:
-        add("Convertir a formato nativo", "na",
-            f"No hace falta: {PLAT_LABEL} reproduce h264/vp9/hevc y aac/opus sin convertir; "
-            "«mejor formato» prefiere h264 por compatibilidad.")
+    add("Unir audio y video (ffmpeg)", "ok",
+        "ffmpeg viene integrado en a-Shell; DLpy no puede comprobarlo desde Python.")
+    add("Convertir a formato nativo", "ok",
+        "Recodifica a HEVC/AAC si el resultado no lo reproduce QuickTime/Fotos "
+        "(usa VideoToolbox si ffmpeg lo trae; si no, libx265/libx264).")
     if ytdlp_needs_js():
         rt, ej = js_runtime(), is_installed("yt_dlp_ejs")
         if rt and ej:
@@ -10307,7 +9683,7 @@ def capabilities():
         else:
             add("YouTube completo (runtime JS + yt-dlp-ejs)", "no",
                 "Falta un runtime de JavaScript, y yt-dlp lo exige desde 2025.11.12: "
-                + JS_INSTALL_HINT[PLATFORM] + ". Sin él YouTube puede mostrar menos formatos; "
+                + JS_INSTALL_HINT + ". Sin él YouTube puede mostrar menos formatos; "
                 "otros sitios no se ven afectados.")
     add("Reanudar descargas cortadas", "ok", "Misma huella enlace+formato; caduca a las 24 h.")
     add("Caché de pistas (24 h)", "ok",
@@ -10317,102 +9693,28 @@ def capabilities():
         add("Variables DLPY_* recordadas", "no", f"No se guardan en {ENV_STATE['path']}: {ENV_STATE['error']}")
     elif ENV_STATE["path"]:
         add("Variables DLPY_* recordadas", "ok", f"Se guardan en {ENV_STATE['path']}.")
-    dest = DOWNLOAD_DIR
-    if IS_IOS:
-        add("Carpeta de descargas", "ok", f"{dest} (sandbox de a-Shell, visible en Archivos).")
-    elif SHARED_OK:
-        add("Carpeta de descargas", "ok", f"{dest} (backups y changelog en {FILES_DIR}).")
-    elif IS_ANDROID:
-        add("Carpeta de descargas", "part",
-            f"Sin permiso de almacenamiento: se guarda en {dest}. Ejecuta termux-setup-storage.")
+    add("Carpeta de descargas", "ok", f"{DOWNLOAD_DIR} (sandbox de a-Shell, visible en Archivos).")
+    if clipboard_cmd():
+        add("Ofrecer el enlace del portapapeles", "ok", "Con «pbpaste» (DLPY_CLIPBOARD=1).")
     else:
-        add("Carpeta de descargas", "part",
-            f"No se puede escribir en la carpeta Descargas: se guarda en {dest}.")
-    cmd = clipboard_cmd()
-    if cmd:
-        add("Ofrecer el enlace del portapapeles", "ok", f"Con «{os.path.basename(cmd[0])}».")
-    elif IS_IOS:
         add("Ofrecer el enlace del portapapeles", "na",
             "Desactivado a propósito: iOS pregunta «¿Permitir pegar?» en cada lectura. "
             "Actívalo con DLPY_CLIPBOARD=1.")
-    elif IS_ANDROID:
-        add("Ofrecer el enlace del portapapeles", "no",
-            "Falta Termux:API (la app de F-Droid + «pkg install termux-api»).")
-    elif IS_LINUX:
-        add("Ofrecer el enlace del portapapeles", "no",
-            "Falta wl-paste, xclip o xsel, o no hay sesión gráfica (SSH).")
-    else:
-        add("Ofrecer el enlace del portapapeles", "no", "No se encontró la orden del portapapeles.")
-    if IS_IOS:
-        add("Entregar el archivo al terminar", "part",
-            f"Lanza tu atajo «{SHORTCUT_NAME}» con shortcuts://; si no lo creaste en Atajos, "
-            "no pasa nada. Python no puede comprobarlo.")
-    elif IS_ANDROID:
-        ok = bool(which("termux-open"))
-        add("Entregar el archivo al terminar", "ok" if ok else "no",
-            "Abre con el reproductor de Android (termux-open)." if ok else
-            "Falta termux-open (pkg install termux-tools).")
-    else:
-        opener = {"macos": "open", "windows": "os.startfile"}.get(PLATFORM)
-        if IS_LINUX:
-            opener = which("xdg-open") or (which("wslview") if is_wsl() else None)
-        if not has_display():
-            add("Entregar el archivo al terminar", "no",
-                "No hay pantalla gráfica (SSH/servidor): el archivo se guarda pero no se abre.")
-        elif not opener:
-            add("Entregar el archivo al terminar", "no", "Falta xdg-open (paquete xdg-utils).")
-        else:
-            add("Entregar el archivo al terminar", "ok",
-                f"Se abre con la app por defecto ({os.path.basename(opener)}).")
-    if IS_IOS:
-        add("Notificación al terminar", "na",
-            "a-Shell no puede notificar; el aviso lo da tu Atajo.")
-    elif IS_ANDROID:
-        ok = bool(which("termux-notification"))
-        add("Notificación al terminar", "ok" if ok else "no",
-            "Con Termux:API." if ok else "Falta Termux:API (app + «pkg install termux-api»).")
-    elif IS_MAC:
-        add("Notificación al terminar", "ok" if which("osascript") else "no",
-            "Con osascript." if which("osascript") else "Falta osascript.")
-    elif IS_WINDOWS:
-        ps = bool(which("powershell") or which("pwsh"))
-        add("Notificación al terminar", "ok" if ps else "no",
-            "Globo de la bandeja con PowerShell." if ps else "Falta PowerShell.")
-    else:
-        ok = has_display() and bool(which("notify-send"))
-        add("Notificación al terminar", "ok" if ok else "no",
-            "Con notify-send." if ok else
-            "Falta notify-send (libnotify-bin) o no hay sesión gráfica.")
-    if IS_ANDROID:
-        ok = bool(which("termux-media-scan"))
-        add("Aparecer en la galería", "ok" if ok else "no",
-            "Escanea el archivo (termux-media-scan)." if ok else
-            "Falta termux-media-scan (pkg install termux-api).")
-    else:
-        add("Aparecer en la galería", "na",
-            "Solo existe en Android; en el resto el archivo se ve en su carpeta.")
-    if IS_ANDROID:
-        add("Compartir un enlace a DLpy", "ok",
-            "~/bin/termux-url-opener: compartes el enlace a Termux desde cualquier app.")
-    elif IS_IOS:
-        add("Compartir un enlace a DLpy", "part",
-            "Solo mediante tu atajo de Atajos, que debe abrir a-Shell con el enlace.")
-    else:
-        add("Compartir un enlace a DLpy", "no",
-            "Un escritorio no tiene «compartir a»: pega el enlace o pásalo como argumento.")
+    add("Entregar el archivo al terminar", "part",
+        f"Lanza tu atajo «{SHORTCUT_NAME}» con shortcuts://; si no lo creaste en Atajos, "
+        "no pasa nada. Python no puede comprobarlo.")
+    add("Notificación al terminar", "na", "a-Shell no puede notificar; el aviso lo da tu Atajo.")
+    add("Compartir un enlace a DLpy", "part",
+        "Solo mediante tu atajo de Atajos, que debe abrir a-Shell con el enlace.")
     if countdown_supported():
-        add("Cuenta regresiva interactiva", "ok",
-            "msvcrt (consola de Windows)." if os.name == "nt" else "termios (modo sin eco).")
+        add("Cuenta regresiva interactiva", "ok", "termios (modo sin eco).")
     else:
         add("Cuenta regresiva interactiva", "part",
-            "La entrada no es un terminal (tubería o sin termios/msvcrt): se pregunta sin cuenta.")
+            "La entrada no es un terminal (tubería o sin termios): se pregunta sin cuenta.")
     add("Colores y barras animadas", "ok" if (USE_COLOR and ANSI_OK) else "part",
         "ANSI activo." if (USE_COLOR and ANSI_OK) else
-        "Sin colores (salida redirigida, NO_COLOR o consola sin ANSI).")
-    if IS_IOS:
-        add("Ocultar el teclado", "ok", "hideKeyboard de a-Shell.")
-    else:
-        add("Ocultar el teclado", "na", "No hay teclado en pantalla que ocultar.")
+        "Sin colores (salida redirigida o NO_COLOR).")
+    add("Ocultar el teclado", "ok", "hideKeyboard de a-Shell.")
     return R
 
 
@@ -10421,7 +9723,6 @@ def print_capabilities():
     print(title_bar(f"DLpy v{VERSION}", paint("sistema", "gray")))
     print(rule())
     kv("Corre en", f"{platform_name()} · {machine_name()} · Python {sys.version.split()[0]}")
-    kv("Modo", PLATFORM + (" (forzado con DLPY_PLATFORM)" if os.environ.get("DLPY_PLATFORM") else ""))
     try:
         _env_cols = shutil.get_terminal_size((0, 0)).columns
     except Exception as _ign:
@@ -10445,116 +9746,6 @@ def print_capabilities():
 
 
 # ───────────────────────── Principal ─────────────────────────
-URL_OPENER_MARK = "# DLpy termux-url-opener"
-
-
-def write_url_opener(force=False):
-    """Crea ~/bin/termux-url-opener. Devuelve (estado, ruta): «creado»,
-    «existe» (ya era el de DLpy), «ajeno» (hay otro y no se toca) o «error:…»."""
-    bindir = os.path.join(HOME, "bin")
-    path = os.path.join(bindir, "termux-url-opener")
-    bash = os.path.join(os.environ.get("PREFIX") or "/data/data/com.termux/files/usr", "bin", "bash")
-    body = (f"#!{bash}\n{URL_OPENER_MARK}\n"
-            f"exec {shlex.quote(sys.executable)} {shlex.quote(SCRIPT_PATH)} \"$1\"\n")
-    try:
-        os.makedirs(bindir, exist_ok=True)
-        if os.path.isfile(path):
-            old = read_text(path)
-            if URL_OPENER_MARK not in old:
-                if not force:
-                    return "ajeno", path
-                copy_file(path, path + ".bak")
-            elif old == body:
-                return "existe", path
-        write_text(path, body)
-        os.chmod(path, 0o755)
-    except OSError as e:
-        return f"error: {e}", path
-    return "creado", path
-
-
-def ensure_url_opener():
-    """Primera ejecución en Android: deja listo «compartir enlace → Termux»."""
-    st, path = write_url_opener()
-    if st == "creado":
-        m_ok("Compartir a Termux activado: comparte un enlace desde cualquier app a Termux.")
-    elif st == "ajeno":
-        m_warn("Ya hay un ~/bin/termux-url-opener que no es de DLpy; no se tocó.")
-        note("Para reemplazarlo (con copia .bak): python dlpy.py --instalar-android")
-    elif st.startswith("error"):
-        dbg("url-opener", st)
-
-
-def setup_android():
-    """Crea ~/bin/termux-url-opener: compartir un enlace a Termux abre DLpy."""
-    if not IS_ANDROID:
-        m_warn("--instalar-android solo aplica en Termux (Android).")
-        return 1
-    st, path = write_url_opener(force=True)
-    if st.startswith("error"):
-        m_err(f"No se pudo crear {path}: {st[7:]}")
-        return 1
-    m_ok(f"Listo: {path}")
-    note("Comparte un enlace desde cualquier app a Termux y se abrirá DLpy con él.")
-    if not SHARED_OK:
-        m_warn("Falta el almacenamiento compartido: ejecuta termux-setup-storage.")
-    return 0
-
-
-def root_move_target(script_path, home):
-    """Destino en la raíz de Termux (~/dlpy.py) o None si el script ya está en ella."""
-    folder = os.path.dirname(os.path.realpath(script_path))
-    if folder == os.path.realpath(home):
-        return None
-    return os.path.join(home, "dlpy.py")
-
-
-def relocate_to_root():
-    """Android: va a la raíz (~), mueve ahí el script si estaba en otra carpeta y
-    lo vuelve a ejecutar desde ahí con los mismos argumentos."""
-    try:
-        os.chdir(HOME)
-    except OSError as _ign:
-        ignore("relocate_to_root", _ign)
-    if os.environ.get("DLPY_NO_MOVE") or os.environ.get("DLPY_MOVED"):
-        return
-    dst = root_move_target(SCRIPT_PATH, HOME)
-    if not dst:
-        return
-    tmp = dst + ".tmp"
-    try:
-        copy_file(SCRIPT_PATH, tmp)
-        os.replace(tmp, dst)
-    except OSError as e:
-        m_warn(f"No se pudo mover DLpy a ~ ({e}); sigue ejecutándose donde está.")
-        try:
-            os.remove(tmp)
-        except OSError as _ign:
-            ignore("relocate_to_root", _ign)
-        return
-    try:
-        os.remove(SCRIPT_PATH)
-    except OSError as _ign:
-        ignore("relocate_to_root", _ign)
-    # El atajo de «compartir a Termux» apuntaba a la ruta vieja
-    opener = os.path.join(HOME, "bin", "termux-url-opener")
-    try:
-        if os.path.isfile(opener):
-            txt = read_text(opener)
-            if URL_OPENER_MARK in txt and shlex.quote(SCRIPT_PATH) in txt:
-                write_text(opener, txt.replace(shlex.quote(SCRIPT_PATH), shlex.quote(dst)))
-    except OSError as _ign:
-        ignore("relocate_to_root", _ign)
-    os.environ["DLPY_MOVED"] = "1"
-    os.environ["DLPY_ORIGIN"] = SCRIPT_PATH      # carpeta de origen: se actualiza junto con ~/dlpy.py
-    card_thread_stop()                           # libera la región de desplazamiento (0.2.6)
-    try:
-        os.execv(sys.executable, [sys.executable, dst] + sys.argv[1:])
-    except OSError as e:
-        m_warn(f"Se movió a {dst} pero no se pudo reiniciar ({e}); vuelve a ejecutarlo desde ~.")
-        sys.exit(1)
-
-
 def main():
     sys.argv[1:] = norm_args(sys.argv[1:])      # «—scb» (raya larga del teclado) → «--scb» (0.3.7)
     if "--selftest" in sys.argv[1:]:
@@ -10572,10 +9763,6 @@ def main():
     if wants_scm(sys.argv[1:]):
         return shortcut_mode(cli_flags, cli_args)         # JSON en la salida y nada más (0.3.7)
     spick = parse_shortcut_pick(cli_flags.get("shortcutpick"))      # lo que eligió el atajo (0.3.7)
-    if IS_ANDROID:
-        relocate_to_root()
-    if "--instalar-android" in sys.argv[1:]:
-        return setup_android()
     input_lock()                    # iOS: entrada bloqueada hasta la primera pregunta (0.2.9)
 
     os.makedirs(FILES_DIR, exist_ok=True)
@@ -10584,14 +9771,6 @@ def main():
     migrate_internal_layout()       # estructura anterior → state/ script/ cache/ delivery/
     ensure_dirs()
     clear_screen()                  # banner arriba, sin restos de la ejecución anterior
-    if IS_ANDROID:
-        ensure_url_opener()
-    if IS_ANDROID and not SHARED_OK:
-        m_warn("Sin acceso al almacenamiento compartido: se guarda en ~/dlpy_files.")
-        note("Ejecuta termux-setup-storage y reinicia Termux para usar Descargas/DLpy.")
-    elif IS_DESKTOP and not SHARED_OK:
-        m_warn("No se puede escribir en la carpeta Descargas: se guarda en ~/dlpy_files.")
-        note("Revisa sus permisos o define DLPY_DOWNLOAD_DIR con otra carpeta.")
 
     if ENV_STATE["error"]:
         m_warn(f"No se pudieron guardar las variables DLPY_* en {ENV_STATE['path']}")
@@ -10742,7 +9921,7 @@ def main():
         n_head = (3 if a_rows else 0) + (2 if v_rows else 0)         # cabeceras + encabezados de columnas
         cap = list_cap(banner_height() + len(title_lines(title, term_width() - 1))
                        + len(_legend_lines(["apple", "orig"])) + n_head + (1 if auto else 0) + 1   # +1: la línea en blanco
-                       + len(wrap_text(plat_text("n.º · b ★ mejor · m más · q salir"), term_width() - 2)) + 1)  # +1: prompt
+                       + len(wrap_text("n.º · b ★ mejor · m más · q salir", term_width() - 2)) + 1)  # +1: prompt
         a_keep = best_n - 1 if bk == "a" and best_n else None
         v_keep = best_n - len(audios) - 1 if bk == "v" and best_n else None
         # lista corta: una sola fila por calidad, la mejor en soporte nativo (0.3.1)
@@ -10751,7 +9930,6 @@ def main():
                                   a_keep)
         v_uniq = best_per_quality(v_rows, video_quality_keys(videos),
                                   lambda i: ("apple" in v_rows[i]["flags"],
-                                             (not APPLE_MODE) and (videos[i].get("vcodec") or "").lower().startswith(("avc1", "h264")),
                                              videos[i].get("tbr") or 0),
                                   v_keep)
         a_pool = sum(1 for i in a_uniq if "apple" in a_rows[i]["flags"]) or len(a_uniq)   # compatibles (0.2.9)
@@ -11032,9 +10210,6 @@ def main():
             m_info(f"Avance guardado ({human_size(saved)}): al repetirlo se reanuda solo.")
         return 1
     ui.finish()
-    if not IS_IOS and (CACHE_STATS["saved"] or CACHE_STATS["failed"]):
-        m_info(f"Caché de streams (24 h): {CACHE_STATS['saved']} pista(s) guardada(s)"
-               + (f", {CACHE_STATS['failed']} con error" if CACHE_STATS["failed"] else ""))
     if conv_state.get("path"):
         convert_done(plan, conv_state.get("vcodec"))
 
