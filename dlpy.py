@@ -3,6 +3,13 @@
 # Cada edicion mete el changelog en el py.
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
 # ==== CHANGELOG ====
+# ## 0.6.1
+#
+# - La actualización se busca SOLO en los Releases de GitHub (antes: la versión más alta entre main y el Release).
+#   Lo que se sube a main ya no llega a los equipos hasta que se publica un Release con esa versión. Sin Releases
+#   publicados (o sin red) el aviso es «no se pudo comprobar la última versión (Releases de GitHub)». Los mensajes
+#   dicen «Release» en vez de «GitHub». --versiones sigue mostrando versions/, Releases, main y backups.
+#
 # ## 0.6.0
 #
 # - Solo iOS (a-Shell): se quita el soporte multiplataforma (unas 800 líneas menos). Fuera: detección de plataforma
@@ -484,8 +491,9 @@
 # Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
 #   Desde la 0.6.0 solo corre en iOS (a-Shell): lo anterior sobre Android, Linux, macOS y Windows ya no aplica.
 #   --versiones y --actualizar buscan también en los Releases de GitHub (0.6.0).
+#   Desde la 0.6.1 la búsqueda de actualizaciones (al abrir y con --actualizar) usa SOLO los Releases; main ya no cuenta.
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Variables DLPY_* recordadas · Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz · Terminal:
@@ -5432,7 +5440,7 @@ def update_status(remote, local=None):
 
 
 def check_update(force=False, late=False):
-    """Si el repositorio tiene una versión más nueva, pregunta, la instala y la ejecuta.
+    """Si el último Release de GitHub es más nuevo, pregunta, la instala y la ejecuta.
     Siempre deja una línea con el resultado (✓ si ya tienes la última).
 
     late=True (0.3.7, tras una descarga con --shortcutpick): la respuesta por omisión es No y, si se instala,
@@ -5442,17 +5450,13 @@ def check_update(force=False, late=False):
     cbar = Bar()
     cbar.start("Comprobando DLpy")
     try:
-        text = fetch_remote_script(timeout=8 if force else 5)
-        rel = fetch_latest_release(timeout=8 if force else 5)
+        rel = fetch_latest_release(timeout=8 if force else 5)      # 0.6.1: la actualización sale solo de los Releases
     finally:
         cbar.stop()
-    remote = remote_script_version(text)
-    from_release = False
-    if rel and (not remote or vtuple(rel[0]) > vtuple(remote)):
-        remote, text, from_release = rel[0], rel[1], True      # el Release es más nuevo que main (0.6.0)
-    if not remote:
-        m_warn(f"DLpy {VERSION} · no se pudo comprobar la última versión")
+    if not rel:
+        m_warn(f"DLpy {VERSION} · no se pudo comprobar la última versión (Releases de GitHub)")
         return False
+    remote, text, rel_url = rel
     UPDATE_CHECKED["ok"] = True                # hubo respuesta: cuenta como comprobada (0.2.7)
     status = update_status(remote)
     rec = load_json(RECOVERED_FILE)
@@ -5460,39 +5464,36 @@ def check_update(force=False, late=False):
     if crashed and vtuple(VERSION) > vtuple(crashed):
         clear_recovered()                  # ya pasaste la versión que falló
         rec, crashed = {}, None
-    if status == "igual" and from_release:
-        m_check(f"DLpy {VERSION} · última versión (Release)")
-        return False
     if status == "igual":
-        row = origins_row(remote, text, github=False, backups=False)   # solo main ↔ instalada (sin versions/)
+        row = origins_row(remote, github=False, backups=False, release=(rel_url, text))   # solo Release ↔ instalada
         st = row_state(row_diffs(row))
         GITHUB_SAME["igual"] = (st == "igual")      # check_version lo usa para refrescar la copia guardada
-        m_check(f"DLpy {VERSION} · última versión" + (" · idéntica a GitHub" if st == "igual" else ""))
+        m_check(f"DLpy {VERSION} · última versión" + (" · idéntica al Release" if st == "igual" else ""))
         if st not in (None, "igual"):
             report_row(row, show_diff=False)
             note("Mismo número con código distinto en algún origen: revisa cuál es el bueno.")
         return False
     if status == "local":
-        m_info(f"DLpy {VERSION} · versión local más reciente que la de GitHub ({remote})")
+        m_info(f"DLpy {VERSION} · versión local más reciente que la del último Release ({remote})")
         return False
     hold = downgrade_hold()
     if hold and vtuple(remote) <= vtuple(hold):
         if not force:
-            m_info(f"DLpy {VERSION} · bajaste a propósito desde la {hold}; no se ofrece la {remote} de GitHub")
+            m_info(f"DLpy {VERSION} · bajaste a propósito desde la {hold}; no se ofrece la {remote} del Release")
             note(f"Cuando haya una versión más nueva que la {hold} se avisará. "
                  "Con --actualizar puedes instalarla de todos modos.")
             return False
-        m_warn(f"La {remote} de GitHub no es más nueva que la {hold}, de la que bajaste a propósito.")
+        m_warn(f"La {remote} del Release no es más nueva que la {hold}, de la que bajaste a propósito.")
     match = (crash_match(remote, text) or (None,))[0]
     if skip_update_after_recovery(remote, crashed, match):
         if not force:
-            m_info(f"DLpy {VERSION} · recuperada tras fallar la {crashed}; no se ofrece la {remote} de GitHub")
+            m_info(f"DLpy {VERSION} · recuperada tras fallar la {crashed}; no se ofrece la {remote} del Release")
             note("Cuando haya una versión más nueva que la que falló se avisará. "
                  "Con --actualizar puedes instalarla de todos modos.")
             return False
-        m_warn(f"La {remote} de GitHub es la que falló en este equipo.")
+        m_warn(f"La {remote} del Release es la que falló en este equipo.")
     else:
-        m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote}" + (" (Release)" if from_release else ""))
+        m_info(f"Hay una versión nueva de DLpy: {VERSION} → {remote} (Release)")
     kind = show_crash_warning(remote, text)       # avisa si es idéntica a una que falló
     # a-Shell: esta pregunta va con input() normal (sin cbreak). Después la versión nueva corre en
     # este mismo proceso y cambiar el modo del terminal justo antes la congelaba.
@@ -7235,9 +7236,9 @@ def pick_source(row):
         return shown[n - 1][0] if n else None
 
 
-def origins_row(ver, main_text=None, with_installed=None, github=True, backups=True):
+def origins_row(ver, main_text=None, with_installed=None, github=True, backups=True, release=None):
     """Fila con TODOS los orígenes de `ver`: la de actualización (`main`, si se da su
-    texto), versions/ de GitHub, backups y la instalada (si es la actual).
+    texto, o el `release` dado), versions/ de GitHub, backups y la instalada (si es la actual).
     Es la misma fila y la misma comparación que usa la lista de versiones."""
     _TEXT_CACHE.clear()
     full = remote_versions_full(timeout=6) if github else None
@@ -7246,9 +7247,13 @@ def origins_row(ver, main_text=None, with_installed=None, github=True, backups=T
     if main_text:
         _TEXT_CACHE[UPDATE_URL] = main_text
         main = (ver, UPDATE_URL, git_blob_sha(main_text.encode("utf-8")))
+    rels = None
+    if release:                                  # (url, texto) del Release ya descargado (0.6.1)
+        _TEXT_CACHE[release[0]] = release[1]
+        rels = [(ver, release[0])]
     inst = (VERSION, SCRIPT_PATH) if (ver == VERSION if with_installed is None else with_installed) else None
     rows = collect_versions([x for x in gh if x[0] == ver], shas, main,
-                            [x for x in backup_versions() if x[0] == ver] if backups else [], inst)
+                            [x for x in backup_versions() if x[0] == ver] if backups else [], inst, rels)
     return rows[0] if rows else {"ver": ver, "srcs": []}
 
 
