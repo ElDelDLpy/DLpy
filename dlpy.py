@@ -1,7 +1,9 @@
 #!dlpy.py - siempre empezar el script con este mismo comentario.
 # Cada edicion de este archivo sube la version: x.y.z donde Y y Z solo llegan hasta el 9 y X no tiene limites.
 # Cada edicion mete el changelog en el py borrando los changelog que no sean de la version actual.
+# Respetar entrga de archivos con dlpy_x.y.z.py (dar archivos con ese orden siempre de nombre siempre sustituyendo x y x con los números correspondientes).
 # Conservar en todo momento los comentarios anteriores en el mismo orden sin importar las ediciones realizadas.
+
 # ==== CHANGELOG ====
 # ## 0.6.3
 #
@@ -9,37 +11,6 @@
 #   y version_move/update_status/downgrade_hold/skip_update_after_recovery podían dar «sube»/«nueva» sin que hubiera cambio.
 # - Se quitó el import textwrap, que no se usaba.
 # ==== FIN CHANGELOG ====
-# DLpy - descargador para a-Shell mini basado en yt-dlp
-# Uso: python dlpy.py [LINK]
-#   Sin LINK: ofrece usar el último enlace.
-#   --selftest: ejecuta pruebas rápidas de funciones puras y sale.
-#   --sistema: muestra en qué corre y qué funciones están disponibles (y por qué).
-#   --actualizar: busca ahora una versión nueva en los Releases de GitHub (0.6.2) y sale.
-#   --2shortcuts: (iOS) manda este dlpy.py tal cual a tu atajo «DLpy» y sale (ver 0.0.1).
-#     (desde 0.0.1 también revisa las dependencias y vuelve a preguntar lo rechazado.)
-#   --versions: lista los Releases de GitHub y deja instalar uno: muestra sus release notes y Enter confirma (0.6.2).
-#   DLPY_TRUECOLOR=0: colores básicos; DLPY_ANIM=0: sin animación; DLPY_CLASSIC=1: barra «█░» (0.2.3).
-#   DLPY_DEV=1: muestra «DEV» en el banner y, en a-Shell, copia el snapshot a ~/Documents/dlpy_<versión>.py (0.0.1).
-#   DLPY_WIDTH=N: fuerza el ancho en columnas; DLPY_PROBE=0 apaga la medición del ancho (0.0.4).
-#   DLPY_PROBE=1: activa la medición del ancho (desde 0.0.5 viene apagada: congelaba a-Shell).
-#   DLPY_CHECK_HOURS=N: cada cuántas horas busca actualizaciones (24 por omisión; 0 = en cada arranque) (0.2.7).
-#   DLPY_UPDATE_REPO=dueño/repo: de qué repositorio de GitHub salen los Releases (ElDelDLpy/DLpy por omisión) (0.6.2).
-#   DLPY_LOCK=1: (pruebas, apagado desde 0.3.0) bloquea el teclado desde el arranque hasta la primera pregunta en iOS.
-#   DLPY_*: se recuerdan entre sesiones en ~/.dlpy_env.json (el último valor usado); DLPY_FORGET=1 las olvida (0.3.2).
-#   DLPY_EARLYCLEAR=0: no borra la consola al abrir (0.3.1).
-#   DLPY_LINES=N: líneas de la interfaz, banner incluido (26 por omisión; 0 = alto del terminal) (0.3.4).
-#   En iOS las DLPY_* se guardan en ~/Documents/dlpy_files/.dlpy_internal/env.json (0.3.5; antes ~/.dlpy_env.json).
-#   --scb LINK: (Atajos) analiza sin interfaz de preguntas y AVISA al atajo «DLpy» con un JSON al terminar (0.3.7).
-#   --scm LINK: (respaldo) lo mismo, pero escribe el JSON en la salida (una línea) en vez de avisar al atajo.
-#     --shortcutclip lo copia además al portapapeles. Se vuelve con --shortcutpick "v=ID,a=IDIOMA,x=IDIOMA+IDIOMA".
-#     Con --shortcutpick las actualizaciones no se buscan al abrir: se buscan al terminar la descarga, justo antes de
-#     entregar el archivo, y la respuesta por omisión es No (también al acabar la cuenta regresiva) (0.3.7).
-#   --noupdates: esta ejecución no busca actualizaciones (ni de DLpy ni de dependencias); también --no-updates (0.3.7).
-# Corre en iOS (a-Shell), Android (Termux), Linux, macOS y Windows (ver 0.0.1).
-#   Desde la 0.6.0 solo corre en iOS (a-Shell): lo anterior sobre Android, Linux, macOS y Windows ya no aplica.
-#   Desde la 0.6.2 las versiones se buscan SOLO en los Releases de GitHub (se acabaron versions/ y main): --versions
-#   (antes --versiones) los lista y --actualizar mira el último; al elegir uno, y al actualizar, se muestran sus
-#   release notes y Enter confirma. changelog.md (dlpy_files) se genera con los release notes de todos los Releases.
 
 VERSION = "0.6.3"
 
