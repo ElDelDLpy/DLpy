@@ -1,7 +1,7 @@
 #!dlpy_selftest.py - módulo de la autoprueba de dlpy.py (2.0.2). No se ejecuta solo: dlpy.py lo carga con exec dentro de su propio espacio de nombres (`python dlpy.py --selftest`).
 # Va en la carpeta modules/ del repo (junto a su SHA256SUMS) y dlpy.py lo baja y verifica su SHA-256 antes de usarlo.
 # Cada edición de dlpy.py que cambie algo probado actualiza también este archivo (regla de la cabecera de dlpy.py) y sube SELFTEST_FOR a la misma versión.
-SELFTEST_FOR = "2.0.2"      # versión de dlpy.py para la que está escrito; dlpy.py no lo carga si no coincide con su VERSION
+SELFTEST_FOR = "2.0.3"      # versión de dlpy.py para la que está escrito; dlpy.py no lo carga si no coincide con su VERSION
 
 # ───────────────────────── [K1] Autoprueba ─────────────────────────
 # Las pruebas son funciones normales (0.7.3): una por grupo [T1]…[T29] (T7–T9 y T20–T22 van juntas porque comparten
@@ -6433,11 +6433,59 @@ def _st_t51_modulo_selftest(check):
                 os.environ[k] = v
 
 
+def _st_t52_instancia_unica(check):
+    """[T52] 2.0.3: bloqueo de instancia con latido y vigilante de congelamientos."""
+    import tempfile
+    g = globals()
+    keys = ("STATE_DIR", "DEBUG", "dbg", "GUARD_BEAT", "GUARD_STUCK")
+    saved = {k: g[k] for k in keys}
+    gsave = dict(GUARD)
+    envs = os.environ.get("DLPY_WATCHDOG")
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            g["STATE_DIR"] = d
+            GUARD.update(id="yo", mode="run", t0=time.time(), limit=0.0, stop=threading.Event())
+            now = time.time()
+            check("2.0.3: lee y escribe el bloqueo", [guard_read(), (guard_write(), guard_read()["id"])[1]], [None, "yo"])
+            vivo = {"id": "otro", "beat": now - 1, "limit": 0}
+            check("2.0.3: latido reciente de otra ejecución = viva", guard_alive(vivo, now), True)
+            check("2.0.3: la propia ejecución no cuenta", guard_alive(dict(vivo, id="yo"), now), False)
+            check("2.0.3: latido viejo (proceso muerto o congelado) no estorba", guard_alive(dict(vivo, beat=now - GUARD_STALE - 1), now), False)
+            check("2.0.3: --scm pasado de su límite (Atajos ya la cortó) no estorba", guard_alive(dict(vivo, limit=now - 1), now), False)
+            check("2.0.3: sin datos o con basura no estorba", [guard_alive(None, now), guard_alive({"id": "x", "beat": "?"}, now)], [False, False])
+            check("2.0.3: modos", [guard_mode(["--scm", "x"]), guard_mode(["--scb"]), guard_mode(["--shortcutpick", "x"]), guard_mode(["https://x"])], ["scm", "scb", "pick", "run"])
+            check("2.0.3: DLPY_WATCHDOG=0 apaga el bloqueo", (os.environ.__setitem__("DLPY_WATCHDOG", "0"), guard_on(), instance_guard(["--scm", "x"]))[1:], (False, None))
+            os.environ.pop("DLPY_WATCHDOG", None)
+            check("2.0.3: al salir solo se borra el bloqueo propio", [(guard_release(), guard_read())[1],
+                  (GUARD.update(stop=threading.Event(), id="otro2"), guard_write(), GUARD.update(id="yo"), guard_release(), guard_read()["id"])[-1]], [None, "otro2"])
+            # vigilante: el flujo principal quieto en la misma línea → anota la pila
+            seen = []
+            g["dbg"] = lambda label, data=None: seen.append((label, data))
+            g["DEBUG"], g["GUARD_BEAT"], g["GUARD_STUCK"] = True, 0.05, 0.15
+            GUARD.update(id="yo", stop=threading.Event())
+            th = threading.Thread(target=_guard_loop, daemon=True)
+            th.start()
+            for _ in range(20):
+                time.sleep(0.05)
+            GUARD["stop"].set()
+            th.join(1)
+            check("2.0.3: el vigilante anota la pila (una sola vez por línea) y mantiene el latido",
+                  [len([x for x in seen if str(x[0]).startswith("vigilante")]), "hilo" in str(seen), guard_read() is not None], [1, True, True])
+    finally:
+        g.update(saved)
+        GUARD.clear()
+        GUARD.update(gsave)
+        if envs is None:
+            os.environ.pop("DLPY_WATCHDOG", None)
+        else:
+            os.environ["DLPY_WATCHDOG"] = envs
+
+
 SELFTEST_GROUPS = (_st_t1, _st_t2, _st_t3, _st_t4, _st_t5, _st_t6,
                    _st_t7_t9, _st_t10, _st_t11, _st_t12, _st_t13, _st_t14,
                    _st_t15, _st_t16, _st_t17, _st_t18, _st_t19, _st_t20_t22,
                    _st_t23, _st_t24, _st_t25, _st_t26, _st_t27, _st_t27_limpieza, _st_t28_morph, _st_t29_separacion, _st_t30_idioma, _st_t32_arreglos, _st_t33_pulido, _st_t34_movimiento,
-                   _st_t35_sondeo, _st_t36_primero, _st_t37_sitio, _st_t38_topbar, _st_t39_version, _st_t40_red, _st_t41_motor_idiomas, _st_t42_franjas_contadores, _st_t43_limpieza_codigo, _st_t44_pines_y_errores, _st_t45_nombres_indefinidos, _st_t46_mensajes_traducibles, _st_t47_plantillas_y_cobertura, _st_t48_fluidez, _st_t49_sc_lista, _st_t50_listas, _st_t51_modulo_selftest)
+                   _st_t35_sondeo, _st_t36_primero, _st_t37_sitio, _st_t38_topbar, _st_t39_version, _st_t40_red, _st_t41_motor_idiomas, _st_t42_franjas_contadores, _st_t43_limpieza_codigo, _st_t44_pines_y_errores, _st_t45_nombres_indefinidos, _st_t46_mensajes_traducibles, _st_t47_plantillas_y_cobertura, _st_t48_fluidez, _st_t49_sc_lista, _st_t50_listas, _st_t51_modulo_selftest, _st_t52_instancia_unica)
 
 
 def selftest_run():
