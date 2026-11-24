@@ -1,4 +1,4 @@
 {
   "version": "0.0.1",
-  "notes": "Nuevo: buscar actualización manual del atajo, instalar la versión publicada aunque sea anterior y posponer avisos 30 días. Corrige que Sistema/Diagnóstico descargara dlpy.py."
+  "notes": "Testing auto updates"
 }
