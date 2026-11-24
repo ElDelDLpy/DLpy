@@ -1,4 +1,4 @@
 {
-  "version": "0.0.1",
-  "notes": "Nuevo: opción 'Buscar actualización del atajo' en el menú principal. El aviso semanal ya no sale si version.json no trae versión."
+  "version": "0.0.2",
+  "notes": "Nuevo: buscar actualización manual del atajo, instalar la versión publicada aunque sea anterior y posponer avisos 30 días. Corrige que Sistema/Diagnóstico descargara dlpy.py."
 }
