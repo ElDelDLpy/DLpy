@@ -1,4 +1,4 @@
 {
-  "version": "0.1.0",
+  "version": "0.0.1",
   "notes": "Nuevo: opción 'Buscar actualización del atajo' en el menú principal. El aviso semanal ya no sale si version.json no trae versión."
 }
