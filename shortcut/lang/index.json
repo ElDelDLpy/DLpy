@@ -1,4 +1,6 @@
 {
-  "names": ["English"],
-  "English": "en"
+  "names": ["🇬🇧 English", "🇮🇹 Italiano", "🇵🇱 Polski"],
+  "🇬🇧 English": "en",
+  "🇮🇹 Italiano": "it",
+  "🇵🇱 Polski": "pl"
 }
