@@ -1,1 +1,70 @@
-
+{
+ "m_check": "🌐 Check shortcut updates\n\nReal internet access is required: if you only have social media access or no connection, the GitHub request fails and the shortcut may stop.\n\nIf it fails, it will ask again next time.",
+ "m_newsh_t": "🔄 New shortcut version",
+ "l_inst": "Installed",
+ "l_avail": "Available",
+ "q_dl": "Download?",
+ "m_clip": "📋 dlpy.py on clipboard",
+ "t_net": "🌐 Internet required",
+ "a_net": "dlpy.py was not found.\nThe latest version will be downloaded from GitHub.\n\nInternet is required: without a connection the shortcut may stop and you would have to try again later.\n\nContinue?",
+ "a_hdr": "The downloaded file does not start with #!dlpy.py.\nNothing was installed.",
+ "a_ver": "VERSION x.y.z was not found in the downloaded file.\nNothing was installed.",
+ "a_hash": "The SHA-256 hash does not match.",
+ "l_calc": "Calculated",
+ "l_pub": "Published",
+ "a_none": "Nothing was installed.",
+ "a_cant": "Could not install dlpy.py.",
+ "t_inst": "✅ dlpy.py installed",
+ "l_ver": "Version",
+ "l_comp": "Compilation",
+ "m_upd": "🔄 Update",
+ "t_shok": "✅ Shortcut up to date",
+ "a_shok": "You have the latest version",
+ "t_ok": "✅ You are up to date",
+ "m_same_t": "⚠️ Same version, different hash",
+ "l_hash_i": "Installed hash",
+ "l_hash_p": "Published hash",
+ "m_same_n": "The version is the same, but the published file has changed.",
+ "q_upd": "Update?",
+ "m_nscr_t": "🔄 New dlpy.py version",
+ "m_detect": "🔄 Update detected\n\ndlpy.py will be replaced with the detected version.\n\nFirst it is checked that it starts with #!dlpy.py, has a version and compiles.",
+ "t_miss": "⚠️ dlpy.py is missing",
+ "a_miss": "dlpy.py was not found.\nOpen the shortcut normally (▶️) to install it and try again.",
+ "p_audio": "🔊 Main audio",
+ "p_audios": "🔊 Additional audio",
+ "ls_chk": [
+  "🔄 Check now",
+  "⏩ Skip"
+ ],
+ "ls_inst": [
+  "⬇️ Install",
+  "⏩ Skip"
+ ],
+ "ls_main": [
+  "▶️ Open",
+  "🔗 Enter link",
+  "🌎 Languages",
+  "⚙️ Settings",
+  "📋 Clipboard",
+  "🔄 Update",
+  "🈯 Shortcut language"
+ ],
+ "m_cfg": "⚙️ Settings",
+ "m_cfgsh": "⚡ Shortcut settings",
+ "ls_cfgsh": [
+  "🈯 Shortcut language",
+  "⏱️ Update check frequency",
+  "♻️ Reset settings"
+ ],
+ "m_per": "⏱️ How often should it check for a new shortcut version?",
+ "ls_per": [
+  "📅 Weekly (default)",
+  "📆 Daily",
+  "🕐 Hourly",
+  "🔁 Every time it opens",
+  "🚫 Never (manual only)"
+ ],
+ "t_cfg_ok": "✅ Done",
+ "a_per_ok": "Update check frequency saved.",
+ "a_reset_ok": "Settings reset. Updates will be asked about again."
+}
