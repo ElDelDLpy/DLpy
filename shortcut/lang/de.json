@@ -1,0 +1,70 @@
+{
+ "m_check": "🌐 Kurzbefehl-Updates prüfen\n\nEchtes Internet ist nötig: Wenn du nur Social-Media-Zugang hast oder gar keine Verbindung, schlägt die GitHub-Anfrage fehl und der Kurzbefehl bleibt vielleicht hängen.\n\nWenn es fehlschlägt, wird beim nächsten Mal wieder gefragt.",
+ "m_newsh_t": "🔄 Neue Kurzbefehl-Version",
+ "l_inst": "Installiert",
+ "l_avail": "Verfügbar",
+ "q_dl": "Laden?",
+ "m_clip": "📋 dlpy.py in der Zwischenablage",
+ "t_net": "🌐 Internet nötig",
+ "a_net": "dlpy.py wurde nicht gefunden.\nDie neueste Version wird von GitHub geladen.\n\nInternet ist nötig: Ohne Verbindung bleibt der Kurzbefehl vielleicht hängen und du musst es später nochmal versuchen.\n\nWeiter?",
+ "a_hdr": "Die geladene Datei beginnt nicht mit #!dlpy.py.\nNichts wurde installiert.",
+ "a_ver": "VERSION x.y.z wurde in der geladenen Datei nicht gefunden.\nNichts wurde installiert.",
+ "a_hash": "Der SHA-256-Hash stimmt nicht überein.",
+ "l_calc": "Berechnet",
+ "l_pub": "Veröffentlicht",
+ "a_none": "Nichts wurde installiert.",
+ "a_cant": "dlpy.py konnte nicht installiert werden.",
+ "t_inst": "✅ dlpy.py installiert",
+ "l_ver": "Version",
+ "l_comp": "Kompilierung",
+ "m_upd": "🔄 Update",
+ "t_shok": "✅ Kurzbefehl aktuell",
+ "a_shok": "Du hast die neueste Version",
+ "t_ok": "✅ Du bist auf dem neuesten Stand",
+ "m_same_t": "⚠️ Gleiche Version, anderer Hash",
+ "l_hash_i": "Installierter Hash",
+ "l_hash_p": "Veröffentlichter Hash",
+ "m_same_n": "Die Version ist gleich, aber die veröffentlichte Datei hat sich geändert.",
+ "q_upd": "Aktualisieren?",
+ "m_nscr_t": "🔄 Neue dlpy.py-Version",
+ "m_detect": "🔄 Update erkannt\n\ndlpy.py wird durch die erkannte Version ersetzt.\n\nZuerst wird geprüft, ob die Datei mit #!dlpy.py beginnt, eine Version hat und kompiliert.",
+ "t_miss": "⚠️ dlpy.py fehlt",
+ "a_miss": "dlpy.py wurde nicht gefunden.\nÖffne den Kurzbefehl normal (▶️), um ihn zu installieren, und versuch es dann nochmal.",
+ "p_audio": "🔊 Haupt-Audio",
+ "p_audios": "🔊 Zusätzliches Audio",
+ "ls_chk": [
+  "🔄 Jetzt prüfen",
+  "⏩ Überspringen"
+ ],
+ "ls_inst": [
+  "⬇️ Installieren",
+  "⏩ Überspringen"
+ ],
+ "ls_main": [
+  "▶️ Öffnen",
+  "🔗 Link eingeben",
+  "🌎 Sprachen",
+  "⚙️ Einstellungen",
+  "📋 Zwischenablage",
+  "🔄 Update",
+  "🈯 Kurzbefehl-Sprache"
+ ],
+ "m_cfg": "⚙️ Einstellungen",
+ "m_cfgsh": "⚡ Kurzbefehl-Einstellungen",
+ "ls_cfgsh": [
+  "🈯 Kurzbefehl-Sprache",
+  "⏱️ Update-Häufigkeit",
+  "♻️ Einstellungen zurücksetzen"
+ ],
+ "m_per": "⏱️ Wie oft soll nach einer neuen Kurzbefehl-Version gesucht werden?",
+ "ls_per": [
+  "📅 Wöchentlich (Standard)",
+  "📆 Täglich",
+  "🕐 Stündlich",
+  "🔁 Bei jedem Öffnen",
+  "🚫 Nie (nur manuell)"
+ ],
+ "t_cfg_ok": "✅ Fertig",
+ "a_per_ok": "Häufigkeit der Update-Prüfung gespeichert.",
+ "a_reset_ok": "Einstellungen zurückgesetzt. Nach Updates wird wieder gefragt."
+}
