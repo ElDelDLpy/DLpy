@@ -1,0 +1,70 @@
+{
+ "m_check": "🌐 Vérifier les mises à jour du raccourci\n\nIl faut un vrai accès à Internet : si tu n'as accès qu'aux réseaux sociaux ou pas de connexion, la requête GitHub échoue et le raccourci peut s'arrêter.\n\nSi ça échoue, il te le redemandera la prochaine fois.",
+ "m_newsh_t": "🔄 Nouvelle version du raccourci",
+ "l_inst": "Installée",
+ "l_avail": "Disponible",
+ "q_dl": "Télécharger ?",
+ "m_clip": "📋 dlpy.py dans le presse-papiers",
+ "t_net": "🌐 Internet requis",
+ "a_net": "dlpy.py est introuvable.\nLa dernière version sera téléchargée depuis GitHub.\n\nIl faut Internet : sans connexion, le raccourci peut s'arrêter et tu devras réessayer plus tard.\n\nContinuer ?",
+ "a_hdr": "Le fichier téléchargé ne commence pas par #!dlpy.py.\nRien n'a été installé.",
+ "a_ver": "VERSION x.y.z est introuvable dans le fichier téléchargé.\nRien n'a été installé.",
+ "a_hash": "Le hash SHA-256 ne correspond pas.",
+ "l_calc": "Calculé",
+ "l_pub": "Publié",
+ "a_none": "Rien n'a été installé.",
+ "a_cant": "Impossible d'installer dlpy.py.",
+ "t_inst": "✅ dlpy.py installé",
+ "l_ver": "Version",
+ "l_comp": "Compilation",
+ "m_upd": "🔄 Mise à jour",
+ "t_shok": "✅ Raccourci à jour",
+ "a_shok": "Tu as la dernière version",
+ "t_ok": "✅ Tu es à jour",
+ "m_same_t": "⚠️ Même version, hash différent",
+ "l_hash_i": "Hash installé",
+ "l_hash_p": "Hash publié",
+ "m_same_n": "La version est la même, mais le fichier publié a changé.",
+ "q_upd": "Mettre à jour ?",
+ "m_nscr_t": "🔄 Nouvelle version de dlpy.py",
+ "m_detect": "🔄 Mise à jour détectée\n\ndlpy.py sera remplacé par la version détectée.\n\nOn vérifie d'abord qu'il commence par #!dlpy.py, qu'il a une version et qu'il compile.",
+ "t_miss": "⚠️ dlpy.py est manquant",
+ "a_miss": "dlpy.py est introuvable.\nOuvre le raccourci normalement (▶️) pour l'installer et réessaie.",
+ "p_audio": "🔊 Audio principal",
+ "p_audios": "🔊 Audio supplémentaire",
+ "ls_chk": [
+  "🔄 Vérifier maintenant",
+  "⏩ Passer"
+ ],
+ "ls_inst": [
+  "⬇️ Installer",
+  "⏩ Passer"
+ ],
+ "ls_main": [
+  "▶️ Ouvrir",
+  "🔗 Entrer un lien",
+  "🌎 Langues",
+  "⚙️ Réglages",
+  "📋 Presse-papiers",
+  "🔄 Mise à jour",
+  "🈯 Langue du raccourci"
+ ],
+ "m_cfg": "⚙️ Réglages",
+ "m_cfgsh": "⚡ Réglages du raccourci",
+ "ls_cfgsh": [
+  "🈯 Langue du raccourci",
+  "⏱️ Fréquence de vérification",
+  "♻️ Réinitialiser les réglages"
+ ],
+ "m_per": "⏱️ Tous les combien vérifier s'il y a une nouvelle version du raccourci ?",
+ "ls_per": [
+  "📅 Chaque semaine (par défaut)",
+  "📆 Chaque jour",
+  "🕐 Chaque heure",
+  "🔁 À chaque ouverture",
+  "🚫 Jamais (manuel uniquement)"
+ ],
+ "t_cfg_ok": "✅ Terminé",
+ "a_per_ok": "Fréquence de vérification enregistrée.",
+ "a_reset_ok": "Réglages réinitialisés. Les mises à jour te seront de nouveau proposées."
+}
