@@ -31,40 +31,30 @@
  "t_miss": "⚠️ dlpy.py is missing",
  "a_miss": "dlpy.py was not found.\nOpen the shortcut normally (▶️) to install it and try again.",
  "p_audio": "🔊 Main audio",
- "p_audios": "🔊 Additional audio",
- "ls_chk": [
-  "🔄 Check now",
-  "⏩ Skip"
- ],
- "ls_inst": [
-  "⬇️ Install",
-  "⏩ Skip"
- ],
- "ls_main": [
-  "▶️ Open",
-  "🔗 Enter link",
-  "🌎 Languages",
-  "⚙️ Settings",
-  "📋 Clipboard",
-  "🔄 Update",
-  "🈯 Shortcut language"
- ],
+ "p_audios": "🔊 Additional audios",
  "m_cfg": "⚙️ Settings",
  "m_cfgsh": "⚡ Shortcut settings",
- "ls_cfgsh": [
-  "🈯 Shortcut language",
-  "⏱️ Update check frequency",
-  "♻️ Reset settings"
- ],
  "m_per": "⏱️ How often should it check for a new shortcut version?",
- "ls_per": [
-  "📅 Weekly (default)",
-  "📆 Daily",
-  "🕐 Hourly",
-  "🔁 Every time it opens",
-  "🚫 Never (manual only)"
- ],
  "t_cfg_ok": "✅ Done",
  "a_per_ok": "Update check frequency saved.",
- "a_reset_ok": "Settings reset. Updates will be asked about again."
+ "a_reset_ok": "Settings reset. It will ask about updates again.",
+ "a_reopen": "Reopen the shortcut to choose the language.",
+ "o_chk_now": "Check now",
+ "o_skip": "Skip",
+ "o_inst": "Install",
+ "o_open": "Open",
+ "o_link": "Enter link",
+ "o_langs": "Languages",
+ "o_cfg": "Settings",
+ "o_clip": "Clipboard",
+ "o_upd": "Update",
+ "o_restart": "Restart shortcut",
+ "o_cfg_lang": "Shortcut language",
+ "o_cfg_freq": "Check frequency",
+ "o_cfg_reset": "Reset settings",
+ "o_per_week": "Every week (default)",
+ "o_per_day": "Every day",
+ "o_per_hour": "Every hour",
+ "o_per_always": "Every time it opens",
+ "o_per_never": "Never (manual only)"
 }
