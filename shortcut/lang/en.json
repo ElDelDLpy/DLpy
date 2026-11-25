@@ -57,5 +57,6 @@
  "o_per_never": "Never (manual only)",
  "n_net": "🌐 Real internet access is required: if you only have social media access or no connection, the shortcut may stop.",
  "a_reset_all": "Everything the shortcut saved was erased (language, downloaded language, frequency and checks). Reopen it to start from scratch.",
- "a_lang_upd": "🌐 Language updated. It will apply the next time you open the shortcut."
+ "a_lang_upd": "🌐 Language updated. It will apply the next time you open the shortcut.",
+ "m_newlang_t": "🌐 New language version"
 }
