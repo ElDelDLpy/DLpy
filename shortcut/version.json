@@ -1,4 +1,4 @@
 {
-  "version": "0.0.4",
-  "notes": "Instala dlpy.py automáticamente si falta (también al abrir desde Compartir) · Reintenta la acción original al terminar de instalar"
+  "version": "0.0.5",
+  "notes": "Instala dlpy.py automáticamente si falta (también al abrir desde Compartir) · Aviso final al instalar desde un archivo detectado (versión, compilación y SHA-256) · El sonido suena antes del aviso, sin tener que pulsar OK"
 }
