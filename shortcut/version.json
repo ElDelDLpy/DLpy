@@ -1,4 +1,4 @@
 {
-  "version": "0.0.3",
-  "notes": "Aviso de internet unificado · Idioma con caché para abrir más rápido · Frecuencia de revisión configurable · Reiniciar atajo · Iconos por tipo (🌐 idioma, ⚡ shortcut, 🐍 script .py) · Títulos faltantes corregidos"
+  "version": "0.0.4",
+  "notes": "Instala dlpy.py automáticamente si falta (también al abrir desde Compartir) · Reintenta la acción original al terminar de instalar"
 }
