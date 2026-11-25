@@ -1,5 +1,5 @@
 {
- "lang_version": "1",
+ "lang_version": "0.0.1",
  "m_check": "🌐 Check shortcut and language updates\n\nIf it fails, it will ask again next time.",
  "m_newsh_t": "🔄 New shortcut version",
  "l_inst": "Installed",
