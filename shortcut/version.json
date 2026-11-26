@@ -1,4 +1,4 @@
 {
-  "version": "0.0.6",
-  "notes": "Nuevo: el auto-actualizador también revisa dlpy.py (mismo periodo que el atajo y el idioma). Si hay otra versión, pregunta 🐍/⏩ y la instala verificando su SHA-256."
+  "version": "0.0.7",
+  "notes": "▸ Descarga y análisis con Execute Long Command (iOS 27): sin límite de tiempo, avance en la Dynamic Island y con la pantalla bloqueada.\n▸ Lista completa de formatos, con lo Apple nativo primero.\n▸ Las actualizaciones (🐍 dlpy.py y ⚡ atajo) ahora preguntan: Instalar o Ahora no.\n▸ Requiere dlpy.py 0.1.4 o superior."
 }

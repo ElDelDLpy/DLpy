@@ -1,0 +1,4 @@
+{
+  "version": "0.0.6",
+  "notes": "Nuevo: el auto-actualizador también revisa dlpy.py (mismo periodo que el atajo y el idioma). Si hay otra versión, pregunta 🐍/⏩ y la instala verificando su SHA-256."
+}
