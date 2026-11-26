@@ -1,198 +1,478 @@
 msgid ""
 msgstr ""
-"Language: ar\n"
+"Project-Id-Version: DLpy\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
 "Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
 "X-Label: 🇸🇦 العربية\n"
-"X-Name: العربية\n"
 
-#: dlpy.py:272
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ جارٍ تثبيت yt-dlp (أول مرة فقط)…"
+msgstr "⬇️ جارٍ تثبيت yt-dlp (المرة الأولى فقط)…"
 
-#: dlpy.py:279
 msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "تعذّر تثبيت yt-dlp. تحقق من اتصالك."
+msgstr "تعذّر تثبيت yt-dlp. تحقّق من اتصالك."
 
-#: dlpy.py:572
 msgid "⚙️ Procesando…"
 msgstr "⚙️ جارٍ المعالجة…"
 
-#: dlpy.py:630
 msgid "✅ Listo"
 msgstr "✅ تم"
 
-#: dlpy.py:631
-#. Marcadores (no traducir): {p}
 msgid "📁 Guardado en: {p}"
 msgstr "📁 تم الحفظ في: {p}"
 
-#: dlpy.py:639
 msgid "Idioma del script"
 msgstr "لغة السكربت"
 
-#: dlpy.py:642
-#. Marcadores (no traducir): {lang}
 msgid "✅ Idioma del script: {lang}"
 msgstr "✅ لغة السكربت: {lang}"
 
-#: dlpy.py:661
-#. Marcadores (no traducir): {v}
-msgid "⚙️ Configuración de DLpy (script {v})"
-msgstr "⚙️ إعدادات DLpy (سكربت {v})"
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ قيمة غير صالحة لـ {k}: {v}"
 
-#: dlpy.py:662
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ إعدادات DLpy (السكربت {v})"
+
 msgid "Idioma"
 msgstr "اللغة"
 
-#: dlpy.py:663
+msgid "URL de idiomas (GitHub)"
+msgstr "رابط اللغات (GitHub)"
+
+msgid "URL de módulos (GitHub)"
+msgstr "رابط الوحدات (GitHub)"
+
 msgid "Carpeta de descargas"
 msgstr "مجلد التنزيلات"
 
-#: dlpy.py:664
 msgid "Contenedor de video (auto/mp4/mkv)"
 msgstr "حاوية الفيديو (auto/mp4/mkv)"
 
-#: dlpy.py:665
 msgid "Formato de audio (native/mp3/m4a)"
 msgstr "صيغة الصوت (native/mp3/m4a)"
 
-#: dlpy.py:666
 msgid "ffmpeg (auto/yes/no)"
 msgstr "ffmpeg (auto/yes/no)"
 
-#: dlpy.py:667
 msgid "Si el archivo ya existe (new/replace)"
-msgstr "إذا كان الملف موجودًا بالفعل (new/replace)"
+msgstr "إذا كان الملف موجودًا (new/replace)"
 
-#: dlpy.py:668
 msgid "Horas de caché de pistas (0 = sin caché)"
 msgstr "ساعات تخزين المسارات مؤقتًا (0 = بدون تخزين)"
 
-#: dlpy.py:669
 msgid "Ruta enviada al atajo (abs/home/rel)"
 msgstr "المسار المُرسل إلى الاختصار (abs/home/rel)"
 
-#: dlpy.py:672
+msgid "Animaciones (1/0)"
+msgstr "الحركات (1/0)"
+
 msgid "Actualizar yt-dlp"
 msgstr "تحديث yt-dlp"
 
-#: dlpy.py:673
+msgid "Actualizar idiomas"
+msgstr "تحديث اللغات"
+
 msgid "Salir"
 msgstr "خروج"
 
-#: dlpy.py:694
-msgid "Nuevo valor: "
-msgstr "قيمة جديدة: "
-
-#: dlpy.py:696
-msgid "✅ Guardado."
-msgstr "✅ تم الحفظ."
-
-#: dlpy.py:700
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 جارٍ تحديث yt-dlp…"
-
-#: dlpy.py:707
-msgid "No se encontraron formatos descargables."
-msgstr "لم يتم العثور على صيغ قابلة للتنزيل."
-
-#: dlpy.py:723
-msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "لا يمكن تنزيل البث المباشر."
-
-#: dlpy.py:759
-#. Marcadores (no traducir): {e}
-msgid "No se pudo leer el enlace: {e}"
-msgstr "تعذّر قراءة الرابط: {e}"
-
-#: dlpy.py:789
-msgid "🔗 Pega el enlace: "
-msgstr "🔗 الصق الرابط: "
-
-#: dlpy.py:793
-msgid "No se encontró un enlace válido."
-msgstr "لم يتم العثور على رابط صالح."
-
-#: dlpy.py:820
-msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 جارٍ إرسال الخيارات إلى الاختصار…"
-
-#: dlpy.py:921
-msgid "⏳ Descargando…"
-msgstr "⏳ جارٍ التنزيل…"
-
-#: dlpy.py:933
-#. Marcadores (no traducir): {e}
-msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ تعذّر وسم مسارات الصوت: {e}"
-
-#: dlpy.py:944
-#. Marcadores (no traducir): {e}
-msgid "❌ Falló la descarga: {e}"
-msgstr "❌ فشل التنزيل: {e}"
-
-#: dlpy.py:963
-msgid "Opción no válida."
-msgstr "خيار غير صالح."
-
-#: dlpy.py:993
-msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ بدون ffmpeg: تُعرض فقط الفيديوهات التي تحتوي على صوت أصلًا."
-
-#: dlpy.py:998
-msgid "🎬 Elige la calidad"
-msgstr "🎬 اختر الجودة"
-
-#: dlpy.py:1001
 msgid "Número"
 msgstr "رقم"
 
-#: dlpy.py:1005
+msgid "Opción no válida."
+msgstr "خيار غير صالح."
+
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ جارٍ تنزيل اللغة…"
+
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ تعذّر تنزيل اللغة (لا يوجد إنترنت أو الملف غير موجود)."
+
+msgid "Nuevo valor: "
+msgstr "قيمة جديدة: "
+
+msgid "✅ Guardado."
+msgstr "✅ تم الحفظ."
+
+msgid "🔄 Actualizando yt-dlp…"
+msgstr "🔄 جارٍ تحديث yt-dlp…"
+
+msgid "No hay idiomas instalados."
+msgstr "لا توجد لغات مثبّتة."
+
+msgid "🌐 Actualizando idiomas…"
+msgstr "🌐 جارٍ تحديث اللغات…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "لم يتم العثور على صيغ قابلة للتنزيل."
+
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "لا يمكن تنزيل البث المباشر."
+
+msgid "No se encontró un enlace válido."
+msgstr "لم يتم العثور على رابط صالح."
+
+msgid "No se pudo leer el enlace: {e}"
+msgstr "تعذّرت قراءة الرابط: {e}"
+
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 الصق الرابط: "
+
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 جارٍ إرسال الخيارات إلى الاختصار…"
+
+msgid "⏳ Descargando…"
+msgstr "⏳ جارٍ التنزيل…"
+
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ فشل التنزيل: {e}"
+
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ تعذّرت تسمية مسارات الصوت: {e}"
+
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ بدون ffmpeg: تُعرض فقط الفيديوهات التي تحتوي على صوت."
+
+msgid "🎬 Elige la calidad"
+msgstr "🎬 اختر الجودة"
+
 msgid "🔊 Audio principal"
 msgstr "🔊 الصوت الرئيسي"
 
-#: dlpy.py:1013
 msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
 msgstr "🔊 أصوات إضافية (أرقام مفصولة بفواصل، a = الكل، Enter = لا شيء)"
 
-#: dlpy.py:1024
-#. Marcadores (no traducir): {n} {t}
 msgid "📃 Lista con {n} elemento: {t}"
 msgid_plural "📃 Lista con {n} elementos: {t}"
-msgstr[0] "📃 قائمة فيها {n} عنصر: {t}"
+msgstr[0] "📃 قائمة فيها {n} عناصر: {t}"
 msgstr[1] "📃 قائمة فيها {n} عنصر: {t}"
 msgstr[2] "📃 قائمة فيها {n} عنصران: {t}"
 msgstr[3] "📃 قائمة فيها {n} عناصر: {t}"
 msgstr[4] "📃 قائمة فيها {n} عنصرًا: {t}"
 msgstr[5] "📃 قائمة فيها {n} عنصر: {t}"
 
-#: dlpy.py:1029
 msgid "Elementos (Enter = todos, ej. 1-3,7)"
-msgstr "العناصر (Enter = الكل، مثال 1-3,7)"
+msgstr "العناصر (Enter = الكل، مثال: 1-3,7)"
 
-#: dlpy.py:1031
 msgid "Mejor calidad"
 msgstr "أفضل جودة"
 
-#: dlpy.py:1035
 msgid "Solo audio"
 msgstr "صوت فقط"
 
-#: dlpy.py:1036
 msgid "Calidad para toda la lista"
-msgstr "جودة القائمة كلها"
+msgstr "الجودة للقائمة كاملة"
 
-#: dlpy.py:1056
-#. Marcadores (no traducir): {bad} {ok}
 msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "انتهى: {ok} نجحت، {bad} بها خطأ."
+msgstr "اكتمل: {ok} بنجاح، {bad} بخطأ."
 
-#: dlpy.py:1080
-msgid "Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python dlpy.py                      menú interactivo (pide el enlace)\n  python dlpy.py <url>                descarga interactiva de ese enlace\n  python dlpy.py --idiomas            JSON con los idiomas del script\n  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: --update (actualiza yt-dlp), --version, --help."
-msgstr "الاختصار \"DLpy\" يتحكم فيه. الأوامر التي يستخدمها الاختصار:\n  python dlpy.py                      قائمة تفاعلية (تطلب الرابط)\n  python dlpy.py <url>                تنزيل تفاعلي لذلك الرابط\n  python dlpy.py --idiomas            JSON بلغات السكربت\n  python dlpy.py --config [K=V ...]   الإعدادات (بدون وسائط: القائمة)\n  python dlpy.py --scm <url>          JSON سريع (5 ث كحد أقصى) بكل ما تم العثور عليه؛ إذا لم\n                                      يكفِ الوقت أو كانت قائمة / yt-dlp غير موجود: {\"use_scb\":true}\n  python dlpy.py --scb <url>          نفسه لكن بدون حد زمني؛ يرسل JSON إلى الاختصار\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   ينزّل الاختيار\nأيضًا: --update (يحدّث yt-dlp)، --version، --help."
-
-#: dlpy.py:1124
-#. Marcadores (no traducir): {e} {tipo}
 msgid "❌ Error inesperado ({tipo}): {e}"
 msgstr "❌ خطأ غير متوقع ({tipo}): {e}"
+
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
+"  python dlpy.py                      menú interactivo (pide el enlace)\n"
+"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
+"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
+"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
+"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
+"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
+"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
+"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
+"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
+msgstr ""
+"يتحكّم به اختصار \"DLpy\". الأوامر التي يستخدمها الاختصار:\n"
+"  python dlpy.py                      قائمة تفاعلية (يطلب الرابط)\n"
+"  python dlpy.py <url>                تنزيل تفاعلي لهذا الرابط\n"
+"  python dlpy.py --idiomas            JSON بلغات السكربت\n"
+"  python dlpy.py --config [K=V ...]   الإعدادات (بدون وسائط: القائمة)\n"
+"  python dlpy.py --scm <url>          JSON سريع (بحد أقصى 5 ث) بكل ما تم العثور عليه؛ إذا لم\n"
+"                                      يكفِ أو كانت قائمة/yt-dlp مفقودًا: {\"use_scb\":true}\n"
+"  python dlpy.py --scb <url>          نفسه لكن بدون حد زمني؛ يرسل JSON إلى الاختصار\n"
+"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   ينزّل الاختيار\n"
+"بالإضافة إلى: --update (يحدّث yt-dlp)، --update-langs [رموز] (يعيد تنزيل اللغات)، --version، --help."
+
+msgid "seg"
+msgstr "ث"
+
+msgid "min"
+msgstr "د"
+
+msgid "Enter"
+msgstr "Enter"
+
+msgid "Seleccione idioma"
+msgstr "اختر اللغة"
+
+msgid "compatible Apple"
+msgstr "متوافق مع Apple"
+
+msgid "pista original"
+msgstr "المسار الأصلي"
+
+msgid "predeterminada"
+msgstr "افتراضية"
+
+msgid "recomendada"
+msgstr "موصى بها"
+
+msgid "Revisando"
+msgstr "جارٍ الفحص"
+
+msgid "Uniendo"
+msgstr "جارٍ الدمج"
+
+msgid "Ajustando"
+msgstr "جارٍ الضبط"
+
+msgid "Guardado"
+msgstr "تم الحفظ"
+
+msgid "Sustituyendo"
+msgstr "جارٍ الاستبدال"
+
+msgid "Limpiando"
+msgstr "جارٍ التنظيف"
+
+msgid "Vaciando"
+msgstr "جارٍ التفريغ"
+
+msgid "Descargando"
+msgstr "جارٍ التنزيل"
+
+msgid "Sitio"
+msgstr "الموقع"
+
+msgid "DLPY"
+msgstr "DLPY"
+
+msgid "Primera ejecución"
+msgstr "التشغيل الأول"
+
+msgid "Novedad"
+msgstr "جديد"
+
+msgid "Retroceso"
+msgstr "تراجع"
+
+msgid "Igual"
+msgstr "مطابق"
+
+msgid "Adelanto"
+msgstr "تقدّم"
+
+msgid "Revisando archivo"
+msgstr "جارٍ فحص الملف"
+
+msgid "Espera"
+msgstr "انتظر"
+
+msgid "Conversión"
+msgstr "تحويل"
+
+msgid "Sustitución"
+msgstr "استبدال"
+
+msgid "Unión"
+msgstr "دمج"
+
+msgid "Limpieza"
+msgstr "تنظيف"
+
+msgid "Papelera"
+msgstr "سلة المهملات"
+
+msgid "Envío"
+msgstr "إرسال"
+
+msgid "Descarga"
+msgstr "تنزيل"
+
+msgid "Pulso"
+msgstr "نبض"
+
+msgid "Carril"
+msgstr "مسار"
+
+msgid "Uniendo pistas"
+msgstr "جارٍ دمج المسارات"
+
+msgid "Convirtiendo"
+msgstr "جارٍ التحويل"
+
+msgid "Ajustando pistas"
+msgstr "جارٍ ضبط المسارات"
+
+msgid "Finalizando"
+msgstr "جارٍ الإنهاء"
+
+msgid "Espera mientras convierte · puede tardar · no cierres la app"
+msgstr "انتظر أثناء التحويل · قد يستغرق وقتًا · لا تغلق التطبيق"
+
+msgid "Espera mientras convierte · no cierres la app"
+msgstr "انتظر أثناء التحويل · لا تغلق التطبيق"
+
+msgid "Espera · puede tardar · no cierres la app"
+msgstr "انتظر · قد يستغرق وقتًا · لا تغلق التطبيق"
+
+msgid "Espera · no cierres la app"
+msgstr "انتظر · لا تغلق التطبيق"
+
+msgid "No cierres la app"
+msgstr "لا تغلق التطبيق"
+
+msgid "no cierres la app"
+msgstr "لا تغلق التطبيق"
+
+msgid "Espera…"
+msgstr "انتظر…"
+
+msgid "VIDEO"
+msgstr "فيديو"
+
+msgid "AUDIO"
+msgstr "صوت"
+
+msgid "UNIÓN"
+msgstr "دمج"
+
+msgid "GUARDADO"
+msgstr "محفوظ"
+
+msgid "PISTA"
+msgstr "مسار"
+
+msgid "¿RES?"
+msgstr "الدقّة؟"
+
+msgid "¿COD?"
+msgstr "الترميز؟"
+
+msgid "¿FPS?"
+msgstr "FPS؟"
+
+msgid "¿BIT?"
+msgstr "البت؟"
+
+msgid "¿KHZ?"
+msgstr "KHZ؟"
+
+msgid "papelera"
+msgstr "سلة المهملات"
+
+msgid "basura"
+msgstr "مهملات"
+
+msgid "VIEJO"
+msgstr "قديم"
+
+msgid "NUEVO"
+msgstr "جديد"
+
+msgid "Toca la pantalla · Enter sustituir · n conservar"
+msgstr "المس الشاشة · Enter استبدال · n الاحتفاظ"
+
+msgid "Enter sustituir · n conservar"
+msgstr "Enter استبدال · n الاحتفاظ"
+
+msgid "Enter sustituir · n no"
+msgstr "Enter استبدال · n لا"
+
+msgid "Enter sí · n no"
+msgstr "Enter نعم · n لا"
+
+msgid "Enter · n"
+msgstr "Enter · n"
+
+msgid "Toca la pantalla · Enter convertir · r remux · n original"
+msgstr "المس الشاشة · Enter تحويل · r remux · n الأصلي"
+
+msgid "Enter convertir · r remux · n original"
+msgstr "Enter تحويل · r remux · n الأصلي"
+
+msgid "Enter convertir · r remux · n no"
+msgstr "Enter تحويل · r remux · n لا"
+
+msgid "Enter sí · r remux · n no"
+msgstr "Enter نعم · r remux · n لا"
+
+msgid "Enter · r · n"
+msgstr "Enter · r · n"
+
+msgid "Toca la pantalla para abrir el teclado"
+msgstr "المس الشاشة لفتح لوحة المفاتيح"
+
+msgid "Toca para abrir el teclado"
+msgstr "المس لفتح لوحة المفاتيح"
+
+msgid "Toca = teclado"
+msgstr "اللمس = لوحة المفاتيح"
+
+msgid "¿Sustituir el archivo?"
+msgstr "هل تريد استبدال الملف؟"
+
+msgid "¿Sustituir archivo?"
+msgstr "استبدال الملف؟"
+
+msgid "¿Sustituir?"
+msgstr "استبدال؟"
+
+msgid "¿Convertir este video?"
+msgstr "هل تريد تحويل هذا الفيديو؟"
+
+msgid "¿Convertir ahora?"
+msgstr "التحويل الآن؟"
+
+msgid "¿Convertir?"
+msgstr "تحويل؟"
+
+msgid "Abriendo con view"
+msgstr "جارٍ الفتح باستخدام view"
+
+msgid "Enviando a DLpy"
+msgstr "جارٍ الإرسال إلى DLpy"
+
+msgid "Preparando"
+msgstr "جارٍ التحضير"
+
+msgid "Preparando descarga"
+msgstr "جارٍ تحضير التنزيل"
+
+msgid "Error"
+msgstr "خطأ"
+
+msgid "falló"
+msgstr "فشل"
+
+msgid "reintenta al abrir"
+msgstr "أعد المحاولة عند الفتح"
+
+msgid "listas"
+msgstr "جاهزة"
+
+msgid "espera"
+msgstr "انتظر"
+
+msgid "activa"
+msgstr "مفعّلة"
+
+msgid "hecho"
+msgstr "تم"
+
+msgid "sin respuesta se sustituye · "
+msgstr "بدون رد يتم الاستبدال · "
+
+msgid "sin respuesta se convierte · "
+msgstr "بدون رد يتم التحويل · "
+
+msgid "actualizaciones"
+msgstr "تحديثات"
+
+msgid "analizando"
+msgstr "جارٍ التحليل"
+
+msgid "boot"
+msgstr "بدء التشغيل"
+
+msgid "GitHub"
+msgstr "GitHub"

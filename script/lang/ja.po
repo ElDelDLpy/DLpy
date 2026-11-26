@@ -1,193 +1,473 @@
 msgid ""
 msgstr ""
-"Language: ja\n"
+"Project-Id-Version: DLpy\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Label: 🇯🇵 日本語\n"
-"X-Name: 日本語\n"
 
-#: dlpy.py:272
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ yt-dlp をインストール中（初回のみ）…"
+msgstr "⬇️ yt-dlpをインストール中（初回のみ）…"
 
-#: dlpy.py:279
 msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "yt-dlp をインストールできませんでした。接続を確認してください。"
+msgstr "yt-dlpをインストールできませんでした。接続を確認してください。"
 
-#: dlpy.py:572
 msgid "⚙️ Procesando…"
 msgstr "⚙️ 処理中…"
 
-#: dlpy.py:630
 msgid "✅ Listo"
 msgstr "✅ 完了"
 
-#: dlpy.py:631
-#. Marcadores (no traducir): {p}
 msgid "📁 Guardado en: {p}"
 msgstr "📁 保存先：{p}"
 
-#: dlpy.py:639
 msgid "Idioma del script"
 msgstr "スクリプトの言語"
 
-#: dlpy.py:642
-#. Marcadores (no traducir): {lang}
 msgid "✅ Idioma del script: {lang}"
 msgstr "✅ スクリプトの言語：{lang}"
 
-#: dlpy.py:661
-#. Marcadores (no traducir): {v}
-msgid "⚙️ Configuración de DLpy (script {v})"
-msgstr "⚙️ DLpy の設定（スクリプト {v}）"
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ {k}の値が無効です：{v}"
 
-#: dlpy.py:662
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ DLpyの設定（スクリプト {v}）"
+
 msgid "Idioma"
 msgstr "言語"
 
-#: dlpy.py:663
+msgid "URL de idiomas (GitHub)"
+msgstr "言語のURL（GitHub）"
+
+msgid "URL de módulos (GitHub)"
+msgstr "モジュールのURL（GitHub）"
+
 msgid "Carpeta de descargas"
 msgstr "ダウンロードフォルダ"
 
-#: dlpy.py:664
 msgid "Contenedor de video (auto/mp4/mkv)"
-msgstr "動画コンテナ (auto/mp4/mkv)"
+msgstr "動画コンテナ（auto/mp4/mkv）"
 
-#: dlpy.py:665
 msgid "Formato de audio (native/mp3/m4a)"
-msgstr "音声フォーマット (native/mp3/m4a)"
+msgstr "音声フォーマット（native/mp3/m4a）"
 
-#: dlpy.py:666
 msgid "ffmpeg (auto/yes/no)"
-msgstr "ffmpeg (auto/yes/no)"
+msgstr "ffmpeg（auto/yes/no）"
 
-#: dlpy.py:667
 msgid "Si el archivo ya existe (new/replace)"
-msgstr "ファイルがすでに存在する場合 (new/replace)"
+msgstr "ファイルが既にある場合（new/replace）"
 
-#: dlpy.py:668
 msgid "Horas de caché de pistas (0 = sin caché)"
-msgstr "トラックのキャッシュ時間（時間）(0 = キャッシュなし)"
+msgstr "トラックのキャッシュ（時間、0 = なし）"
 
-#: dlpy.py:669
 msgid "Ruta enviada al atajo (abs/home/rel)"
-msgstr "ショートカットに送るパス (abs/home/rel)"
+msgstr "ショートカットに送るパス（abs/home/rel）"
 
-#: dlpy.py:672
+msgid "Animaciones (1/0)"
+msgstr "アニメーション（1/0）"
+
 msgid "Actualizar yt-dlp"
-msgstr "yt-dlp をアップデート"
+msgstr "yt-dlpを更新"
 
-#: dlpy.py:673
+msgid "Actualizar idiomas"
+msgstr "言語を更新"
+
 msgid "Salir"
 msgstr "終了"
 
-#: dlpy.py:694
-msgid "Nuevo valor: "
-msgstr "新しい値："
-
-#: dlpy.py:696
-msgid "✅ Guardado."
-msgstr "✅ 保存しました。"
-
-#: dlpy.py:700
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 yt-dlp をアップデート中…"
-
-#: dlpy.py:707
-msgid "No se encontraron formatos descargables."
-msgstr "ダウンロード可能な形式が見つかりませんでした。"
-
-#: dlpy.py:723
-msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "ライブ配信はダウンロードできません。"
-
-#: dlpy.py:759
-#. Marcadores (no traducir): {e}
-msgid "No se pudo leer el enlace: {e}"
-msgstr "リンクを読み取れませんでした：{e}"
-
-#: dlpy.py:789
-msgid "🔗 Pega el enlace: "
-msgstr "🔗 リンクを貼り付け："
-
-#: dlpy.py:793
-msgid "No se encontró un enlace válido."
-msgstr "有効なリンクが見つかりませんでした。"
-
-#: dlpy.py:820
-msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 オプションをショートカットに送信中…"
-
-#: dlpy.py:921
-msgid "⏳ Descargando…"
-msgstr "⏳ ダウンロード中…"
-
-#: dlpy.py:933
-#. Marcadores (no traducir): {e}
-msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ 音声トラックにタグを付けられませんでした：{e}"
-
-#: dlpy.py:944
-#. Marcadores (no traducir): {e}
-msgid "❌ Falló la descarga: {e}"
-msgstr "❌ ダウンロードに失敗しました：{e}"
-
-#: dlpy.py:963
-msgid "Opción no válida."
-msgstr "無効なオプションです。"
-
-#: dlpy.py:993
-msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ ffmpeg なし：音声付きの動画のみ表示されます。"
-
-#: dlpy.py:998
-msgid "🎬 Elige la calidad"
-msgstr "🎬 画質を選択"
-
-#: dlpy.py:1001
 msgid "Número"
 msgstr "番号"
 
-#: dlpy.py:1005
+msgid "Opción no válida."
+msgstr "無効な選択です。"
+
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ 言語をダウンロード中…"
+
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ 言語をダウンロードできませんでした（オフラインかファイルが見つかりません）。"
+
+msgid "Nuevo valor: "
+msgstr "新しい値： "
+
+msgid "✅ Guardado."
+msgstr "✅ 保存しました。"
+
+msgid "🔄 Actualizando yt-dlp…"
+msgstr "🔄 yt-dlpを更新中…"
+
+msgid "No hay idiomas instalados."
+msgstr "インストール済みの言語がありません。"
+
+msgid "🌐 Actualizando idiomas…"
+msgstr "🌐 言語を更新中…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "ダウンロード可能な形式が見つかりませんでした。"
+
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "ライブ配信はダウンロードできません。"
+
+msgid "No se encontró un enlace válido."
+msgstr "有効なリンクが見つかりませんでした。"
+
+msgid "No se pudo leer el enlace: {e}"
+msgstr "リンクを読み取れませんでした：{e}"
+
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 リンクを貼り付け： "
+
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 ショートカットに選択肢を送信中…"
+
+msgid "⏳ Descargando…"
+msgstr "⏳ ダウンロード中…"
+
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ ダウンロードに失敗しました：{e}"
+
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ 音声トラックにタグを付けられませんでした：{e}"
+
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ ffmpegなし：音声付きの動画のみ表示します。"
+
+msgid "🎬 Elige la calidad"
+msgstr "🎬 画質を選択"
+
 msgid "🔊 Audio principal"
 msgstr "🔊 メイン音声"
 
-#: dlpy.py:1013
 msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
-msgstr "🔊 追加の音声（カンマ区切りの番号、a = すべて、Enter = なし）"
+msgstr "🔊 追加音声（カンマ区切りの番号、a = すべて、Enter = なし）"
 
-#: dlpy.py:1024
-#. Marcadores (no traducir): {n} {t}
 msgid "📃 Lista con {n} elemento: {t}"
 msgid_plural "📃 Lista con {n} elementos: {t}"
-msgstr[0] "📃 {n} 件のリスト：{t}"
+msgstr[0] "📃 {n}件のリスト：{t}"
 
-#: dlpy.py:1029
 msgid "Elementos (Enter = todos, ej. 1-3,7)"
-msgstr "項目（Enter = すべて、例 1-3,7）"
+msgstr "項目（Enter = すべて、例：1-3,7）"
 
-#: dlpy.py:1031
 msgid "Mejor calidad"
 msgstr "最高画質"
 
-#: dlpy.py:1035
 msgid "Solo audio"
 msgstr "音声のみ"
 
-#: dlpy.py:1036
 msgid "Calidad para toda la lista"
 msgstr "リスト全体の画質"
 
-#: dlpy.py:1056
-#. Marcadores (no traducir): {bad} {ok}
 msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "完了：{ok} 件成功、{bad} 件失敗。"
+msgstr "完了：{ok}件成功、{bad}件エラー。"
 
-#: dlpy.py:1080
-msgid "Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python dlpy.py                      menú interactivo (pide el enlace)\n  python dlpy.py <url>                descarga interactiva de ese enlace\n  python dlpy.py --idiomas            JSON con los idiomas del script\n  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: --update (actualiza yt-dlp), --version, --help."
-msgstr "ショートカット \"DLpy\" が制御しています。ショートカットが使うコマンド：\n  python dlpy.py                      対話メニュー（リンクを聞きます）\n  python dlpy.py <url>                そのリンクの対話ダウンロード\n  python dlpy.py --idiomas            スクリプトの言語の JSON\n  python dlpy.py --config [K=V ...]   設定（引数なし：メニュー）\n  python dlpy.py --scm <url>          高速 JSON（最大 5 秒）で見つかったものすべて；間に合わない\n                                      場合やリスト／yt-dlp がない場合：{\"use_scb\":true}\n  python dlpy.py --scb <url>          同じですが時間制限なし；JSON をショートカットに送ります\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   選択をダウンロードします\nその他：--update（yt-dlp をアップデート）、--version、--help。"
-
-#: dlpy.py:1124
-#. Marcadores (no traducir): {e} {tipo}
 msgid "❌ Error inesperado ({tipo}): {e}"
-msgstr "❌ 予期しないエラー ({tipo})：{e}"
+msgstr "❌ 予期しないエラー（{tipo}）：{e}"
+
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
+"  python dlpy.py                      menú interactivo (pide el enlace)\n"
+"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
+"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
+"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
+"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
+"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
+"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
+"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
+"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
+msgstr ""
+"\"DLpy\"ショートカットが制御します。ショートカットが使うコマンド：\n"
+"  python dlpy.py                      対話メニュー（リンクを入力）\n"
+"  python dlpy.py <url>                そのリンクの対話ダウンロード\n"
+"  python dlpy.py --idiomas            スクリプトの言語一覧（JSON）\n"
+"  python dlpy.py --config [K=V ...]   設定（引数なし：メニュー）\n"
+"  python dlpy.py --scm <url>          高速JSON（最大5秒）で見つかったものをすべて取得；間に合わない場合や\n"
+"                                      リスト・yt-dlpなしの場合：{\"use_scb\":true}\n"
+"  python dlpy.py --scb <url>          同じだが時間制限なし；JSONをショートカットに送信\n"
+"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   選択をダウンロード\n"
+"その他：--update（yt-dlpを更新）、--update-langs [コード]（言語を再ダウンロード）、--version、--help。"
+
+msgid "seg"
+msgstr "秒"
+
+msgid "min"
+msgstr "分"
+
+msgid "Enter"
+msgstr "Enter"
+
+msgid "Seleccione idioma"
+msgstr "言語を選択"
+
+msgid "compatible Apple"
+msgstr "Apple対応"
+
+msgid "pista original"
+msgstr "オリジナルトラック"
+
+msgid "predeterminada"
+msgstr "デフォルト"
+
+msgid "recomendada"
+msgstr "おすすめ"
+
+msgid "Revisando"
+msgstr "確認中"
+
+msgid "Uniendo"
+msgstr "結合中"
+
+msgid "Ajustando"
+msgstr "調整中"
+
+msgid "Guardado"
+msgstr "保存済み"
+
+msgid "Sustituyendo"
+msgstr "置き換え中"
+
+msgid "Limpiando"
+msgstr "クリーンアップ中"
+
+msgid "Vaciando"
+msgstr "排出中"
+
+msgid "Descargando"
+msgstr "ダウンロード中"
+
+msgid "Sitio"
+msgstr "サイト"
+
+msgid "DLPY"
+msgstr "DLPY"
+
+msgid "Primera ejecución"
+msgstr "初回起動"
+
+msgid "Novedad"
+msgstr "新機能"
+
+msgid "Retroceso"
+msgstr "巻き戻し"
+
+msgid "Igual"
+msgstr "同じ"
+
+msgid "Adelanto"
+msgstr "早送り"
+
+msgid "Revisando archivo"
+msgstr "ファイルを確認中"
+
+msgid "Espera"
+msgstr "お待ちください"
+
+msgid "Conversión"
+msgstr "変換"
+
+msgid "Sustitución"
+msgstr "置き換え"
+
+msgid "Unión"
+msgstr "結合"
+
+msgid "Limpieza"
+msgstr "クリーンアップ"
+
+msgid "Papelera"
+msgstr "ゴミ箱"
+
+msgid "Envío"
+msgstr "送信"
+
+msgid "Descarga"
+msgstr "ダウンロード"
+
+msgid "Pulso"
+msgstr "パルス"
+
+msgid "Carril"
+msgstr "レーン"
+
+msgid "Uniendo pistas"
+msgstr "トラックを結合中"
+
+msgid "Convirtiendo"
+msgstr "変換中"
+
+msgid "Ajustando pistas"
+msgstr "トラックを調整中"
+
+msgid "Finalizando"
+msgstr "仕上げ中"
+
+msgid "Espera mientras convierte · puede tardar · no cierres la app"
+msgstr "変換中です · 時間がかかる場合があります · アプリを閉じないで"
+
+msgid "Espera mientras convierte · no cierres la app"
+msgstr "変換中です · アプリを閉じないで"
+
+msgid "Espera · puede tardar · no cierres la app"
+msgstr "お待ちください · 時間がかかる場合があります · アプリを閉じないで"
+
+msgid "Espera · no cierres la app"
+msgstr "お待ちください · アプリを閉じないで"
+
+msgid "No cierres la app"
+msgstr "アプリを閉じないで"
+
+msgid "no cierres la app"
+msgstr "アプリを閉じないで"
+
+msgid "Espera…"
+msgstr "お待ちください…"
+
+msgid "VIDEO"
+msgstr "ビデオ"
+
+msgid "AUDIO"
+msgstr "オーディオ"
+
+msgid "UNIÓN"
+msgstr "結合"
+
+msgid "GUARDADO"
+msgstr "保存済み"
+
+msgid "PISTA"
+msgstr "トラック"
+
+msgid "¿RES?"
+msgstr "RES?"
+
+msgid "¿COD?"
+msgstr "COD?"
+
+msgid "¿FPS?"
+msgstr "FPS?"
+
+msgid "¿BIT?"
+msgstr "BIT?"
+
+msgid "¿KHZ?"
+msgstr "KHZ?"
+
+msgid "papelera"
+msgstr "ゴミ箱"
+
+msgid "basura"
+msgstr "ゴミ"
+
+msgid "VIEJO"
+msgstr "旧"
+
+msgid "NUEVO"
+msgstr "新"
+
+msgid "Toca la pantalla · Enter sustituir · n conservar"
+msgstr "画面をタップ · Enterで置き換え · nで保持"
+
+msgid "Enter sustituir · n conservar"
+msgstr "Enterで置き換え · nで保持"
+
+msgid "Enter sustituir · n no"
+msgstr "Enterで置き換え · nでいいえ"
+
+msgid "Enter sí · n no"
+msgstr "Enterではい · nでいいえ"
+
+msgid "Enter · n"
+msgstr "Enter · n"
+
+msgid "Toca la pantalla · Enter convertir · r remux · n original"
+msgstr "画面をタップ · Enterで変換 · rでremux · nで元のまま"
+
+msgid "Enter convertir · r remux · n original"
+msgstr "Enterで変換 · rでremux · nで元のまま"
+
+msgid "Enter convertir · r remux · n no"
+msgstr "Enterで変換 · rでremux · nでいいえ"
+
+msgid "Enter sí · r remux · n no"
+msgstr "Enterではい · rでremux · nでいいえ"
+
+msgid "Enter · r · n"
+msgstr "Enter · r · n"
+
+msgid "Toca la pantalla para abrir el teclado"
+msgstr "画面をタップしてキーボードを開く"
+
+msgid "Toca para abrir el teclado"
+msgstr "タップしてキーボードを開く"
+
+msgid "Toca = teclado"
+msgstr "タップ = キーボード"
+
+msgid "¿Sustituir el archivo?"
+msgstr "このファイルを置き換えますか？"
+
+msgid "¿Sustituir archivo?"
+msgstr "ファイルを置き換えますか？"
+
+msgid "¿Sustituir?"
+msgstr "置き換えますか？"
+
+msgid "¿Convertir este video?"
+msgstr "この動画を変換しますか？"
+
+msgid "¿Convertir ahora?"
+msgstr "今すぐ変換しますか？"
+
+msgid "¿Convertir?"
+msgstr "変換しますか？"
+
+msgid "Abriendo con view"
+msgstr "viewで開いています"
+
+msgid "Enviando a DLpy"
+msgstr "DLpyに送信中"
+
+msgid "Preparando"
+msgstr "準備中"
+
+msgid "Preparando descarga"
+msgstr "ダウンロードを準備中"
+
+msgid "Error"
+msgstr "エラー"
+
+msgid "falló"
+msgstr "失敗"
+
+msgid "reintenta al abrir"
+msgstr "開くときに再試行"
+
+msgid "listas"
+msgstr "準備完了"
+
+msgid "espera"
+msgstr "待機"
+
+msgid "activa"
+msgstr "有効"
+
+msgid "hecho"
+msgstr "完了"
+
+msgid "sin respuesta se sustituye · "
+msgstr "応答がない場合は置き換えます · "
+
+msgid "sin respuesta se convierte · "
+msgstr "応答がない場合は変換します · "
+
+msgid "actualizaciones"
+msgstr "アップデート"
+
+msgid "analizando"
+msgstr "解析中"
+
+msgid "boot"
+msgstr "起動"
+
+msgid "GitHub"
+msgstr "GitHub"

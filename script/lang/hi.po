@@ -1,194 +1,474 @@
 msgid ""
 msgstr ""
-"Language: hi\n"
+"Project-Id-Version: DLpy\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Label: 🇮🇳 हिन्दी\n"
-"X-Name: हिन्दी\n"
 
-#: dlpy.py:272
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ yt-dlp इंस्टॉल हो रहा है (सिर्फ पहली बार)…"
+msgstr "⬇️ yt-dlp इंस्टॉल हो रहा है (सिर्फ़ पहली बार)…"
 
-#: dlpy.py:279
 msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "yt-dlp इंस्टॉल नहीं हो सका। अपना कनेक्शन जांचें।"
+msgstr "yt-dlp इंस्टॉल नहीं हो पाया। अपना कनेक्शन देखें।"
 
-#: dlpy.py:572
 msgid "⚙️ Procesando…"
 msgstr "⚙️ प्रोसेस हो रहा है…"
 
-#: dlpy.py:630
 msgid "✅ Listo"
 msgstr "✅ हो गया"
 
-#: dlpy.py:631
-#. Marcadores (no traducir): {p}
 msgid "📁 Guardado en: {p}"
 msgstr "📁 यहाँ सेव हुआ: {p}"
 
-#: dlpy.py:639
 msgid "Idioma del script"
 msgstr "स्क्रिप्ट की भाषा"
 
-#: dlpy.py:642
-#. Marcadores (no traducir): {lang}
 msgid "✅ Idioma del script: {lang}"
 msgstr "✅ स्क्रिप्ट की भाषा: {lang}"
 
-#: dlpy.py:661
-#. Marcadores (no traducir): {v}
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ {k} के लिए गलत वैल्यू: {v}"
+
 msgid "⚙️ Configuración de DLpy (script {v})"
 msgstr "⚙️ DLpy सेटिंग्स (स्क्रिप्ट {v})"
 
-#: dlpy.py:662
 msgid "Idioma"
 msgstr "भाषा"
 
-#: dlpy.py:663
+msgid "URL de idiomas (GitHub)"
+msgstr "भाषाओं का URL (GitHub)"
+
+msgid "URL de módulos (GitHub)"
+msgstr "मॉड्यूल का URL (GitHub)"
+
 msgid "Carpeta de descargas"
 msgstr "डाउनलोड फ़ोल्डर"
 
-#: dlpy.py:664
 msgid "Contenedor de video (auto/mp4/mkv)"
 msgstr "वीडियो कंटेनर (auto/mp4/mkv)"
 
-#: dlpy.py:665
 msgid "Formato de audio (native/mp3/m4a)"
 msgstr "ऑडियो फ़ॉर्मेट (native/mp3/m4a)"
 
-#: dlpy.py:666
 msgid "ffmpeg (auto/yes/no)"
 msgstr "ffmpeg (auto/yes/no)"
 
-#: dlpy.py:667
 msgid "Si el archivo ya existe (new/replace)"
-msgstr "अगर फ़ाइल पहले से मौजूद है (new/replace)"
+msgstr "फ़ाइल पहले से हो तो (new/replace)"
 
-#: dlpy.py:668
 msgid "Horas de caché de pistas (0 = sin caché)"
 msgstr "ट्रैक कैश के घंटे (0 = कैश नहीं)"
 
-#: dlpy.py:669
 msgid "Ruta enviada al atajo (abs/home/rel)"
 msgstr "शॉर्टकट को भेजा गया पाथ (abs/home/rel)"
 
-#: dlpy.py:672
+msgid "Animaciones (1/0)"
+msgstr "एनिमेशन (1/0)"
+
 msgid "Actualizar yt-dlp"
 msgstr "yt-dlp अपडेट करें"
 
-#: dlpy.py:673
+msgid "Actualizar idiomas"
+msgstr "भाषाएँ अपडेट करें"
+
 msgid "Salir"
 msgstr "बाहर निकलें"
 
-#: dlpy.py:694
-msgid "Nuevo valor: "
-msgstr "नई वैल्यू: "
-
-#: dlpy.py:696
-msgid "✅ Guardado."
-msgstr "✅ सेव हो गया।"
-
-#: dlpy.py:700
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 yt-dlp अपडेट हो रहा है…"
-
-#: dlpy.py:707
-msgid "No se encontraron formatos descargables."
-msgstr "डाउनलोड करने लायक कोई फ़ॉर्मेट नहीं मिला।"
-
-#: dlpy.py:723
-msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "लाइव स्ट्रीम डाउनलोड नहीं हो सकतीं।"
-
-#: dlpy.py:759
-#. Marcadores (no traducir): {e}
-msgid "No se pudo leer el enlace: {e}"
-msgstr "लिंक पढ़ा नहीं जा सका: {e}"
-
-#: dlpy.py:789
-msgid "🔗 Pega el enlace: "
-msgstr "🔗 लिंक पेस्ट करें: "
-
-#: dlpy.py:793
-msgid "No se encontró un enlace válido."
-msgstr "कोई सही लिंक नहीं मिला।"
-
-#: dlpy.py:820
-msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 विकल्प शॉर्टकट को भेजे जा रहे हैं…"
-
-#: dlpy.py:921
-msgid "⏳ Descargando…"
-msgstr "⏳ डाउनलोड हो रहा है…"
-
-#: dlpy.py:933
-#. Marcadores (no traducir): {e}
-msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ ऑडियो ट्रैक टैग नहीं हो सके: {e}"
-
-#: dlpy.py:944
-#. Marcadores (no traducir): {e}
-msgid "❌ Falló la descarga: {e}"
-msgstr "❌ डाउनलोड फ़ेल हो गया: {e}"
-
-#: dlpy.py:963
-msgid "Opción no válida."
-msgstr "गलत विकल्प।"
-
-#: dlpy.py:993
-msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ ffmpeg के बिना: सिर्फ वही वीडियो दिखाए जाते हैं जिनमें पहले से ऑडियो है।"
-
-#: dlpy.py:998
-msgid "🎬 Elige la calidad"
-msgstr "🎬 क्वालिटी चुनें"
-
-#: dlpy.py:1001
 msgid "Número"
 msgstr "नंबर"
 
-#: dlpy.py:1005
+msgid "Opción no válida."
+msgstr "गलत विकल्प।"
+
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ भाषा डाउनलोड हो रही है…"
+
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ भाषा डाउनलोड नहीं हो पाई (इंटरनेट नहीं है या फ़ाइल नहीं मिली)।"
+
+msgid "Nuevo valor: "
+msgstr "नई वैल्यू: "
+
+msgid "✅ Guardado."
+msgstr "✅ सेव हो गया।"
+
+msgid "🔄 Actualizando yt-dlp…"
+msgstr "🔄 yt-dlp अपडेट हो रहा है…"
+
+msgid "No hay idiomas instalados."
+msgstr "कोई भाषा इंस्टॉल नहीं है।"
+
+msgid "🌐 Actualizando idiomas…"
+msgstr "🌐 भाषाएँ अपडेट हो रही हैं…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "डाउनलोड करने लायक कोई फ़ॉर्मेट नहीं मिला।"
+
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "लाइव स्ट्रीम डाउनलोड नहीं हो सकती।"
+
+msgid "No se encontró un enlace válido."
+msgstr "कोई सही लिंक नहीं मिला।"
+
+msgid "No se pudo leer el enlace: {e}"
+msgstr "लिंक पढ़ा नहीं जा सका: {e}"
+
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 लिंक यहाँ डालें: "
+
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 विकल्प शॉर्टकट को भेजे जा रहे हैं…"
+
+msgid "⏳ Descargando…"
+msgstr "⏳ डाउनलोड हो रहा है…"
+
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ डाउनलोड फेल हो गया: {e}"
+
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ ऑडियो ट्रैक टैग नहीं हो पाए: {e}"
+
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ ffmpeg नहीं है: सिर्फ़ वही वीडियो दिखेंगे जिनमें पहले से ऑडियो है।"
+
+msgid "🎬 Elige la calidad"
+msgstr "🎬 क्वालिटी चुनें"
+
 msgid "🔊 Audio principal"
 msgstr "🔊 मुख्य ऑडियो"
 
-#: dlpy.py:1013
 msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
-msgstr "🔊 अतिरिक्त ऑडियो (नंबर कॉमा से अलग करें, a = सभी, Enter = कोई नहीं)"
+msgstr "🔊 और ऑडियो (नंबर कॉमा से अलग करें, a = सभी, Enter = कोई नहीं)"
 
-#: dlpy.py:1024
-#. Marcadores (no traducir): {n} {t}
 msgid "📃 Lista con {n} elemento: {t}"
 msgid_plural "📃 Lista con {n} elementos: {t}"
 msgstr[0] "📃 {n} आइटम वाली लिस्ट: {t}"
 msgstr[1] "📃 {n} आइटम वाली लिस्ट: {t}"
 
-#: dlpy.py:1029
 msgid "Elementos (Enter = todos, ej. 1-3,7)"
 msgstr "आइटम (Enter = सभी, जैसे 1-3,7)"
 
-#: dlpy.py:1031
 msgid "Mejor calidad"
 msgstr "सबसे अच्छी क्वालिटी"
 
-#: dlpy.py:1035
 msgid "Solo audio"
-msgstr "सिर्फ ऑडियो"
+msgstr "सिर्फ़ ऑडियो"
 
-#: dlpy.py:1036
 msgid "Calidad para toda la lista"
 msgstr "पूरी लिस्ट के लिए क्वालिटी"
 
-#: dlpy.py:1056
-#. Marcadores (no traducir): {bad} {ok}
 msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "खत्म: {ok} सही, {bad} में एरर।"
+msgstr "हो गया: {ok} सही, {bad} में एरर।"
 
-#: dlpy.py:1080
-msgid "Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python dlpy.py                      menú interactivo (pide el enlace)\n  python dlpy.py <url>                descarga interactiva de ese enlace\n  python dlpy.py --idiomas            JSON con los idiomas del script\n  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: --update (actualiza yt-dlp), --version, --help."
-msgstr "इसे शॉर्टकट \"DLpy\" कंट्रोल करता है। शॉर्टकट के इस्तेमाल वाले कमांड:\n  python dlpy.py                      इंटरैक्टिव मेनू (लिंक माँगता है)\n  python dlpy.py <url>                उस लिंक का इंटरैक्टिव डाउनलोड\n  python dlpy.py --idiomas            स्क्रिप्ट की भाषाओं वाला JSON\n  python dlpy.py --config [K=V ...]   सेटिंग्स (बिना आर्ग्युमेंट: मेनू)\n  python dlpy.py --scm <url>          तेज़ JSON (अधिकतम 5 से.) जिसमें सब कुछ मिला है; अगर\n                                      समय कम पड़े या यह लिस्ट हो / yt-dlp न हो: {\"use_scb\":true}\n  python dlpy.py --scb <url>          वही, पर बिना समय सीमा के; JSON शॉर्टकट को भेजता है\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   चुना हुआ डाउनलोड करता है\nइसके अलावा: --update (yt-dlp अपडेट करता है), --version, --help।"
-
-#: dlpy.py:1124
-#. Marcadores (no traducir): {e} {tipo}
 msgid "❌ Error inesperado ({tipo}): {e}"
-msgstr "❌ अनपेक्षित एरर ({tipo}): {e}"
+msgstr "❌ अनजानी गड़बड़ ({tipo}): {e}"
+
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
+"  python dlpy.py                      menú interactivo (pide el enlace)\n"
+"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
+"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
+"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
+"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
+"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
+"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
+"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
+"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
+msgstr ""
+"इसे \"DLpy\" शॉर्टकट चलाता है। शॉर्टकट इन कमांड का इस्तेमाल करता है:\n"
+"  python dlpy.py                      इंटरैक्टिव मेनू (लिंक माँगता है)\n"
+"  python dlpy.py <url>                उस लिंक का इंटरैक्टिव डाउनलोड\n"
+"  python dlpy.py --idiomas            स्क्रिप्ट की भाषाओं वाला JSON\n"
+"  python dlpy.py --config [K=V ...]   सेटिंग्स (बिना आर्ग्युमेंट: मेनू)\n"
+"  python dlpy.py --scm <url>          तेज़ JSON (ज़्यादा से ज़्यादा 5 s) जिसमें सब कुछ है; अगर\n"
+"                                      पूरा न हो या लिस्ट हो / yt-dlp न हो: {\"use_scb\":true}\n"
+"  python dlpy.py --scb <url>          वही, पर बिना टाइम लिमिट के; JSON शॉर्टकट को भेजता है\n"
+"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   चुनी हुई चीज़ डाउनलोड करता है\n"
+"इसके अलावा: --update (yt-dlp अपडेट करता है), --update-langs [कोड] (भाषाएँ फिर से डाउनलोड करता है), --version, --help."
+
+msgid "seg"
+msgstr "से"
+
+msgid "min"
+msgstr "मिन"
+
+msgid "Enter"
+msgstr "Enter"
+
+msgid "Seleccione idioma"
+msgstr "भाषा चुनें"
+
+msgid "compatible Apple"
+msgstr "Apple संगत"
+
+msgid "pista original"
+msgstr "ओरिजिनल ट्रैक"
+
+msgid "predeterminada"
+msgstr "डिफ़ॉल्ट"
+
+msgid "recomendada"
+msgstr "सुझाई गई"
+
+msgid "Revisando"
+msgstr "जाँच हो रही है"
+
+msgid "Uniendo"
+msgstr "जोड़ा जा रहा है"
+
+msgid "Ajustando"
+msgstr "एडजस्ट हो रहा है"
+
+msgid "Guardado"
+msgstr "सेव हो गया"
+
+msgid "Sustituyendo"
+msgstr "बदला जा रहा है"
+
+msgid "Limpiando"
+msgstr "साफ़ किया जा रहा है"
+
+msgid "Vaciando"
+msgstr "खाली किया जा रहा है"
+
+msgid "Descargando"
+msgstr "डाउनलोड हो रहा है"
+
+msgid "Sitio"
+msgstr "साइट"
+
+msgid "DLPY"
+msgstr "DLPY"
+
+msgid "Primera ejecución"
+msgstr "पहली बार चलाना"
+
+msgid "Novedad"
+msgstr "नया"
+
+msgid "Retroceso"
+msgstr "पीछे जाना"
+
+msgid "Igual"
+msgstr "एक जैसा"
+
+msgid "Adelanto"
+msgstr "आगे बढ़ना"
+
+msgid "Revisando archivo"
+msgstr "फ़ाइल जाँची जा रही है"
+
+msgid "Espera"
+msgstr "रुकिए"
+
+msgid "Conversión"
+msgstr "कन्वर्ज़न"
+
+msgid "Sustitución"
+msgstr "बदलाव"
+
+msgid "Unión"
+msgstr "जोड़"
+
+msgid "Limpieza"
+msgstr "सफ़ाई"
+
+msgid "Papelera"
+msgstr "ट्रैश"
+
+msgid "Envío"
+msgstr "भेजना"
+
+msgid "Descarga"
+msgstr "डाउनलोड"
+
+msgid "Pulso"
+msgstr "पल्स"
+
+msgid "Carril"
+msgstr "लेन"
+
+msgid "Uniendo pistas"
+msgstr "ट्रैक जोड़े जा रहे हैं"
+
+msgid "Convirtiendo"
+msgstr "कन्वर्ट हो रहा है"
+
+msgid "Ajustando pistas"
+msgstr "ट्रैक एडजस्ट हो रहे हैं"
+
+msgid "Finalizando"
+msgstr "खत्म हो रहा है"
+
+msgid "Espera mientras convierte · puede tardar · no cierres la app"
+msgstr "कन्वर्ट होते समय रुकिए · टाइम लग सकता है · ऐप बंद न करें"
+
+msgid "Espera mientras convierte · no cierres la app"
+msgstr "कन्वर्ट होते समय रुकिए · ऐप बंद न करें"
+
+msgid "Espera · puede tardar · no cierres la app"
+msgstr "रुकिए · टाइम लग सकता है · ऐप बंद न करें"
+
+msgid "Espera · no cierres la app"
+msgstr "रुकिए · ऐप बंद न करें"
+
+msgid "No cierres la app"
+msgstr "ऐप बंद न करें"
+
+msgid "no cierres la app"
+msgstr "ऐप बंद न करें"
+
+msgid "Espera…"
+msgstr "रुकिए…"
+
+msgid "VIDEO"
+msgstr "वीडियो"
+
+msgid "AUDIO"
+msgstr "ऑडियो"
+
+msgid "UNIÓN"
+msgstr "जोड़"
+
+msgid "GUARDADO"
+msgstr "सेव हो गया"
+
+msgid "PISTA"
+msgstr "ट्रैक"
+
+msgid "¿RES?"
+msgstr "RES?"
+
+msgid "¿COD?"
+msgstr "COD?"
+
+msgid "¿FPS?"
+msgstr "FPS?"
+
+msgid "¿BIT?"
+msgstr "BIT?"
+
+msgid "¿KHZ?"
+msgstr "KHZ?"
+
+msgid "papelera"
+msgstr "ट्रैश"
+
+msgid "basura"
+msgstr "कचरा"
+
+msgid "VIEJO"
+msgstr "पुराना"
+
+msgid "NUEVO"
+msgstr "नया"
+
+msgid "Toca la pantalla · Enter sustituir · n conservar"
+msgstr "स्क्रीन पर टैप करें · Enter = बदलें · n = रखें"
+
+msgid "Enter sustituir · n conservar"
+msgstr "Enter = बदलें · n = रखें"
+
+msgid "Enter sustituir · n no"
+msgstr "Enter = बदलें · n = नहीं"
+
+msgid "Enter sí · n no"
+msgstr "Enter = हाँ · n = नहीं"
+
+msgid "Enter · n"
+msgstr "Enter · n"
+
+msgid "Toca la pantalla · Enter convertir · r remux · n original"
+msgstr "स्क्रीन पर टैप करें · Enter = कन्वर्ट करें · r = remux · n = ओरिजिनल"
+
+msgid "Enter convertir · r remux · n original"
+msgstr "Enter = कन्वर्ट करें · r = remux · n = ओरिजिनल"
+
+msgid "Enter convertir · r remux · n no"
+msgstr "Enter = कन्वर्ट करें · r = remux · n = नहीं"
+
+msgid "Enter sí · r remux · n no"
+msgstr "Enter = हाँ · r = remux · n = नहीं"
+
+msgid "Enter · r · n"
+msgstr "Enter · r · n"
+
+msgid "Toca la pantalla para abrir el teclado"
+msgstr "कीबोर्ड खोलने के लिए स्क्रीन पर टैप करें"
+
+msgid "Toca para abrir el teclado"
+msgstr "कीबोर्ड खोलने के लिए टैप करें"
+
+msgid "Toca = teclado"
+msgstr "टैप = कीबोर्ड"
+
+msgid "¿Sustituir el archivo?"
+msgstr "फ़ाइल बदल दें?"
+
+msgid "¿Sustituir archivo?"
+msgstr "फ़ाइल बदलें?"
+
+msgid "¿Sustituir?"
+msgstr "बदल दें?"
+
+msgid "¿Convertir este video?"
+msgstr "इस वीडियो को कन्वर्ट करें?"
+
+msgid "¿Convertir ahora?"
+msgstr "अभी कन्वर्ट करें?"
+
+msgid "¿Convertir?"
+msgstr "कन्वर्ट करें?"
+
+msgid "Abriendo con view"
+msgstr "view से खोला जा रहा है"
+
+msgid "Enviando a DLpy"
+msgstr "DLpy को भेजा जा रहा है"
+
+msgid "Preparando"
+msgstr "तैयार हो रहा है"
+
+msgid "Preparando descarga"
+msgstr "डाउनलोड तैयार हो रहा है"
+
+msgid "Error"
+msgstr "एरर"
+
+msgid "falló"
+msgstr "फेल"
+
+msgid "reintenta al abrir"
+msgstr "खोलने पर फिर कोशिश करें"
+
+msgid "listas"
+msgstr "तैयार"
+
+msgid "espera"
+msgstr "रुकिए"
+
+msgid "activa"
+msgstr "चालू"
+
+msgid "hecho"
+msgstr "हो गया"
+
+msgid "sin respuesta se sustituye · "
+msgstr "जवाब न मिला तो बदल दिया जाएगा · "
+
+msgid "sin respuesta se convierte · "
+msgstr "जवाब न मिला तो कन्वर्ट हो जाएगा · "
+
+msgid "actualizaciones"
+msgstr "अपडेट"
+
+msgid "analizando"
+msgstr "विश्लेषण हो रहा है"
+
+msgid "boot"
+msgstr "स्टार्टअप"
+
+msgid "GitHub"
+msgstr "GitHub"
