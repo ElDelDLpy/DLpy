@@ -1,5 +1,12 @@
 #!dlpy.py
 # -*- coding: utf-8 -*-
+# 0.1.1: las animaciones de la escena (descarga, barra, morph, union, envio) viven en un modulo aparte, dlpy_anim.py
+#        (version propia, ver su cabecera: 0.0.1): carpeta modules/ junto a este archivo o dlpy_files/_modules/; si falta se baja de MODULES_URL (modules/index.json con version, api y sha256; se verifica el hash). Es opcional: sin el
+#        archivo, con ANIM=0, fuera de un terminal con color, con un API distinta (ANIM_API) o ante cualquier
+#        fallo se usa la barra simple de siempre.
+#        Seguridad: (1) ffmpeg por os.system escapa $ y ` y los nombres de archivo ya no los llevan;
+#        (2) los .po solo pueden usar {marcadores} simples que existan en el texto original;
+#        (3) la configuracion se valida (valores permitidos) al leerla, con --config y en el menu.
 # 0.1.0: los idiomas .po faltantes se bajan de GitHub (LANG_URL, por defecto script/lang del repo);
 #        el menu de idioma ofrece los remotos (index.json); --update-langs re-baja los instalados.
 # 0.0.9: todo texto pasa por tr()/trn() (gettext): el espanol va en el codigo y los demas idiomas son
@@ -22,15 +29,18 @@ import hashlib
 import warnings
 import contextlib
 import importlib
+import importlib.util
 import threading
 import subprocess
 import urllib.parse
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 START = time.time()     # para el limite de tiempo de --scm
 SCM_LIMIT = 5.0         # segundos maximos de --scm; si no alcanza, el atajo usa --scb
 APPLE = "\uf8ff"        #  (logo de Apple; se ve en iOS/macOS) = reproducible de forma nativa
+
+ANIM_API = 1           # contrato que este host espera de dlpy_anim.py (su API)
 
 SHORTCUT_NAME = "DLpy"
 DOCS = os.path.expanduser("~/Documents")
@@ -38,6 +48,7 @@ CFG_PATH = os.path.join(DOCS, "dlpy_config.json")
 DEFAULTS = {
     "LANG": "es",        # idioma del script
     "LANG_URL": "https://raw.githubusercontent.com/ElDelDLpy/DLpy/main/script/lang",  # de donde se bajan los .po
+    "MODULES_URL": "https://raw.githubusercontent.com/ElDelDLpy/DLpy/main/script/modules",  # de donde se baja dlpy_anim.py
     "DIR": "dlpy_files",  # carpeta de descargas (relativa a ~/Documents)
     "MERGE": "auto",     # contenedor al unir: auto (mp4 si todo es compatible con Apple, si no mkv) | mp4 | mkv
     "AUDIO": "native",   # audio solo: native | mp3 | m4a
@@ -46,6 +57,7 @@ DEFAULTS = {
     "DUP": "new",        # si el archivo final ya existe: new (nombre (2)) | replace
     "CACHE_H": "24",     # horas que se conservan las pistas en dlpy_files/_cache (0 = borrar al terminar)
     "PATH": "abs",       # ruta enviada al atajo: abs (absoluta) | home (desde ~) | rel (desde ~/Documents)
+    "ANIM": "1",         # 1 = animaciones de la escena si existe dlpy_anim.py (terminal con color) | 0 = barra simple
 }
 
 # ------------------------------------------------------- idiomas (estilo gettext)
@@ -100,6 +112,38 @@ def parse_po(text):
     return msgs, hdr
 
 
+_PH = re.compile(r"\{[^{}]*\}")
+
+
+def _ph_names(text):
+    """Nombres de {marcadores} de `text` (ignora {{ y }}); None si alguno no es un nombre simple."""
+    names = set()
+    for m in _PH.findall(text.replace("{{", "").replace("}}", "")):
+        n = m[1:-1]
+        if not re.fullmatch(r"\w*", n):       # {x.attr}, {x[0]}, {x!r}, {x:>99}: no permitidos
+            return None
+        names.add(n)
+    return names
+
+
+def safe_msgs(msgs):
+    """Quita las traducciones con marcadores raros o que no existan en el texto original."""
+    out = {}
+    for mid, val in msgs.items():
+        allowed = _ph_names(mid) or set()
+        forms = val if isinstance(val, list) else [val]
+        ok = True
+        for f in forms:
+            names = _ph_names(f) if isinstance(f, str) else set()
+            if names is None or (not isinstance(val, list) and not names <= allowed) \
+                    or (isinstance(val, list) and not all(re.fullmatch(r"\w+", n) for n in names)):
+                ok = False
+                break
+        if ok:
+            out[mid] = val
+    return out
+
+
 def lang_dir():
     return os.path.join(base_dir(), "_lang")
 
@@ -108,13 +152,14 @@ def load_cat(code):
     """(mensajes, encabezado, funcion de plural) del idioma; el base no necesita paquete."""
     if code not in _CATS:
         msgs, hdr, plural = {}, {}, None
-        if code != BASE_LANG:
+        if code != BASE_LANG and LANG_RE.match(code or ""):
             if NET_LANGS and code not in _TRIED and not lang_installed(code):
                 _TRIED.add(code)
                 lang_download(code)
             try:
                 with open(os.path.join(lang_dir(), code + ".po"), encoding="utf-8") as f:
                     msgs, hdr = parse_po(f.read())
+                msgs = safe_msgs(msgs)
                 from gettext import c2py
                 plural = c2py(re.search(r"plural=([^;]+)", hdr.get("Plural-Forms", "")).group(1))
             except Exception:
@@ -258,6 +303,33 @@ def remote_langs():
     return out
 
 
+CHOICES = {
+    "MERGE": {"auto", "mp4", "mkv"}, "AUDIO": {"native", "mp3", "m4a"},
+    "FFMPEG": {"auto", "yes", "no"}, "CALLBACK": {"0", "1"}, "DUP": {"new", "replace"},
+    "PATH": {"abs", "home", "rel"}, "ANIM": {"0", "1"},
+}
+
+
+def valid_cfg(k, v):
+    """(ok, valor normalizado) para la clave de configuracion k."""
+    v = str(v).strip()
+    if k in CHOICES:
+        v = v.lower()
+        return v in CHOICES[k], v
+    if k == "LANG":
+        return bool(LANG_RE.match(v)), v
+    if k in ("LANG_URL", "MODULES_URL"):
+        return v.lower().startswith("https://"), v
+    if k == "CACHE_H":
+        try:
+            return float(v) >= 0, v
+        except ValueError:
+            return False, v
+    if k == "DIR":
+        return bool(v) and "\x00" not in v, v
+    return True, v
+
+
 def load_cfg():
     c = dict(DEFAULTS)
     try:
@@ -266,7 +338,9 @@ def load_cfg():
         for k, v in d.items():
             k = str(k).upper()
             if k in c:
-                c[k] = str(v)
+                ok, nv = valid_cfg(k, v)
+                if ok:
+                    c[k] = nv
     except Exception:
         pass
     if c["DIR"] == "DLpy":          # carpeta por defecto de versiones anteriores
@@ -631,15 +705,110 @@ def place(path, mode):
     return dest
 
 
+# ---------------------------------------------------------------- animaciones (modulo opcional)
+_ANIM = {"mod": None, "tried": False}
+
+
+def module_dirs():
+    """Donde buscar modulos: modules/ junto a este archivo y dlpy_files/_modules/ (donde se bajan)."""
+    dirs = []
+    try:
+        dirs.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules"))
+    except NameError:
+        pass
+    dirs.append(os.path.join(base_dir(), "_modules"))
+    return dirs
+
+
+def module_download(name, api):
+    """Baja <MODULES_URL>/<name>.py a dlpy_files/_modules/ si index.json lo trae con la api esperada y el sha256 coincide
+    (y compila). True si quedo instalado."""
+    base = CFG["MODULES_URL"].rstrip("/") + "/"
+    try:
+        info = json.loads(http_get(base + "index.json", 6).decode("utf-8"))[name]
+        want = str(info["sha256"]).lower()
+        if info.get("api") != api or not re.fullmatch(r"[0-9a-f]{64}", want):
+            return False
+        raw = http_get(base + name + ".py", 20, 4000000)
+        if not raw or hashlib.sha256(raw).hexdigest() != want:
+            return False
+        compile(raw, name + ".py", "exec")
+        d = os.path.join(base_dir(), "_modules")
+        os.makedirs(d, exist_ok=True)
+        dst = os.path.join(d, name + ".py")
+        with open(dst + ".tmp", "wb") as f:
+            f.write(raw)
+        os.replace(dst + ".tmp", dst)
+        return True
+    except Exception:
+        return False
+
+
+def _load_module(path):
+    """dlpy_anim.py de `path` ya configurado, o None (no carga o su API no es la que espera este host)."""
+    try:
+        spec = importlib.util.spec_from_file_location("dlpy_anim", path)
+        m = importlib.util.module_from_spec(spec)
+        sys.modules["dlpy_anim"] = m
+        spec.loader.exec_module(m)
+        if getattr(m, "API", None) != ANIM_API:   # otro contrato: mejor la barra simple que fallar a medias
+            raise ImportError("API")
+        m.configure(tr=tr, lang=CFG["LANG"], version=VERSION)
+        return m
+    except Exception:
+        sys.modules.pop("dlpy_anim", None)
+        return None
+
+
+def load_anim():
+    """Carga dlpy_anim.py (modules/ junto a este archivo o dlpy_files/_modules/; si no esta, lo baja). None si esta
+    apagado, falta o falla."""
+    if _ANIM["tried"]:
+        return _ANIM["mod"]
+    _ANIM["tried"] = True
+    try:
+        if CFG["ANIM"] != "1" or not sys.stdout.isatty():
+            return None
+    except Exception:
+        return None
+    for attempt in (0, 1):
+        for d in module_dirs():
+            p = os.path.join(d, "dlpy_anim.py")
+            if os.path.isfile(p):
+                m = _load_module(p)
+                if m:
+                    _ANIM["mod"] = m
+                    return m
+        if attempt == 0 and not module_download("dlpy_anim", ANIM_API):
+            break
+    return None
+
+
+def anim_ui(url, fmt, audio_only):
+    """AnimUI para una descarga, o None (sin modulo, sin color o escena imposible): entonces manda la barra simple."""
+    m = load_anim()
+    try:
+        if m is None or not m.available():
+            return None
+        total = 1 if audio_only else max(1, (fmt or "").split("/")[0].count("+") + 1)
+        return m.AnimUI(url, total=total, audio_only=audio_only)
+    except Exception:
+        return None
+
+
 def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True,
-             audio_fmt="native", cache_h=24.0, dup="new"):
+             audio_fmt="native", cache_h=24.0, dup="new", ui=None):
+    """ui: AnimUI opcional (lo cierra quien lo creo); si no arranca la escena, se usa la barra simple."""
     sweep_cache(cache_h)
     outdir = work_dir(url)
     last = [0.0]
+    scene = bool(ui and show and ui.begin())
 
     def hook(d):
         if not show:
             return
+        if scene:
+            return ui.hook(d)
         st = d.get("status")
         if st == "downloading":
             now = time.time()
@@ -666,6 +835,8 @@ def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True
         "socket_timeout": 25, "trim_file_name": 150, "keepvideo": cache_h > 0, "allow_multiple_audio_streams": bool(multi),
         "merge_output_format": merge if merge in ("mp4", "mkv") else "mp4",
     }
+    if scene:
+        o["postprocessor_hooks"] = [ui.pp_hook]
     if audio_only and audio_fmt in ("mp3", "m4a"):
         o["postprocessors"] = [{"key": "FFmpegExtractAudio", "preferredcodec": audio_fmt,
                                 "preferredquality": "192"}]
@@ -679,9 +850,9 @@ def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True
             if os.path.exists(stem + "." + ext):
                 path = stem + "." + ext
                 break
-    # el atajo decodifica el texto que recibe: evitar % y + en el nombre
-    if path and os.path.exists(path) and re.search(r"[%+]", os.path.basename(path)):
-        new = os.path.join(os.path.dirname(path), re.sub(r"[%+]", "_", os.path.basename(path)))
+    # el atajo decodifica el texto que recibe (% y +) y el shell interpreta $ ` ! \ : fuera todos del nombre
+    if path and os.path.exists(path) and re.search(r"[%+$`!\\]", os.path.basename(path)):
+        new = os.path.join(os.path.dirname(path), re.sub(r"[%+$`!\\]", "_", os.path.basename(path)))
         os.replace(path, new)
         path = new
     if path and os.path.exists(path):
@@ -741,7 +912,11 @@ def cmd_config(args):
             if k.startswith("DLPY_"):
                 k = k[5:]
             if k in CFG:
-                CFG[k] = v.strip()
+                ok, nv = valid_cfg(k, v)
+                if ok:
+                    CFG[k] = nv
+                else:
+                    print(tr("⚠️ Valor no válido para {k}: {v}", k=k, v=v.strip()))
         save_cfg()
         if CFG["LANG"] != BASE_LANG and not lang_installed(CFG["LANG"]):
             lang_download(CFG["LANG"])
@@ -750,13 +925,15 @@ def cmd_config(args):
         print("\n" + tr("⚙️ Configuración de DLpy (script {v})", v=VERSION))
         items = [("LANG", tr("Idioma")),
                  ("LANG_URL", tr("URL de idiomas (GitHub)")),
+                 ("MODULES_URL", tr("URL de módulos (GitHub)")),
                  ("DIR", tr("Carpeta de descargas")),
                  ("MERGE", tr("Contenedor de video (auto/mp4/mkv)")),
                  ("AUDIO", tr("Formato de audio (native/mp3/m4a)")),
                  ("FFMPEG", tr("ffmpeg (auto/yes/no)")),
                  ("DUP", tr("Si el archivo ya existe (new/replace)")),
                  ("CACHE_H", tr("Horas de caché de pistas (0 = sin caché)")),
-                 ("PATH", tr("Ruta enviada al atajo (abs/home/rel)"))]
+                 ("PATH", tr("Ruta enviada al atajo (abs/home/rel)")),
+                 ("ANIM", tr("Animaciones (1/0)"))]
         for i, (k, lab) in enumerate(items, 1):
             print(" %d. %s: %s" % (i, lab, CFG[k]))
         print(" %d. %s" % (len(items) + 1, tr("Actualizar yt-dlp")))
@@ -792,7 +969,12 @@ def cmd_config(args):
                         continue
                 CFG["LANG"] = code
             else:
-                CFG[k] = input(tr("Nuevo valor: ")).strip() or CFG[k]
+                nv = input(tr("Nuevo valor: ")).strip()
+                ok, nv = valid_cfg(k, nv) if nv else (False, "")
+                if not ok:
+                    print(tr("Opción no válida."))
+                    continue
+                CFG[k] = nv
             save_cfg()
             print(tr("✅ Guardado."))
 
@@ -989,7 +1171,7 @@ def run_ffmpeg(args, out):
     try:
         if os.path.exists(out):
             os.remove(out)
-        q = lambda a: '"%s"' % str(a).replace("\\", "\\\\").replace('"', '\\"')
+        q = lambda a: '"%s"' % re.sub(r'([\\"$`])', r"\\\1", str(a))
         os.system(" ".join(q(a) for a in args))
         if os.path.exists(out) and os.path.getsize(out) > 0:
             return True, ""
@@ -1037,21 +1219,33 @@ def run_pick(yt, url, v, a="", x=""):
         fmt = "+".join(p for p in (v, a, x) if p)
     multi = bool(x) and not audio_only
     print(tr("⏳ Descargando…"))
+    ui = anim_ui(url, fmt, audio_only)
+    tag_err = None
     try:
         by = {}
         if not audio_only and (multi or CFG["MERGE"].lower() == "auto"):
             by = formats_by_id(yt, url)
         merge = "mp4" if audio_only else pick_container(by, fmt, CFG["MERGE"])
         path, _ = download(yt, url, fmt, merge, multi, audio_only, audio_fmt=CFG["AUDIO"],
-                           cache_h=cache_hours(), dup=CFG["DUP"])
+                           cache_h=cache_hours(), dup=CFG["DUP"], ui=ui)
         if multi:
             ids = [i for i in [a] + x.split("+") if i]
             ok, err = tag_audio_tracks(path, [(by.get(i) or {}).get("language") or "" for i in ids])
             if not ok:
-                print(tr("⚠️ No se pudieron etiquetar las pistas de audio: {e}", e=err))
+                tag_err = err
+    except KeyboardInterrupt:
+        if ui:
+            ui.abort()
+        raise
     except Exception as e:
+        if ui:
+            ui.end(ok=False, error=clean_err(e))
         print(tr("❌ Falló la descarga: {e}", e=clean_err(e)))
         return
+    if ui:
+        ui.end(ok=True, send=CFG["CALLBACK"] == "1")
+    if tag_err:
+        print(tr("⚠️ No se pudieron etiquetar las pistas de audio: {e}", e=tag_err))
     finish(path)
 
 
