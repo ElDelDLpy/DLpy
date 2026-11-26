@@ -13,17 +13,15 @@ def get(url):
 
 
 def latest():
-    data = json.loads(get(f"https://api.github.com/repos/{REPO}/releases?per_page=5"))
-    for rel in data:
-        if rel.get("draft") or rel.get("prerelease"):
-            continue
-        for a in rel.get("assets") or []:
-            name = str(a.get("name") or "")
-            url = a.get("browser_download_url")
-            if url and (name == "dlpy.py" or re.match(r"^dlpy[_\-]?\d+\.\d+\.\d+\.py$", name, re.I)):
-                text = get(url).decode("utf-8").replace("\r\n", "\n")
-                if text.startswith("#!dlpy.py") and re.search(r'(?m)^VERSION = "\d+\.\d+\.\d+"', text):
-                    return text
+    # /releases/latest siempre devuelve el release más reciente publicado (no draft/prerelease)
+    rel = json.loads(get(f"https://api.github.com/repos/{REPO}/releases/latest"))
+    for a in rel.get("assets") or []:
+        name = str(a.get("name") or "")
+        url = a.get("browser_download_url")
+        if url and (name == "dlpy.py" or re.match(r"^dlpy[_\-]?\d+\.\d+\.\d+\.py$", name, re.I)):
+            text = get(url).decode("utf-8").replace("\r\n", "\n")
+            if text.startswith("#!dlpy.py") and re.search(r'(?m)^VERSION = "\d+\.\d+\.\d+"', text):
+                return text
     raise SystemExit("DLpy bootstrap: no hay Release con dlpy.py")
 
 
