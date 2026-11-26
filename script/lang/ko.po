@@ -1,0 +1,193 @@
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Label: 🇰🇷 한국어\n"
+"X-Name: 한국어\n"
+
+#: dlpy.py:272
+msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
+msgstr "⬇️ yt-dlp 설치 중 (첫 실행만)…"
+
+#: dlpy.py:279
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "yt-dlp를 설치할 수 없습니다. 연결을 확인해 주세요."
+
+#: dlpy.py:572
+msgid "⚙️ Procesando…"
+msgstr "⚙️ 처리 중…"
+
+#: dlpy.py:630
+msgid "✅ Listo"
+msgstr "✅ 완료"
+
+#: dlpy.py:631
+#. Marcadores (no traducir): {p}
+msgid "📁 Guardado en: {p}"
+msgstr "📁 저장 위치: {p}"
+
+#: dlpy.py:639
+msgid "Idioma del script"
+msgstr "스크립트 언어"
+
+#: dlpy.py:642
+#. Marcadores (no traducir): {lang}
+msgid "✅ Idioma del script: {lang}"
+msgstr "✅ 스크립트 언어: {lang}"
+
+#: dlpy.py:661
+#. Marcadores (no traducir): {v}
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ DLpy 설정 (스크립트 {v})"
+
+#: dlpy.py:662
+msgid "Idioma"
+msgstr "언어"
+
+#: dlpy.py:663
+msgid "Carpeta de descargas"
+msgstr "다운로드 폴더"
+
+#: dlpy.py:664
+msgid "Contenedor de video (auto/mp4/mkv)"
+msgstr "비디오 컨테이너 (auto/mp4/mkv)"
+
+#: dlpy.py:665
+msgid "Formato de audio (native/mp3/m4a)"
+msgstr "오디오 형식 (native/mp3/m4a)"
+
+#: dlpy.py:666
+msgid "ffmpeg (auto/yes/no)"
+msgstr "ffmpeg (auto/yes/no)"
+
+#: dlpy.py:667
+msgid "Si el archivo ya existe (new/replace)"
+msgstr "파일이 이미 있을 때 (new/replace)"
+
+#: dlpy.py:668
+msgid "Horas de caché de pistas (0 = sin caché)"
+msgstr "트랙 캐시 시간 (0 = 캐시 없음)"
+
+#: dlpy.py:669
+msgid "Ruta enviada al atajo (abs/home/rel)"
+msgstr "단축어에 보낼 경로 (abs/home/rel)"
+
+#: dlpy.py:672
+msgid "Actualizar yt-dlp"
+msgstr "yt-dlp 업데이트"
+
+#: dlpy.py:673
+msgid "Salir"
+msgstr "종료"
+
+#: dlpy.py:694
+msgid "Nuevo valor: "
+msgstr "새 값: "
+
+#: dlpy.py:696
+msgid "✅ Guardado."
+msgstr "✅ 저장됨."
+
+#: dlpy.py:700
+msgid "🔄 Actualizando yt-dlp…"
+msgstr "🔄 yt-dlp 업데이트 중…"
+
+#: dlpy.py:707
+msgid "No se encontraron formatos descargables."
+msgstr "다운로드 가능한 형식을 찾을 수 없습니다."
+
+#: dlpy.py:723
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "실시간 스트리밍은 다운로드할 수 없습니다."
+
+#: dlpy.py:759
+#. Marcadores (no traducir): {e}
+msgid "No se pudo leer el enlace: {e}"
+msgstr "링크를 읽을 수 없습니다: {e}"
+
+#: dlpy.py:789
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 링크 붙여넣기: "
+
+#: dlpy.py:793
+msgid "No se encontró un enlace válido."
+msgstr "유효한 링크를 찾을 수 없습니다."
+
+#: dlpy.py:820
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 옵션을 단축어로 보내는 중…"
+
+#: dlpy.py:921
+msgid "⏳ Descargando…"
+msgstr "⏳ 다운로드 중…"
+
+#: dlpy.py:933
+#. Marcadores (no traducir): {e}
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ 오디오 트랙에 태그를 지정할 수 없습니다: {e}"
+
+#: dlpy.py:944
+#. Marcadores (no traducir): {e}
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ 다운로드 실패: {e}"
+
+#: dlpy.py:963
+msgid "Opción no válida."
+msgstr "잘못된 옵션입니다."
+
+#: dlpy.py:993
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ ffmpeg 없음: 오디오가 이미 포함된 비디오만 표시됩니다."
+
+#: dlpy.py:998
+msgid "🎬 Elige la calidad"
+msgstr "🎬 화질 선택"
+
+#: dlpy.py:1001
+msgid "Número"
+msgstr "번호"
+
+#: dlpy.py:1005
+msgid "🔊 Audio principal"
+msgstr "🔊 주 오디오"
+
+#: dlpy.py:1013
+msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
+msgstr "🔊 추가 오디오 (쉼표로 구분된 번호, a = 모두, Enter = 없음)"
+
+#: dlpy.py:1024
+#. Marcadores (no traducir): {n} {t}
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 {n}개 항목이 있는 목록: {t}"
+
+#: dlpy.py:1029
+msgid "Elementos (Enter = todos, ej. 1-3,7)"
+msgstr "항목 (Enter = 모두, 예: 1-3,7)"
+
+#: dlpy.py:1031
+msgid "Mejor calidad"
+msgstr "최고 화질"
+
+#: dlpy.py:1035
+msgid "Solo audio"
+msgstr "오디오만"
+
+#: dlpy.py:1036
+msgid "Calidad para toda la lista"
+msgstr "전체 목록 화질"
+
+#: dlpy.py:1056
+#. Marcadores (no traducir): {bad} {ok}
+msgid "Terminado: {ok} bien, {bad} con error."
+msgstr "완료: {ok}개 성공, {bad}개 오류."
+
+#: dlpy.py:1080
+msgid "Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python dlpy.py                      menú interactivo (pide el enlace)\n  python dlpy.py <url>                descarga interactiva de ese enlace\n  python dlpy.py --idiomas            JSON con los idiomas del script\n  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: --update (actualiza yt-dlp), --version, --help."
+msgstr "단축어 \"DLpy\"가 제어합니다. 단축어가 사용하는 명령:\n  python dlpy.py                      대화형 메뉴 (링크를 묻습니다)\n  python dlpy.py <url>                해당 링크의 대화형 다운로드\n  python dlpy.py --idiomas            스크립트 언어 JSON\n  python dlpy.py --config [K=V ...]   설정 (인수 없음: 메뉴)\n  python dlpy.py --scm <url>          빠른 JSON (최대 5초)으로 찾은 모든 것; 시간이 부족하거나\n                                      목록이거나 yt-dlp가 없을 때: {\"use_scb\":true}\n  python dlpy.py --scb <url>          동일하지만 시간 제한 없음; JSON을 단축어로 보냅니다\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   선택 항목 다운로드\n그 외: --update (yt-dlp 업데이트), --version, --help."
+
+#: dlpy.py:1124
+#. Marcadores (no traducir): {e} {tipo}
+msgid "❌ Error inesperado ({tipo}): {e}"
+msgstr "❌ 예상치 못한 오류 ({tipo}): {e}"

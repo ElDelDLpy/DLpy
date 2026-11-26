@@ -1,0 +1,193 @@
+msgid ""
+msgstr ""
+"Language: zh\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Label: 🇨🇳 中文 (简体)\n"
+"X-Name: 中文 (简体)\n"
+
+#: dlpy.py:272
+msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
+msgstr "⬇️ 正在安装 yt-dlp（仅首次）…"
+
+#: dlpy.py:279
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "无法安装 yt-dlp。请检查网络连接。"
+
+#: dlpy.py:572
+msgid "⚙️ Procesando…"
+msgstr "⚙️ 正在处理…"
+
+#: dlpy.py:630
+msgid "✅ Listo"
+msgstr "✅ 完成"
+
+#: dlpy.py:631
+#. Marcadores (no traducir): {p}
+msgid "📁 Guardado en: {p}"
+msgstr "📁 已保存到：{p}"
+
+#: dlpy.py:639
+msgid "Idioma del script"
+msgstr "脚本语言"
+
+#: dlpy.py:642
+#. Marcadores (no traducir): {lang}
+msgid "✅ Idioma del script: {lang}"
+msgstr "✅ 脚本语言：{lang}"
+
+#: dlpy.py:661
+#. Marcadores (no traducir): {v}
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ DLpy 设置（脚本 {v}）"
+
+#: dlpy.py:662
+msgid "Idioma"
+msgstr "语言"
+
+#: dlpy.py:663
+msgid "Carpeta de descargas"
+msgstr "下载文件夹"
+
+#: dlpy.py:664
+msgid "Contenedor de video (auto/mp4/mkv)"
+msgstr "视频容器 (auto/mp4/mkv)"
+
+#: dlpy.py:665
+msgid "Formato de audio (native/mp3/m4a)"
+msgstr "音频格式 (native/mp3/m4a)"
+
+#: dlpy.py:666
+msgid "ffmpeg (auto/yes/no)"
+msgstr "ffmpeg (auto/yes/no)"
+
+#: dlpy.py:667
+msgid "Si el archivo ya existe (new/replace)"
+msgstr "文件已存在时 (new/replace)"
+
+#: dlpy.py:668
+msgid "Horas de caché de pistas (0 = sin caché)"
+msgstr "音轨缓存小时数 (0 = 不缓存)"
+
+#: dlpy.py:669
+msgid "Ruta enviada al atajo (abs/home/rel)"
+msgstr "发送给快捷指令的路径 (abs/home/rel)"
+
+#: dlpy.py:672
+msgid "Actualizar yt-dlp"
+msgstr "更新 yt-dlp"
+
+#: dlpy.py:673
+msgid "Salir"
+msgstr "退出"
+
+#: dlpy.py:694
+msgid "Nuevo valor: "
+msgstr "新值："
+
+#: dlpy.py:696
+msgid "✅ Guardado."
+msgstr "✅ 已保存。"
+
+#: dlpy.py:700
+msgid "🔄 Actualizando yt-dlp…"
+msgstr "🔄 正在更新 yt-dlp…"
+
+#: dlpy.py:707
+msgid "No se encontraron formatos descargables."
+msgstr "未找到可下载的格式。"
+
+#: dlpy.py:723
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "直播无法下载。"
+
+#: dlpy.py:759
+#. Marcadores (no traducir): {e}
+msgid "No se pudo leer el enlace: {e}"
+msgstr "无法读取链接：{e}"
+
+#: dlpy.py:789
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 粘贴链接："
+
+#: dlpy.py:793
+msgid "No se encontró un enlace válido."
+msgstr "未找到有效链接。"
+
+#: dlpy.py:820
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 正在将选项发送到快捷指令…"
+
+#: dlpy.py:921
+msgid "⏳ Descargando…"
+msgstr "⏳ 正在下载…"
+
+#: dlpy.py:933
+#. Marcadores (no traducir): {e}
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ 无法给音轨打标签：{e}"
+
+#: dlpy.py:944
+#. Marcadores (no traducir): {e}
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ 下载失败：{e}"
+
+#: dlpy.py:963
+msgid "Opción no válida."
+msgstr "选项无效。"
+
+#: dlpy.py:993
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ 没有 ffmpeg：只提供已自带音频的视频。"
+
+#: dlpy.py:998
+msgid "🎬 Elige la calidad"
+msgstr "🎬 选择画质"
+
+#: dlpy.py:1001
+msgid "Número"
+msgstr "编号"
+
+#: dlpy.py:1005
+msgid "🔊 Audio principal"
+msgstr "🔊 主音频"
+
+#: dlpy.py:1013
+msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
+msgstr "🔊 附加音频（数字用逗号分隔，a = 全部，Enter = 无）"
+
+#: dlpy.py:1024
+#. Marcadores (no traducir): {n} {t}
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 包含 {n} 个项目的列表：{t}"
+
+#: dlpy.py:1029
+msgid "Elementos (Enter = todos, ej. 1-3,7)"
+msgstr "项目（Enter = 全部，例如 1-3,7）"
+
+#: dlpy.py:1031
+msgid "Mejor calidad"
+msgstr "最佳画质"
+
+#: dlpy.py:1035
+msgid "Solo audio"
+msgstr "仅音频"
+
+#: dlpy.py:1036
+msgid "Calidad para toda la lista"
+msgstr "整个列表的画质"
+
+#: dlpy.py:1056
+#. Marcadores (no traducir): {bad} {ok}
+msgid "Terminado: {ok} bien, {bad} con error."
+msgstr "完成：{ok} 个成功，{bad} 个失败。"
+
+#: dlpy.py:1080
+msgid "Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python dlpy.py                      menú interactivo (pide el enlace)\n  python dlpy.py <url>                descarga interactiva de ese enlace\n  python dlpy.py --idiomas            JSON con los idiomas del script\n  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: --update (actualiza yt-dlp), --version, --help."
+msgstr "由快捷指令 \"DLpy\" 控制。快捷指令使用的命令：\n  python dlpy.py                      交互菜单（会询问链接）\n  python dlpy.py <url>                交互下载该链接\n  python dlpy.py --idiomas            包含脚本语言的 JSON\n  python dlpy.py --config [K=V ...]   设置（无参数：菜单）\n  python dlpy.py --scm <url>          快速 JSON（最多 5 秒），包含找到的全部内容；如果\n                                      来不及或是列表 / 缺少 yt-dlp：{\"use_scb\":true}\n  python dlpy.py --scb <url>          相同，但无时间限制；将 JSON 发送给快捷指令\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   下载所选内容\n另外：--update（更新 yt-dlp）、--version、--help。"
+
+#: dlpy.py:1124
+#. Marcadores (no traducir): {e} {tipo}
+msgid "❌ Error inesperado ({tipo}): {e}"
+msgstr "❌ 意外错误 ({tipo})：{e}"

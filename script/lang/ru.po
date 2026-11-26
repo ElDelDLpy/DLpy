@@ -1,0 +1,195 @@
+msgid ""
+msgstr ""
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Label: 🇷🇺 Русский\n"
+"X-Name: Русский\n"
+
+#: dlpy.py:272
+msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
+msgstr "⬇️ Установка yt-dlp (только в первый раз)…"
+
+#: dlpy.py:279
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "Не удалось установить yt-dlp. Проверь подключение."
+
+#: dlpy.py:572
+msgid "⚙️ Procesando…"
+msgstr "⚙️ Обработка…"
+
+#: dlpy.py:630
+msgid "✅ Listo"
+msgstr "✅ Готово"
+
+#: dlpy.py:631
+#. Marcadores (no traducir): {p}
+msgid "📁 Guardado en: {p}"
+msgstr "📁 Сохранено в: {p}"
+
+#: dlpy.py:639
+msgid "Idioma del script"
+msgstr "Язык скрипта"
+
+#: dlpy.py:642
+#. Marcadores (no traducir): {lang}
+msgid "✅ Idioma del script: {lang}"
+msgstr "✅ Язык скрипта: {lang}"
+
+#: dlpy.py:661
+#. Marcadores (no traducir): {v}
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ Настройки DLpy (скрипт {v})"
+
+#: dlpy.py:662
+msgid "Idioma"
+msgstr "Язык"
+
+#: dlpy.py:663
+msgid "Carpeta de descargas"
+msgstr "Папка загрузок"
+
+#: dlpy.py:664
+msgid "Contenedor de video (auto/mp4/mkv)"
+msgstr "Видео-контейнер (auto/mp4/mkv)"
+
+#: dlpy.py:665
+msgid "Formato de audio (native/mp3/m4a)"
+msgstr "Формат аудио (native/mp3/m4a)"
+
+#: dlpy.py:666
+msgid "ffmpeg (auto/yes/no)"
+msgstr "ffmpeg (auto/yes/no)"
+
+#: dlpy.py:667
+msgid "Si el archivo ya existe (new/replace)"
+msgstr "Если файл уже существует (new/replace)"
+
+#: dlpy.py:668
+msgid "Horas de caché de pistas (0 = sin caché)"
+msgstr "Часы кэша дорожек (0 = без кэша)"
+
+#: dlpy.py:669
+msgid "Ruta enviada al atajo (abs/home/rel)"
+msgstr "Путь, отправляемый в быструю команду (abs/home/rel)"
+
+#: dlpy.py:672
+msgid "Actualizar yt-dlp"
+msgstr "Обновить yt-dlp"
+
+#: dlpy.py:673
+msgid "Salir"
+msgstr "Выйти"
+
+#: dlpy.py:694
+msgid "Nuevo valor: "
+msgstr "Новое значение: "
+
+#: dlpy.py:696
+msgid "✅ Guardado."
+msgstr "✅ Сохранено."
+
+#: dlpy.py:700
+msgid "🔄 Actualizando yt-dlp…"
+msgstr "🔄 Обновление yt-dlp…"
+
+#: dlpy.py:707
+msgid "No se encontraron formatos descargables."
+msgstr "Загружаемых форматов не найдено."
+
+#: dlpy.py:723
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "Прямые трансляции скачать нельзя."
+
+#: dlpy.py:759
+#. Marcadores (no traducir): {e}
+msgid "No se pudo leer el enlace: {e}"
+msgstr "Не удалось прочитать ссылку: {e}"
+
+#: dlpy.py:789
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 Вставь ссылку: "
+
+#: dlpy.py:793
+msgid "No se encontró un enlace válido."
+msgstr "Подходящая ссылка не найдена."
+
+#: dlpy.py:820
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 Отправка вариантов в быструю команду…"
+
+#: dlpy.py:921
+msgid "⏳ Descargando…"
+msgstr "⏳ Скачивание…"
+
+#: dlpy.py:933
+#. Marcadores (no traducir): {e}
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ Не удалось проставить теги аудиодорожек: {e}"
+
+#: dlpy.py:944
+#. Marcadores (no traducir): {e}
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ Ошибка скачивания: {e}"
+
+#: dlpy.py:963
+msgid "Opción no válida."
+msgstr "Неверный вариант."
+
+#: dlpy.py:993
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ Без ffmpeg: предлагаются только видео, в которых уже есть звук."
+
+#: dlpy.py:998
+msgid "🎬 Elige la calidad"
+msgstr "🎬 Выбери качество"
+
+#: dlpy.py:1001
+msgid "Número"
+msgstr "Номер"
+
+#: dlpy.py:1005
+msgid "🔊 Audio principal"
+msgstr "🔊 Основной звук"
+
+#: dlpy.py:1013
+msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
+msgstr "🔊 Дополнительные аудио (номера через запятую, a = все, Enter = ни одного)"
+
+#: dlpy.py:1024
+#. Marcadores (no traducir): {n} {t}
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 Список с {n} элементом: {t}"
+msgstr[1] "📃 Список с {n} элемента: {t}"
+msgstr[2] "📃 Список с {n} элементов: {t}"
+
+#: dlpy.py:1029
+msgid "Elementos (Enter = todos, ej. 1-3,7)"
+msgstr "Элементы (Enter = все, напр. 1-3,7)"
+
+#: dlpy.py:1031
+msgid "Mejor calidad"
+msgstr "Лучшее качество"
+
+#: dlpy.py:1035
+msgid "Solo audio"
+msgstr "Только аудио"
+
+#: dlpy.py:1036
+msgid "Calidad para toda la lista"
+msgstr "Качество для всего списка"
+
+#: dlpy.py:1056
+#. Marcadores (no traducir): {bad} {ok}
+msgid "Terminado: {ok} bien, {bad} con error."
+msgstr "Готово: {ok} успешно, {bad} с ошибкой."
+
+#: dlpy.py:1080
+msgid "Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python dlpy.py                      menú interactivo (pide el enlace)\n  python dlpy.py <url>                descarga interactiva de ese enlace\n  python dlpy.py --idiomas            JSON con los idiomas del script\n  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: --update (actualiza yt-dlp), --version, --help."
+msgstr "Этим управляет быстрая команда \"DLpy\". Команды, которые использует быстрая команда:\n  python dlpy.py                      интерактивное меню (запрашивает ссылку)\n  python dlpy.py <url>                интерактивное скачивание этой ссылки\n  python dlpy.py --idiomas            JSON с языками скрипта\n  python dlpy.py --config [K=V ...]   настройки (без аргументов: меню)\n  python dlpy.py --scm <url>          быстрый JSON (макс. 5 с) со ВСЕМ найденным; если не\n                                      успевает или это список / нет yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          то же, но без ограничения по времени; отправляет JSON в быструю команду\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   скачивает выбор\nКроме того: --update (обновляет yt-dlp), --version, --help."
+
+#: dlpy.py:1124
+#. Marcadores (no traducir): {e} {tipo}
+msgid "❌ Error inesperado ({tipo}): {e}"
+msgstr "❌ Неожиданная ошибка ({tipo}): {e}"
