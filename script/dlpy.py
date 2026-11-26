@@ -1,5 +1,8 @@
 #!dlpy.py
 # -*- coding: utf-8 -*-
+# 0.1.3: --scm ya no usa un hilo ni os._exit(0): en a-Shell, al vencer el tiempo, os._exit cerraba el proceso con el hilo
+#        todavia dentro de yt-dlp y terminaba en "segmentation fault". Ahora el limite lo vigila el logger de yt-dlp
+#        (_Log.deadline), que corta entre una peticion y la siguiente; sin hilos al salir.
 # 0.1.2: el index.json de idiomas del script usa el mismo formato que el del atajo, asi que el archivo se puede copiar
 #        tal cual de uno a otro: {"names": ["🇺🇸 English", ...], "🇺🇸 English": "en", ...} (names da el orden; cada
 #        etiqueta apunta a su codigo). Cada uno sigue leyendo el suyo (script: LANG_URL/index.json); el script tambien
@@ -34,11 +37,10 @@ import warnings
 import contextlib
 import importlib
 import importlib.util
-import threading
 import subprocess
 import urllib.parse
 
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 
 START = time.time()     # para el limite de tiempo de --scm
 SCM_LIMIT = 5.0         # segundos maximos de --scm; si no alcanza, el atajo usa --scb
@@ -432,9 +434,17 @@ def out_dir():
     return d
 
 
+class _Deadline(BaseException):
+    """Se lanza desde _Log al vencer el limite. BaseException: yt-dlp atrapa Exception, no esto."""
+
+
 class _Log:
+    deadline = None          # time.time() maximo; None = sin limite
+
     def debug(self, m):
-        pass
+        # yt-dlp manda aqui cada paso ("Downloading webpage"...): sirve para cortar sin hilos ni os._exit
+        if self.deadline is not None and time.time() > self.deadline:
+            raise _Deadline()
 
     info = warning = error = debug
 
@@ -665,8 +675,10 @@ def silent(fn, *a, **k):
         return fn(*a, **k)
 
 
-def extract(yt, url, sock=25):
-    o = {"quiet": True, "no_warnings": True, "logger": _Log(), "skip_download": True,
+def extract(yt, url, sock=25, deadline=None):
+    log = _Log()
+    log.deadline = deadline
+    o = {"quiet": True, "no_warnings": True, "logger": log, "skip_download": True,
          "noplaylist": True, "extract_flat": "in_playlist", "socket_timeout": sock}
     with yt.YoutubeDL(o) as y:
         return y.extract_info(url, download=False)
@@ -1029,9 +1041,10 @@ def make_payload(info, url, vmax=60, tmax=20):
     return out
 
 
-def analyze(yt, url, sock, vmax=60, tmax=20):
-    """(payload, info). payload = dict para el atajo; info = datos de yt-dlp (None si no hay)."""
-    info = extract(yt, url, sock)
+def analyze(yt, url, sock, vmax=60, tmax=20, deadline=None):
+    """(payload, info). payload = dict para el atajo; info = datos de yt-dlp (None si no hay).
+    Con `deadline` lanza _Deadline si se pasa de ese instante."""
+    info = extract(yt, url, sock, deadline)
     if not info:
         return {"ok": False, "error": tr("No se encontraron formatos descargables.")}, None
     if is_playlist(info):
@@ -1054,27 +1067,18 @@ def cmd_scm(url):
     yt = import_ytdlp(False)
     if yt is None:
         return out({"ok": True, "use_scb": True, "reason": "install"})
-    res = {}
-
-    def work():
-        try:
-            res["r"] = analyze(yt, url, 4)[0]
-        except Exception as e:
-            res["e"] = e
-
-    buf = io.StringIO()
-    warnings.filterwarnings("ignore")
-    with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
-        th = threading.Thread(target=work, daemon=True)
-        th.start()
-        th.join(max(0.3, SCM_LIMIT - (time.time() - START) - 0.4))
-    if th.is_alive():
-        out({"ok": True, "use_scb": True, "reason": "timeout"})
-        sys.stdout.flush()
-        os._exit(0)          # no esperar al hilo que sigue descargando datos
-    if "e" in res:
-        return out({"ok": False, "error": tr("No se pudo leer el enlace: {e}", e=clean_err(res["e"]))})
-    out(res["r"])
+    # Sin hilos: en a-Shell, os._exit(0) con un hilo aun dentro de yt-dlp daba "segmentation fault".
+    # El limite se comprueba en cada mensaje de yt-dlp (_Log); un socket colgado puede pasarse hasta socket_timeout (4 s).
+    deadline = max(START + SCM_LIMIT - 0.4, time.time() + 0.3)
+    try:
+        res = silent(analyze, yt, url, 4, deadline=deadline)[0]
+    except _Deadline:
+        return out({"ok": True, "use_scb": True, "reason": "timeout"})
+    except Exception as e:
+        if time.time() > deadline:       # fallo tardio (p. ej. socket vencido pasado el limite): que lo intente --scb
+            return out({"ok": True, "use_scb": True, "reason": "timeout"})
+        return out({"ok": False, "error": tr("No se pudo leer el enlace: {e}", e=clean_err(e))})
+    out(res)
 
 
 def _safe(o):
