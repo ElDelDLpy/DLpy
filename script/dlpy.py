@@ -1,5 +1,9 @@
 #!dlpy.py
 # -*- coding: utf-8 -*-
+# 0.1.2: el index.json de idiomas del script usa el mismo formato que el del atajo, asi que el archivo se puede copiar
+#        tal cual de uno a otro: {"names": ["🇺🇸 English", ...], "🇺🇸 English": "en", ...} (names da el orden; cada
+#        etiqueta apunta a su codigo). Cada uno sigue leyendo el suyo (script: LANG_URL/index.json); el script tambien
+#        acepta los formatos anteriores (lista de codigos, {code,label}, {codigo: etiqueta}).
 # 0.1.1: las animaciones de la escena (descarga, barra, morph, union, envio) viven en un modulo aparte, dlpy_anim.py
 #        (version propia, ver su cabecera: 0.0.1): carpeta modules/ junto a este archivo o dlpy_files/_modules/; si falta se baja de MODULES_URL (modules/index.json con version, api y sha256; se verifica el hash). Es opcional: sin el
 #        archivo, con ANIM=0, fuera de un terminal con color, con un API distinta (ANIM_API) o ante cualquier
@@ -34,7 +38,7 @@ import threading
 import subprocess
 import urllib.parse
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 START = time.time()     # para el limite de tiempo de --scm
 SCM_LIMIT = 5.0         # segundos maximos de --scm; si no alcanza, el atajo usa --scb
@@ -284,23 +288,36 @@ def lang_download(code):
     return True
 
 
-def remote_langs():
-    """[(codigo, etiqueta)] de <LANG_URL>/index.json (lista de codigos, de {code,label} o {codigo: etiqueta})."""
-    raw = http_get(lang_url("index.json"), 3)
+def parse_lang_index(raw):
+    """[(codigo, etiqueta)] de un index.json (bytes o texto); [] si no se entiende.
+    Formato unico, el del atajo: {"names": ["🇺🇸 English", ...], "🇺🇸 English": "en", ...}
+    (names da el orden y cada etiqueta apunta a su codigo; el atajo solo lee esas claves).
+    Tambien acepta los formatos anteriores del script: lista de codigos, de {code,label} o {codigo: etiqueta}."""
     try:
-        d = json.loads(raw.decode("utf-8"))
-        items = d.items() if isinstance(d, dict) else [
-            (x, None) if isinstance(x, str) else (x.get("code"), x.get("label"))
-            for x in d if isinstance(x, (str, dict))]
+        d = json.loads(raw.decode("utf-8-sig") if isinstance(raw, bytes) else raw)
+        if isinstance(d, dict) and isinstance(d.get("names"), list):       # formato del atajo
+            items = [(d.get(n), n) for n in d["names"] if isinstance(n, str)]
+        elif isinstance(d, dict):
+            items = [(v, k) if isinstance(v, str) and not LANG_RE.match(k) and LANG_RE.match(v) else (k, v)
+                     for k, v in d.items()]                               # {codigo: etiqueta} o {etiqueta: codigo}
+        else:
+            items = [(x, None) if isinstance(x, str) else (x.get("code"), x.get("label"))
+                     for x in d if isinstance(x, (str, dict))]
     except Exception:
         return []
-    out = []
+    out, seen = [], set()
     for c, l in items:
         if isinstance(l, dict):
             l = l.get("label") or l.get("name")
-        if isinstance(c, str) and LANG_RE.match(c) and c != BASE_LANG:
+        if isinstance(c, str) and LANG_RE.match(c) and c != BASE_LANG and c not in seen:
+            seen.add(c)
             out.append((c, l if isinstance(l, str) and l else c))
     return out
+
+
+def remote_langs():
+    """[(codigo, etiqueta)] de <LANG_URL>/index.json (formato en parse_lang_index)."""
+    return parse_lang_index(http_get(lang_url("index.json"), 3))
 
 
 CHOICES = {
