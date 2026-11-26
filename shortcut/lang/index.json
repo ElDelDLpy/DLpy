@@ -1,95 +1,28 @@
 {
-  "languages": [
-    {
-      "code": "es",
-      "label": "🇪🇸 Español",
-      "language": "es",
-      "file": "es.po",
-      "plural_forms": "nplurals=2; plural=(n != 1);"
-    },
-    {
-      "code": "en",
-      "label": "🇺🇸 English",
-      "language": "en",
-      "file": "en.po",
-      "plural_forms": "nplurals=2; plural=(n != 1);"
-    },
-    {
-      "code": "pt",
-      "label": "🇧🇷 Português (Brasil)",
-      "language": "pt",
-      "file": "pt.po",
-      "plural_forms": "nplurals=2; plural=(n != 1);"
-    },
-    {
-      "code": "fr",
-      "label": "🇫🇷 Français",
-      "language": "fr",
-      "file": "fr.po",
-      "plural_forms": "nplurals=2; plural=(n > 1);"
-    },
-    {
-      "code": "de",
-      "label": "🇩🇪 Deutsch",
-      "language": "de",
-      "file": "de.po",
-      "plural_forms": "nplurals=2; plural=(n != 1);"
-    },
-    {
-      "code": "it",
-      "label": "🇮🇹 Italiano",
-      "language": "it",
-      "file": "it.po",
-      "plural_forms": "nplurals=2; plural=(n != 1);"
-    },
-    {
-      "code": "ru",
-      "label": "🇷🇺 Русский",
-      "language": "ru",
-      "file": "ru.po",
-      "plural_forms": "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);"
-    },
-    {
-      "code": "zh",
-      "label": "🇨🇳 中文（简体）",
-      "language": "zh",
-      "file": "zh.po",
-      "plural_forms": "nplurals=1; plural=0;"
-    },
-    {
-      "code": "hi",
-      "label": "🇮🇳 हिन्दी",
-      "language": "hi",
-      "file": "hi.po",
-      "plural_forms": "nplurals=2; plural=(n != 1);"
-    },
-    {
-      "code": "ar",
-      "label": "🇸🇦 العربية",
-      "language": "ar",
-      "file": "ar.po",
-      "plural_forms": "nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);"
-    },
-    {
-      "code": "ja",
-      "label": "🇯🇵 日本語",
-      "language": "ja",
-      "file": "ja.po",
-      "plural_forms": "nplurals=1; plural=0;"
-    },
-    {
-      "code": "ko",
-      "label": "🇰🇷 한국어",
-      "language": "ko",
-      "file": "ko.po",
-      "plural_forms": "nplurals=1; plural=0;"
-    },
-    {
-      "code": "pl",
-      "label": "🇵🇱 Polski",
-      "language": "pl",
-      "file": "pl.po",
-      "plural_forms": "nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);"
-    }
-  ]
+  "names": [
+    "🇺🇸 English",
+    "🇧🇷 Português (Brasil)",
+    "🇫🇷 Français",
+    "🇩🇪 Deutsch",
+    "🇮🇹 Italiano",
+    "🇷🇺 Русский",
+    "🇨🇳 中文 (简体)",
+    "🇮🇳 हिन्दी",
+    "🇸🇦 العربية",
+    "🇯🇵 日本語",
+    "🇰🇷 한국어",
+    "🇵🇱 Polski"
+  ],
+  "🇺🇸 English": "en",
+  "🇧🇷 Português (Brasil)": "pt",
+  "🇫🇷 Français": "fr",
+  "🇩🇪 Deutsch": "de",
+  "🇮🇹 Italiano": "it",
+  "🇷🇺 Русский": "ru",
+  "🇨🇳 中文 (简体)": "zh",
+  "🇮🇳 हिन्दी": "hi",
+  "🇸🇦 العربية": "ar",
+  "🇯🇵 日本語": "ja",
+  "🇰🇷 한국어": "ko",
+  "🇵🇱 Polski": "pl"
 }
