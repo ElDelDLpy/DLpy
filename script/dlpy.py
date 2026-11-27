@@ -13,15 +13,20 @@
 
 # ==== CHANGELOG ====
 #
-# ## 2.1.6
+# ## 2.1.9
 #
-# - Soporte de a-Shell «Execute Long Command» (LongRunningIntent / iOS 27+): en --shortcutpick (cuando el atajo ya eligió y
-#   DLpy descarga) se reporta progreso real con el comando `progress` de a-Shell, sin añadir texto a la salida del atajo.
-#   Escala 0–1000: descarga (por pista si hay varias), postproceso en modo indeterminado y 1000/1000 al terminar. Así iOS no
-#   cancela trabajos largos por falta de progreso. Fuera de --shortcutpick no se llama a `progress`.
+# - LongRunningIntent: la barra principal de la Live Activity se quedaba en «0% completado»
+#   aunque el subtítulo («Convirtiendo 24%») sí avanzaba. Causa: el total crecía en cada fase
+#   (1000 → 2000 → 3000). Apple Progress / a-Shell no actualiza bien completedUnitCount cuando
+#   totalUnitCount cambia a mitad de camino. Solución: total FIJO en 1000 para toda la vida del
+#   comando. Rangos: descarga 0–400 · post-proceso ligero (Merger/Pistas) 400–500 · conversión
+#   500–999 · Completado 1000/1000. Así la barra principal avanza de verdad y iOS deja de matar
+#   el proceso por «sin progreso».
+# - Se mantienen el latido agresivo (IDLE 4 s / STEP 2 s) y el forzado de progress cada ~3,5 s
+#   durante ffmpeg de la 2.1.8.
 #
 # ==== FIN CHANGELOG ==== 
-VERSION = "2.1.6"
+VERSION = "2.1.9"
 
 # Índice de secciones (cada una empieza con una cabecera «# ──── Título ────»; busca el título):
 #   Variables DLPY_* recordadas · Plataforma · Rutas · Compatibilidad nativa Apple · Interfaz · Terminal:
@@ -3112,33 +3117,295 @@ def sh_run(cmd):
 
 
 # 2.1.6: progreso para a-Shell «Execute Long Command» (LongRunningIntent). El comando `progress` no contamina la salida del atajo.
-_ASHELL_PROG = {"t": 0.0, "sig": None}
+# 2.1.7: según la documentación de a-Shell (PR #1073), iOS cancela («timeout») un comando que pasa demasiado tiempo sin reportar progreso;
+# el total puede crecer, pero lo hecho nunca retrocede. Por eso: (1) todo es UNA sola línea de tiempo creciente N/M (la descarga ocupa 0–1000 y
+# cada fase pesada —unir, remux, convertir— suma 1000 al total, sin volver nunca atrás); (2) un latido reenvía el último valor, con el tiempo
+# transcurrido en el título y un avance mínimo del valor, si pasan segundos sin novedades (unir o convertir archivos grandes tardan minutos sin avisar nada).
+# 2.1.9: total FIJO en 1000. Nunca se crece. Rangos:
+#   descarga          0 – 400
+#   post ligero       400 – 500   (Merger, Pistas, Remux ligero…)
+#   conversión        500 – 999
+#   Completado        1000/1000
+_ASHELL_PROG = {"t": 0.0, "t0": 0.0, "sig": None, "num": None, "lab": "", "base": 0, "span": 400, "total": 1000, "form": 0, "fails": 0, "done": False, "tw": 0}
+_ASHELL_LOCK = threading.RLock()
+_ASHELL_BEAT = {"th": None, "stop": None}
+ASHELL_BEAT_IDLE = 4.0    # 2.1.8/2.1.9: s sin avisos reales antes de reenviar
+ASHELL_BEAT_STEP = 2.0    # 2.1.8/2.1.9: s entre revisiones del latido
+ASHELL_HEAVY_PP = ("FFmpegMerger", "FFmpegVideoRemuxer", "FFmpegVideoConvertor")   # fases pesadas de yt-dlp sin % propio (las de ffmpeg_progress abren la suya)
+ASHELL_RANGE_DOWNLOAD = (0, 400)
+ASHELL_RANGE_POST     = (400, 500)
+ASHELL_RANGE_CONVERT  = (500, 999)
 
 
-def ashell_progress(value, label="", force=False, min_interval=1.0):
-    """Reporta progreso a a-Shell (Execute Long Command / iOS 27+).
-    `value`: número 0–1000, texto «N/1000» o «--indeterminate». `label` es el texto de la Live Activity.
-    Throttle ~1 s (salvo force o 1000/1000). Falla en silencio si `progress` no existe."""
+def _ashell_trace(msg):
+    """2.1.7: rastro de la Live Activity en Long Command (state/long_trace.log, últimas ~150 líneas): hora, tiempo desde el inicio, valor, título y
+    resultado de cada aviso, para ver CUÁNDO muere un timeout (reloj total vs hueco sin avisos). Falla en silencio."""
+    if not LONG_CMD.get("on"):
+        return
     try:
-        if isinstance(value, (int, float)):
-            v = "%d/1000" % max(0, min(1000, int(round(value))))
-        else:
-            v = str(value or "").strip() or "--indeterminate"
-        lab = str(label or "").strip()
-        sig = v + "\0" + lab
-        now = time.time()
-        if not force and sig == _ASHELL_PROG["sig"] and (now - _ASHELL_PROG["t"]) < min_interval:
-            return
-        if not force and v != "1000/1000" and (now - _ASHELL_PROG["t"]) < min_interval:
-            return
-        _ASHELL_PROG["t"], _ASHELL_PROG["sig"] = now, sig
-        if lab:
-            cmd = "progress %s %s >/dev/null 2>&1" % (shlex.quote(v), shlex.quote(lab))
-        else:
-            cmd = "progress %s >/dev/null 2>&1" % shlex.quote(v)
-        sh_run(cmd)
+        P = _ASHELL_PROG
+        path = os.path.join(STATE_DIR, "long_trace.log")
+        el = time.time() - (P["t0"] or time.time())
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write("%s +%d:%02d %s\n" % (time.strftime("%H:%M:%S"), int(el) // 60, int(el) % 60, msg))
+        P["tw"] = P.get("tw", 0) + 1
+        if P["tw"] % 100 == 0:
+            with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                lines = fh.readlines()
+            if len(lines) > 150:
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.writelines(lines[-150:])
     except Exception:
         pass
+
+
+def _ashell_send(v, lab):
+    """2.1.7: una llamada a `progress`. Forma: `progress N/M título` (título suelto; la forma `progress N/M --title …` se veía LITERAL en la Live
+    Activity: «--title Convirtiendo 22%»). Si el comando la rechaza, solo el valor; recuerda cuál funcionó. Si ninguna funciona tres veces
+    seguidas deja de intentarlo (a-Shell sin `progress`)."""
+    P, q = _ASHELL_PROG, shlex.quote
+    forms = (lambda: "progress %s %s" % (q(v), q(lab)),
+             lambda: "progress %s" % q(v))
+    for i in range(min(P["form"], 2), 2):
+        if i == 0 and not lab:
+            continue
+        rc = sh_run(forms[i]() + " >/dev/null 2>&1")
+        if rc == 0:
+            P["form"], P["fails"] = i, 0
+            _ashell_trace("%s | %s" % (v, lab))
+            return True
+    P["fails"] += 1
+    _ashell_trace("FALLO %s | %s" % (v, lab))
+    if P["fails"] >= 3:
+        P["form"] = 2
+    return False
+
+
+def ashell_progress(value, label="", force=False, min_interval=1.0, done=False):
+    """Reporta progreso a a-Shell (Execute Long Command / iOS 27+).
+    2.1.9: total FIJO 1000. `value` es unidades DENTRO del span de la fase actual (0 .. span)
+    o «--indeterminate». `done` marca 1000/1000. El valor global nunca retrocede.
+    Throttle ~1 s (salvo force o done). Falla en silencio si `progress` no existe."""
+    P = _ASHELL_PROG
+    try:
+        with _ASHELL_LOCK:
+            now = time.time()
+            if not P["t0"]:
+                P["t0"] = now
+            if done:
+                P["num"], P["done"] = P["total"], True
+                v = "%d/%d" % (P["total"], P["total"])
+            elif isinstance(value, (int, float)):
+                span = max(1, int(P.get("span") or 400))
+                inner = max(0, min(span - 1, int(round(value))))
+                candidate = P["base"] + inner
+                P["num"] = max(candidate, P["num"] or 0)
+                v = "%d/%d" % (P["num"], P["total"])
+            else:
+                v = str(value or "").strip() or "--indeterminate"
+            lab = str(label or "").strip()
+            if not force and not done and (now - P["t"]) < min_interval:
+                return
+            P["t"], P["sig"], P["lab"] = now, v + "\0" + lab, lab
+            _ashell_send(v, lab)
+    except Exception:
+        pass
+
+
+def ashell_phase(label="", kind="post"):
+    """2.1.9: cambia de fase con total FIJO 1000.
+    kind: 'download' | 'post' | 'convert'. Ajusta base+span y reporta 0 de la nueva fase.
+    Nunca se crece el total (evita que la barra principal de LongRunningIntent se quede en 0%)."""
+    P = _ASHELL_PROG
+    ranges = {
+        "download": ASHELL_RANGE_DOWNLOAD,
+        "post":     ASHELL_RANGE_POST,
+        "convert":  ASHELL_RANGE_CONVERT,
+    }
+    lo, hi = ranges.get(kind, ASHELL_RANGE_POST)
+    with _ASHELL_LOCK:
+        P["base"] = lo
+        P["span"] = hi - lo
+        P["done"] = False
+        # asegurar que el valor no retroceda al entrar en la fase
+        if P["num"] is not None and P["num"] < lo:
+            P["num"] = lo
+        ashell_progress(0, label, force=True)
+
+
+def ashell_label(label):
+    """2.1.9: cambia solo el texto manteniendo el último valor (pasos ligeros: metadatos, miniatura, mover…)."""
+    P = _ASHELL_PROG
+    with _ASHELL_LOCK:
+        if P["num"] is None:
+            ashell_progress("--indeterminate", label, force=True)
+        else:
+            # reenviar el valor actual (sin avanzar)
+            ashell_progress(max(0, (P["num"] or 0) - P["base"]), label, force=True)
+
+
+def _ashell_beat_loop(stop):
+    """2.1.9: latido. Si pasan ASHELL_BEAT_IDLE s sin avisos reales, reenvía el último valor + avance mínimo
+    y el tiempo transcurrido en el título. Total fijo 1000."""
+    P = _ASHELL_PROG
+    while not stop.wait(ASHELL_BEAT_STEP):
+        try:
+            with _ASHELL_LOCK:
+                now = time.time()
+                if P["done"] or not P["t"] or now - P["t"] < ASHELL_BEAT_IDLE:
+                    continue
+                el = int(now - (P["t0"] or now))
+                P["t"] = now
+                # avance mínimo dentro del span de la fase actual (nunca llega al final de la fase)
+                span = max(1, int(P.get("span") or 400))
+                if P["num"] is not None and (P["num"] - P["base"]) < (span - 2):
+                    P["num"] += 1
+                v = "%d/%d" % (P["num"], P["total"]) if P["num"] is not None else "--indeterminate"
+                _ashell_send(v, "%s · %d:%02d" % (P["lab"] or "DLpy", el // 60, el % 60))
+        except Exception:
+            pass
+
+
+def ashell_beat_start():
+    """2.1.8: arranca el latido cuando se reporta progress (--shortcutpick o --long). Idempotente.
+    Antes solo arrancaba con LONG_CMD.on; ahora también con _ASHELL_CONV.on para proteger
+    conversiones largas aunque el atajo no haya pasado --long explícito."""
+    if not (LONG_CMD.get("on") or _ASHELL_CONV.get("on")):
+        return
+    th = _ASHELL_BEAT.get("th")
+    if th is not None and th.is_alive():
+        return
+    ev = threading.Event()
+    th = threading.Thread(target=_ashell_beat_loop, args=(ev,), name="dlpy-beat", daemon=True)
+    _ASHELL_BEAT["th"], _ASHELL_BEAT["stop"] = th, ev
+    th.start()
+
+
+def ashell_beat_stop():
+    ev = _ASHELL_BEAT.get("stop")
+    if ev is not None:
+        ev.set()
+    _ASHELL_BEAT["th"] = None
+
+
+# 2.1.7: la conversión (ffmpeg) reporta su % real a a-Shell `progress` (antes solo «Convirtiendo» fijo, indeterminado).
+# Se activa desde DownloadUI (long_cmd) o en Long Command; es inocuo fuera de él, igual que ashell_progress.
+_ASHELL_CONV = {"on": False}
+
+
+def ashell_conv_on():
+    return bool(_ASHELL_CONV["on"] or LONG_CMD.get("on"))
+
+
+def ashell_conv_begin(label="Convirtiendo"):
+    """2.1.9: arranca conversión ffmpeg → fase 'convert' (500–999) + latido."""
+    if not ashell_conv_on():
+        return
+    ashell_beat_start()
+    ashell_phase(label, kind="convert")
+
+
+def ashell_conv(pct, label="Convirtiendo", force=False):
+    """2.1.9: avance de ffmpeg (0–100) → unidades dentro del rango convert (500–999).
+    Sin % conocido queda indeterminado. Falla en silencio."""
+    if not ashell_conv_on():
+        return
+    try:
+        if pct is None:
+            ashell_progress("--indeterminate", label, force=force)
+        else:
+            p = max(0.0, min(100.0, float(pct)))
+            # mapear 0–100 % → 0 .. (span-1) de la fase convert
+            span = ASHELL_RANGE_CONVERT[1] - ASHELL_RANGE_CONVERT[0]   # 499
+            units = p / 100.0 * (span - 1)
+            ashell_progress(units, "%s %d%%" % (label, int(p)), force=force)
+    except Exception:
+        pass
+
+
+# 2.1.7: Long Command explícito (--long), como la 0.1.6. Separado del progreso: `progress`
+# se reporta con --shortcutpick (inocuo fuera de Long Command), pero la ENTREGA solo usa
+# Long Command si el atajo pasó --long; si no, entrega como siempre (view / shortcuts://).
+# En modo long toda la salida salvo el JSON final va a un sumidero (como el redirect_stdout
+# de long_pick en la 0.1.6): el JSON se escribe directo en la stdout real guardada, sin
+# restaurar sys.stdout, para que el finally de main() (ux_stop) no ensucie la salida.
+LONG_CMD = {"on": False, "out": None, "err": None, "sink": None, "emitted": False, "error": None}
+
+
+def wants_long(args):
+    """2.1.7: ¿se pidió --long / --long-command / --longcommand? Acepta rayas largas (– —)."""
+    for a in (args or []):
+        if a[:1] in "-\u2013\u2014" and a.lstrip("-\u2013\u2014").lower().split("=")[0] in ("long", "long-command", "longcommand"):
+            return True
+    return False
+
+
+def wants_shortcutpick(args):
+    """2.1.7: ¿se pidió --shortcutpick? (para que --long solo cuente en la descarga del atajo)."""
+    for a in (args or []):
+        if a[:1] in "-\u2013\u2014" and a.lstrip("-\u2013\u2014").lower().split("=")[0] == "shortcutpick":
+            return True
+    return False
+
+
+def is_long_command(args=None):
+    """2.1.7: True si esta ejecución es Long Command (ya iniciado, o --long + --shortcutpick en argv)."""
+    if LONG_CMD.get("on"):
+        return True
+    try:
+        argv = list(sys.argv[1:] if args is None else args)
+    except Exception:
+        return False
+    return wants_long(argv) and wants_shortcutpick(argv)
+
+
+def long_payload(final, title):
+    """2.1.7: el mismo JSON que _deliver_platform manda al atajo, pero para stdout (Long Command). Función pura."""
+    return {"dlpy": "file", "ok": True, "file_path": os.path.abspath(final or ""), "file_title": delivery_title(title)}
+
+
+def long_emit(obj):
+    """2.1.7: escribe UNA sola línea JSON en la stdout real guardada (la de Atajos). Solo la primera vez."""
+    if LONG_CMD.get("emitted"):
+        return False
+    LONG_CMD["emitted"] = True
+    ashell_beat_stop()                    # 2.1.7: ya no hay más avisos de progreso tras el JSON
+    out = LONG_CMD.get("out") or sys.stdout
+    try:
+        out.write(json.dumps(json_clean(obj), ensure_ascii=True, separators=(",", ":")) + "\n")
+        out.flush()
+        return True
+    except Exception as _ign:
+        ignore("long_emit", _ign)
+        return False
+
+
+def long_emit_file(final, title):
+    """2.1.7: éxito de Long Command, como emit_long(ok=True, file_path=..., file_title=...) en la 0.1.6."""
+    return long_emit(long_payload(final, title))
+
+
+def long_emit_error(error):
+    """2.1.7: error de Long Command, como emit_long(ok=False, error=...) en la 0.1.6."""
+    return long_emit({"dlpy": "file", "ok": False, "error": str(error or "Falló la descarga.")})
+
+
+def long_begin(args=None):
+    """2.1.7: si es Long Command, guarda la stdout real y manda el resto a un sumidero. Idempotente."""
+    if LONG_CMD.get("on") or LONG_CMD.get("emitted"):
+        return bool(LONG_CMD.get("on"))
+    argv = list(sys.argv[1:] if args is None else args)
+    if not (wants_long(argv) and wants_shortcutpick(argv)):
+        return False
+    try:
+        LONG_CMD["out"], LONG_CMD["err"] = sys.stdout, sys.stderr
+        LONG_CMD["sink"] = open(os.devnull, "w", encoding="utf-8")
+        sys.stdout = sys.stderr = LONG_CMD["sink"]
+        LONG_CMD["on"] = True
+    except Exception as _ign:
+        ignore("long_begin", _ign)
+        LONG_CMD["on"] = False
+    return bool(LONG_CMD.get("on"))
 
 
 def native_clear(fallback=None, mode=None):
@@ -3861,6 +4128,11 @@ def _say(color, msg, mark=None):
     # 1.9.2: todo error/aviso enciende la bottombar y se guarda por separado en internal/logs/errors.log y warnings.log.
     if color in ("red", "amber"):
         diagnostic_report("E" if color == "red" else "A", msg)
+    if color == "red":
+        try:
+            LONG_CMD["error"] = msg  # 2.1.7: el error que verá el atajo en modo long
+        except Exception:
+            pass
     # 1.0.4: con escena activa los errores no rompen la animación; se registran y se integran en D L P Y.
     if ux_on():
         if color != "red":
@@ -10380,21 +10652,31 @@ class DownloadUI:
         self.vkey = vkey
         self.resumed = resumed
         self.long_cmd = bool(long_cmd)   # 2.1.6: --shortcutpick → reportar a a-Shell `progress`
+        _ASHELL_CONV["on"] = self.long_cmd   # 2.1.7: ffmpeg_progress reporta su % real a a-Shell
+        if self.long_cmd:
+            ashell_beat_start()          # 2.1.8: latido (protege LongRunningIntent; arranca también con --shortcutpick)
         self._reset_speed()
 
     def _ashell_units(self, pct):
-        """2.1.6: porcentaje 0–100 de la pista actual → unidades 0–1000 (reparte si hay varias pistas)."""
+        """2.1.9: porcentaje 0–100 de la pista actual → unidades DENTRO del rango download (0–400).
+        Si hay varias pistas se reparte el rango 0–400 entre ellas."""
         if pct is None:
             return None
         pct = max(0.0, min(100.0, float(pct)))
+        lo, hi = ASHELL_RANGE_DOWNLOAD
+        span = hi - lo
         if self.total > 1 and self.seen >= 1:
-            span = 1000.0 / float(self.total)
-            return (self.seen - 1) * span + (pct / 100.0) * span
-        return pct * 10.0
+            part = span / float(self.total)
+            return (self.seen - 1) * part + (pct / 100.0) * part
+        return (pct / 100.0) * (span - 1)
 
     def _ashell_report(self, pct, label, force=False):
         if not self.long_cmd:
             return
+        # asegurar que estamos en la fase download
+        P = _ASHELL_PROG
+        if P.get("base") != ASHELL_RANGE_DOWNLOAD[0] and not P.get("done"):
+            ashell_phase(label or "Descargando", kind="download")
         u = self._ashell_units(pct) if pct is not None else None
         if u is None:
             ashell_progress("--indeterminate", label, force=force)
@@ -10549,7 +10831,10 @@ class DownloadUI:
             ux_pp_start(name)
             b.start(pp_label(name))
             if self.long_cmd:
-                ashell_progress("--indeterminate", pp_label(name) or "Procesando", force=True)
+                if name in ASHELL_HEAVY_PP:      # 2.1.9: fase post (400–500); la conversión real usa ashell_conv_begin
+                    ashell_phase(pp_label(name) or "Procesando", kind="post")
+                else:
+                    ashell_label(pp_label(name) or "Procesando")
             if name == "FFmpegMerger":
                 info = d.get("info_dict") or {}
                 parts = [f.get("filepath") for f in (info.get("requested_formats") or [])
@@ -10566,10 +10851,11 @@ class DownloadUI:
         if self.bar.th:
             self.bar.done(min_secs=0.5)
         if self.long_cmd:
-            ashell_progress(1000, "Completado", force=True)
+            ashell_progress(1000, "Completado", force=True, done=True)
 
     def abort(self):
         self.bar.stop()
+        ashell_beat_stop()
 
 
 # ───────────────────── [B6] UIM · Terminal: teclado y cuenta regresiva ─────────────────────
@@ -11483,7 +11769,10 @@ def ffmpeg_progress(pp, src, dst, opts, duration, bar):
         pp.run_ffmpeg(src, dst, opts)
         return
     t0 = time.time()
-    epos, last_raw = [0], [0.0]
+    epos, last_raw, last_force = [0], [0.0], [0.0]   # 2.1.8: last_force para forzar progress periódico
+    _alab = (getattr(bar, "label", "") or "Convirtiendo").split(" · ")[0]   # 2.1.7: «Convirtiendo», «Remux», «Ajustando pistas»
+    ashell_conv_begin(_alab)                                                # 2.1.7: fase nueva en la Live Activity de a-Shell
+    FORCE_EVERY = 3.5   # 2.1.8: forzar ashell_conv al menos cada X s aunque el % no cambie (vídeos pesados)
 
     def drain_err():
         """Debug: reenvía la salida de ffmpeg tal cual va llegando."""
@@ -11505,12 +11794,14 @@ def ffmpeg_progress(pp, src, dst, opts, duration, bar):
         while proc.poll() is None:
             # (1.6.4: con convert_fast_anim se lee el avance cada FFMPEG_TICK_FAST en vez de FFMPEG_TICK)
             drain_err()
-            if DEBUG and time.time() - last_raw[0] >= 2.0:
-                last_raw[0] = time.time()
+            now = time.time()
+            if DEBUG and now - last_raw[0] >= 2.0:
+                last_raw[0] = now
                 raw = _read_progress_raw(pfile)
                 if raw:
                     dbg("ffmpeg progress", raw)
             secs, speed = _read_progress(pfile)
+            force = (now - last_force[0]) >= FORCE_EVERY
             if secs is not None:
                 parts = []
                 fps_now, out_bytes = _read_progress_extra(pfile)      # 1.6.9: datos reales de la salida
@@ -11526,12 +11817,20 @@ def ffmpeg_progress(pp, src, dst, opts, duration, bar):
                     _pc = min(99.9, secs / duration * 100)
                     bar.set(pct=_pc, tail="  ".join(parts), val=speed)
                     ux_conv_progress(_pc)                       # 1.2.1: el mismo % en la escena de conversión
+                    ashell_conv(_pc, _alab, force=force)        # 2.1.8: force periódico para no dejar huecos
                 else:
                     if speed:
                         parts.append(f"{speed:.1f}x")
                     parts.append(f"t={int(secs) // 60:02d}:{int(secs) % 60:02d}")
                     bar.set(tail="  ".join(parts), indeterminate=True, val=speed)
                     ux_conv_progress(None)
+                    ashell_conv(None, _alab, force=force)
+                if force:
+                    last_force[0] = now
+            elif force:
+                # 2.1.8: aunque aún no haya secs, mantener vivo el LongRunningIntent
+                ashell_conv(None, _alab, force=True)
+                last_force[0] = now
             bar.kick()
             try:
                 # 1.6.4: duerme hasta el próximo avance o hasta que ffmpeg termine (lo que pase primero)
@@ -11561,6 +11860,7 @@ def ffmpeg_progress(pp, src, dst, opts, duration, bar):
         raise RuntimeError(err or f"ffmpeg terminó con código {proc.returncode}")
     bar.set(pct=100.0, tail="")
     ux_conv_progress(100.0)
+    ashell_conv(100.0, _alab, force=True)
 
 
 def make_track_pp(labels, bar=None):
@@ -15792,6 +16092,10 @@ def instance_guard(args):
         guard_start()
         return None
     dbg("instancia: ya hay otra ejecución", info)
+    if GUARD["mode"] == "pick" and wants_long(args):  # 2.1.7: Long Command ocupado -> JSON, como --scm/--scb
+        sys.stdout.write(json.dumps({"dlpy": "file", "ok": False, "error": GUARD_BUSY}, ensure_ascii=True, separators=(",", ":")) + "\n")
+        sys.stdout.flush()
+        return 0
     if GUARD["mode"] in ("scm", "scb"):
         out = shortcut_error("busy", GUARD_BUSY)
         sys.stdout.write(json.dumps(json_clean(out), ensure_ascii=True, separators=(",", ":")) + "\n")
@@ -16282,6 +16586,10 @@ def run_cmd(args, timeout=8):
 
 def deliver(final, title):
     """Entrega el archivo (Atajos / app por defecto) y anota la hora en el índice."""
+    if LONG_CMD.get("on") or is_long_command():  # 2.1.7: Long Command -> JSON por stdout, como la 0.1.6
+        if long_emit_file(final, title):
+            mark_delivered(final)
+        return
     if ux_on() and ux_questions():
         # 0.9.3: hay algo que preguntar: la escena cede y sale como siempre (1.1.5: ux_questions ya es siempre False)
         ux_stop(clear=True)
@@ -18405,6 +18713,7 @@ def _end(rc):
 def _m_modes(run):
     """[M0a] Modos especiales (--selftest, --sistema, --perfil, --config, --2shortcuts, --scb, --scm:"""
     sys.argv[1:] = norm_args(sys.argv[1:])      # «—scb» (raya larga del teclado) → «--scb»
+    long_begin()  # 2.1.7: --shortcutpick --long -> resto de la salida al sumidero, solo el JSON final llega al atajo
     if "--selftest" in sys.argv[1:]:
         return _end(selftest())
     if "--sistema" in sys.argv[1:]:
@@ -19345,7 +19654,8 @@ def _m_register(run):
         m_warn(f"No se pudo guardar el índice: {e}")
     history_add(key, index[key])          # downloads.json guarda cada descarga, no solo la última
 
-    result_card(final, title, index[key]["meta"], run.info.get("duration"))
+    if not LONG_CMD.get("on"):  # 2.1.7: en Long Command no hay consola que vea la tarjeta
+        result_card(final, title, index[key]["meta"], run.info.get("duration"))
     deliver(final, title)
     return 0
 
@@ -19363,11 +19673,16 @@ def main():
         for step in MAIN_STEPS:
             rc = step(run)
             if rc is not None:
+                if rc and (LONG_CMD.get("on") or is_long_command()) and not LONG_CMD.get("emitted"):  # 2.1.7: _m_register no corrió: el atajo necesita el error
+                    long_emit_error(LONG_CMD.get("error") or "Falló la descarga.")
                 return rc
         return 0
     except Exception as exc:
         # llega a la bottombar antes de que la escena se cierre
         diagnostic_report("E", f"Error inesperado: {type(exc).__name__}: {exc}")
+        if (LONG_CMD.get("on") or is_long_command()) and not LONG_CMD.get("emitted"):  # 2.1.7: sin JSON el atajo se queda sin respuesta
+            long_emit_error(LONG_CMD.get("error") or f"{type(exc).__name__}: {exc}")
+            return 1
         raise
     finally:
         ux_error_end()                   # 1.0.8: un error se muestra en D L P Y antes de cerrar la escena

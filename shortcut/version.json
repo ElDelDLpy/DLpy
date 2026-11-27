@@ -1,4 +1,4 @@
 {
-  "version": "0.0.7",
-  "notes": "▸ Descarga y análisis con Execute Long Command (iOS 27): sin límite de tiempo, avance en la Dynamic Island y con la pantalla bloqueada.\n▸ Lista completa de formatos, con lo Apple nativo primero.\n▸ Las actualizaciones (🐍 dlpy.py y ⚡ atajo) ahora preguntan: Instalar o Ahora no.\n▸ Requiere dlpy.py 0.1.4 o superior."
+  "version": "0.0.8",
+  "notes": "Sin enlace de entrada: toma el enlace del portapapeles, lo muestra para editarlo y abre dlpy.py con él. Ahora compatible con iOS que no tienen «Obtener almacenamiento» / «Guardar contenido»: el estado de la revisión se guarda en Archivos (DLpy/ultima_revision.txt). Rama de búsqueda elegible (main/dev) y siempre pregunta Instalar u Omitir antes de actualizar el atajo o dlpy.py. El actualizador acepta enlaces de iCloud o de GitHub para el atajo."
 }
