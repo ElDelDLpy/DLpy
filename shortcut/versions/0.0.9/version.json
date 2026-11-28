@@ -1,0 +1,4 @@
+{
+  "version": "0.0.9",
+  "notes": "✨ Novedades 0.0.9\n📱 Menú al abrir desde Atajos: 🔗 Ingresar link · ⚙️ Configuración\n⏱️ Frecuencia de búsqueda ajustable: diaria, semanal, mensual o manual\n🔄 Opción «Buscar ahora»\n🐍 Orden de actualización: primero dlpy.py y luego el atajo\n🎨 Diseño unificado con iconos en menús y alertas"
+}
