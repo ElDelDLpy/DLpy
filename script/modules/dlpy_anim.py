@@ -1,5 +1,12 @@
 #!dlpy_anim.py
 # -*- coding: utf-8 -*-
+# 0.0.2: la escena MUESTRA LA CONVERSION. El dibujo «conv» (chips origen → destino, via de puntos que se llena con el % real, el codigo
+#        de destino como titulo y el aviso «Espera mientras convierte…») venia de la 2.1.5 pero nadie lo activaba: con escena, ensure_apple
+#        convertia en silencio. Nuevo para el host (API sigue en 1; un modulo viejo simplemente no los tiene y el host los salta):
+#        AnimUI.conv_begin(path, streams, plan, final_ext, enc) / conv_progress(pct) / conv_end(ok=True) y sus puentes ux_conv_begin/progress/end.
+#        conv_begin recibe los datos crudos del host y decide los chips aqui (conv_chips: VP9 -> H.264, MKV -> MP4, OPUS -> AAC, HEV1 -> HVC1).
+#        conv_begin espera (scene_gate) a que el dibujo anterior se vea entero; un intento nuevo tras un fallo reinicia la via; conv_end(ok=True)
+#        llena la via y el destino destella (CONV_END_HOLD); conv_end(ok=False) quita el dibujo sin destello.
 # 0.0.1: primer modulo aparte (escena extraida de la 2.1.5 del DLpy original). Version propia: VERSION (esta) y API (entero
 #        que sube cuando cambia lo que dlpy.py espera de este archivo; el host compara con su ANIM_API y, si no
 #        coincide, usa su barra simple). Se retiran funciones sin uso (scene_wait_*, scene_brand/note/hold,
@@ -23,7 +30,7 @@ import site
 import urllib.parse
 import urllib
 
-VERSION = "0.0.1"       # version de este modulo
+VERSION = "0.0.2"       # version de este modulo
 API = 1                 # contrato con dlpy.py (su ANIM_API): subir al cambiar AnimUI/configure/available
 
 # ══════════════════════════════════════ PUENTE CON EL HOST (dlpy.py) ══════════════════════════════════════
@@ -5176,6 +5183,77 @@ def ux_pp_start(name):
     scene_status(scene_pp_text(name), frac=min(0.94, max(SCENE["frac"], 0.8) + 0.03))
 
 
+CHIP_CODEC = {"h264": "H.264", "hevc": "HEVC", "vp9": "VP9", "vp8": "VP8", "av1": "AV1", "mpeg4": "MPEG-4", "mpeg2video": "MPEG-2",
+              "aac": "AAC", "opus": "Opus", "vorbis": "Vorbis", "mp3": "MP3", "ac3": "AC-3", "eac3": "E-AC-3", "flac": "FLAC", "alac": "ALAC"}
+ENC_DST = {"hevc_videotoolbox": "HEVC", "libx265": "HEVC", "libkvazaar": "HEVC", "libx264": "H.264", "h264_videotoolbox": "H.264"}
+
+
+def conv_chips(path, streams, plan, final_ext, enc):
+    """0.0.2: (origen, destino) de los chips: lo MAS pesado que cambia (video recodificado > audio > etiqueta > contenedor)."""
+    vs = [x for x in streams if x["type"] == "video"][:1]
+    au = [x for x in streams if x["type"] == "audio"]
+    nm = lambda c: CHIP_CODEC.get(c, (c or "?").upper())
+    if vs and enc in ENC_DST:
+        return nm(vs[0]["codec"]), ENC_DST[enc]
+    for a, m in zip(au, plan["a"]):
+        if m != "copy":
+            return nm(a["codec"]), "AAC"
+    if vs and plan["tag"]:
+        return (vs[0]["tag"] or "hev1").upper(), "HVC1"
+    return (os.path.splitext(path)[1][1:] or "?").upper(), (final_ext[1:] or "?").upper()
+
+
+def ux_conv_begin(src, dst, codec=None):
+    """0.0.2: empieza la conversion: chips origen → destino, via de puntos sin % todavia y, de titulo, el codigo de destino.
+    Primero espera (modo wait) a que el dibujo que ocupa el centro se vea entero; un intento nuevo tras un fallo reinicia la via sin esperar."""
+    S = SCENE
+    if not S["on"]:
+        return
+    prev = S.get("conv")
+    if not (prev and prev.get("end") is None):
+        scene_gate("conv")
+    scene_busy(False)
+    S["pp_pct"] = None
+    S["conv"] = {"src": ux_chip(src) or "?", "dst": ux_chip(dst) or "?", "codec": ux_chip(codec or dst) or "",
+                 "pct": None, "end": None, "t0": float(S.get("ta") or 0.0)}
+    scene_status("Convirtiendo", frac=min(0.94, max(S["frac"], 0.8) + 0.03))
+    _FAST_WAKE.set()
+
+
+def ux_conv_progress(pct):
+    """0.0.2: el % real de ffmpeg (None = sin dato: la via sigue tenue). Mueve la via, la regla y el texto de estado."""
+    S = SCENE
+    cv = S.get("conv") if S["on"] else None
+    if not cv or cv.get("end") is not None:
+        return
+    try:
+        p = None if pct is None else max(0.0, min(100.0, float(pct)))
+    except (TypeError, ValueError):
+        p = None
+    old = cv.get("pct")
+    cv["pct"] = p
+    S["pct"] = p
+    if p is not None:
+        S["frac"] = max(S["frac"], min(0.97, 0.83 + 0.14 * p / 100.0))
+    if (None if old is None else int(old)) != (None if p is None else int(p)):
+        _FAST_WAKE.set()                       # convert_fast_anim: el cuadro solo se repinta cuando cambia el % entero
+
+
+def ux_conv_end(ok=True):
+    """0.0.2: ok → la via se llena y el destino destella (el dibujo cierra su loop); no ok → se quita sin destello."""
+    S = SCENE
+    cv = S.get("conv") if S["on"] else None
+    if not cv or cv.get("end") is not None:
+        return
+    if ok:
+        cv["pct"], S["pct"] = 100.0, 100.0
+        cv["end"] = float(S.get("ta") or 0.0)
+        S["frac"] = max(S["frac"], 0.97)
+    else:
+        S["conv"], S["pct"] = None, None
+    _FAST_WAKE.set()
+
+
 def ux_end(*a, **k):
     return scene_end(*a, **k)
 
@@ -5366,6 +5444,33 @@ class AnimUI:
                 ux_pp_start(str(d.get("postprocessor") or ""))
         except Exception as e:
             dbg("anim: fallo en el hook de proceso", "%s: %s" % (type(e).__name__, e))
+
+    # ---- conversion (0.0.2) ----
+    def conv_begin(self, path, streams, plan, final_ext, enc):
+        """Empieza (o reinicia tras un intento fallido) la escena de conversion. El host da lo crudo (archivo, pistas de ffprobe, plan,
+        extension final y encoder del intento); los chips los decide conv_chips."""
+        if self.on:
+            try:
+                src, dst = conv_chips(path, streams, plan, final_ext, enc)
+                ux_conv_begin(src, dst)
+            except Exception as e:
+                dbg("anim: fallo al iniciar la conversión", "%s: %s" % (type(e).__name__, e))
+
+    def conv_progress(self, pct):
+        """% real de la conversion (0-100) o None si no hay dato."""
+        if self.on:
+            try:
+                ux_conv_progress(pct)
+            except Exception as e:
+                dbg("anim: fallo en el avance de conversión", "%s: %s" % (type(e).__name__, e))
+
+    def conv_end(self, ok=True):
+        """Termina la conversion: ok=True llena la via; ok=False la quita."""
+        if self.on:
+            try:
+                ux_conv_end(ok)
+            except Exception as e:
+                dbg("anim: fallo al cerrar la conversión", "%s: %s" % (type(e).__name__, e))
 
     def status(self, text, frac=None):
         if self.on:
