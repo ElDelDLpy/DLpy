@@ -1,31 +1,9 @@
 #!dlpy.py
 # -*- coding: utf-8 -*-
-# ==============================================================================================================================
-# REGLA ABSOLUTA (vale para TODO cambio, presente y futuro): DLpy debe mantenerse LO MAS LIGERO POSIBLE. Corre en a-Shell mini
-# (iOS, menos de 250 MB: sin Perl, TeX ni compiladores; poca memoria y poco tiempo en --scm y atajos). Por eso:
-#   1. El host NUNCA depende de un modulo: sin el, todo funciona igual (con la version simple). Al agregar o modificar un modulo
-#      no se toca el host mas alla de su API (ANIM_API) y el host no conoce los ajustes de ningun modulo.
-#   2. Toda funcion nueva es OPCIONAL y viene APAGADA por defecto si anade peso (paquetes, descargas, archivos, memoria, red,
-#      tiempo de arranque o de descarga). Lo que no pesa nada (p. ej. THREADS) puede venir activo.
-#   3. Nada pesado se importa al arrancar: imports perezosos, dentro de la funcion que los usa.
-#   4. Un paquete de pip extra solo se instala cuando la persona activa la opcion que lo necesita (nunca por defecto, y la
-#      revision semanal solo lo actualiza si ya esta en DEPS).
-#   5. Antes de escribir codigo propio, usar lo que ya trae yt-dlp o el ffmpeg de a-Shell. Sin hilos propios, sin procesos
-#      residentes, sin caches nuevas y sin archivos nuevos fuera de dlpy_files/.
-# ==============================================================================================================================
-# 0.2.4: OPCIONES DE yt-dlp (todas apagadas por defecto salvo THREADS; cada una es una clave de --config y del menu).
-#        THREADS=4: concurrent_fragment_downloads, baja varios fragmentos HLS/DASH a la vez (1-16; no pesa nada; no ayuda en mp4 directos).
-#        SUBS=off|es,en (+SUBAUTO=1): descarga subtitulos, los pasa a srt y los embebe (mov_text en mp4); si el ffmpeg no puede, el
-#        video se conserva sin ellos y se avisa. La conversion a Apple y el etiquetado de pistas ya no los descartan.
-#        THUMB=1: portada embebida (jpg, o png si el ffmpeg no trae mjpeg). Instala `mutagen` SOLO si hace falta (mp4/m4a/ogg/opus;
-#        yt-dlp lo usa para esos contenedores) y avisa «⬇️ Instalando…». META=1: metadatos y capitulos (FFmpegMetadata).
-#        Si un extra falla en el postproceso, se repite la descarga SIN extras (las pistas ya estan en la cache) y se avisa.
-#        COOKIES=<ruta a cookies.txt> (relativa a ~/Documents o absoluta): cookiefile para contenido con edad, privado o con login.
-#        TRAMO: --shortcutpick acepta ,R=1:20-3:45 al final (o 80-225, 1:20-, -45) y el modo terminal lo pregunta; baja solo ese
-#        tramo (download_ranges). Cada tramo usa su propia carpeta de cache (no se confunde con el video completo) y el archivo
-#        lleva el tramo en el nombre. DEBUG=1: yt-dlp en modo verbose y todo lo que informa va a dlpy_files/_log.txt (se recorta).
-#        LISTAS: ahora tambien revisan la compatibilidad con Apple (ensure_apple) como una descarga normal; los elementos con
-#        enlace relativo (id sin http) ya no cuentan como error si se pueden reconstruir; numeracion y aviso de "+N mas".
+# 0.2.4: DESCARGAS STREAMING MAS RAPIDAS. Las pistas por fragmentos (HLS/DASH: m3u8, mpd, ok.ru, etc.) se bajan con varios fragmentos
+#        a la vez (yt-dlp: concurrent_fragment_downloads). Nueva clave FRAGS (1-16, por defecto 4; 1 = como antes, uno por uno):
+#        --config FRAGS=8 o la opcion del menu. Las descargas normales de un solo archivo no cambian. Los avisos de avance se
+#        serializan con un candado porque yt-dlp puede llamarlos desde varios hilos (barra simple, escena y --long).
 # 0.2.3: MODULOS E INSTALACIONES CON AVISO (el host sigue sin depender de ningun modulo: no sabe de fps ni de animaciones; cada modulo guarda sus
 #        propios ajustes). INSTALACIONES: tambien avisa cuando INSTALA algo que no existia (yt-dlp, un modulo, una dependencia o un idioma: «⬇️ Instalando …»
 #        y «✅ … instalado» o «⚠️ No se pudo instalar …»), sea en la revision, en el menu o al usarlo por primera vez.
@@ -128,6 +106,7 @@ import shutil
 import hashlib
 import warnings
 import contextlib
+import threading
 import importlib
 import importlib.util
 import subprocess
@@ -158,19 +137,13 @@ DEFAULTS = {
     "FFMPEG": "auto",    # auto | yes | no (forzar la deteccion de ffmpeg)
     "CALLBACK": "1",     # 1 = al terminar, abrir el atajo para previsualizar
     "DUP": "new",        # si el archivo final ya existe: new (nombre (2)) | replace
+    "FRAGS": "4",        # fragmentos que se bajan a la vez en streams HLS/DASH (1-16; 1 = uno por uno)
     "CACHE_H": "24",     # horas que se conservan las pistas en dlpy_files/_cache (0 = borrar al terminar)
     "PATH": "abs",       # ruta enviada al atajo: abs (absoluta) | home (desde ~) | rel (desde ~/Documents)
     "DEPS": "pip,yt-dlp",  # paquetes de pip que la revision semanal mantiene al dia (separados por coma)
     "TOOLTAG": "1",      # 1 = escribir «DLpy <version>» en el «Software de codificación» del mp4/m4v/m4a final | 0 = no
     "UPDATE": "1",       # 1 = al abrir, buscar cada semana un Release nuevo de dlpy.py (y poner al dia sus modulos, dependencias e idiomas) | 0 = no
     "ANIM": "0",         # 0 = barra simple (por defecto) | 1 = animaciones de la escena si existe dlpy_anim.py (terminal con color)
-    "THREADS": "4",      # fragmentos que se bajan a la vez en streams HLS/DASH (1-16)
-    "SUBS": "off",       # off | idiomas separados por coma (es,en  /  en.*): descarga y embebe subtitulos
-    "SUBAUTO": "0",      # 1 = si no hay subtitulos manuales, usar los automaticos
-    "THUMB": "0",        # 1 = portada embebida (instala mutagen solo si hace falta)
-    "META": "0",         # 1 = metadatos y capitulos dentro del archivo
-    "COOKIES": "",       # ruta a cookies.txt (relativa a ~/Documents o absoluta); vacio = sin cookies
-    "DEBUG": "0",        # 1 = yt-dlp verbose y registro en dlpy_files/_log.txt
 }
 
 # ------------------------------------------------------- idiomas (estilo gettext)
@@ -486,9 +459,7 @@ CHOICES = {
     "MERGE": {"auto", "mp4", "mkv"}, "AUDIO": {"native", "mp3", "m4a"},
     "FFMPEG": {"auto", "yes", "no"}, "CALLBACK": {"0", "1"}, "DUP": {"new", "replace"},
     "PATH": {"abs", "home", "rel"}, "ANIM": {"0", "1"}, "UPDATE": {"0", "1"}, "TOOLTAG": {"0", "1"},
-    "SUBAUTO": {"0", "1"}, "THUMB": {"0", "1"}, "META": {"0", "1"}, "DEBUG": {"0", "1"},
 }
-SUB_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._*-]{0,15}$")      # codigo de idioma de subtitulos (yt-dlp admite regex simples: en.*)
 
 
 def valid_cfg(k, v):
@@ -501,6 +472,11 @@ def valid_cfg(k, v):
         return bool(LANG_RE.match(v)), v
     if k in ("LANG_URL", "MODULES_URL"):
         return v.lower().startswith("https://"), v
+    if k == "FRAGS":
+        try:
+            return 1 <= int(v) <= 16, str(int(v))
+        except ValueError:
+            return False, v
     if k == "CACHE_H":
         try:
             return float(v) >= 0, v
@@ -508,21 +484,6 @@ def valid_cfg(k, v):
             return False, v
     if k == "DIR":
         return bool(v) and "\x00" not in v, v
-    if k == "THREADS":
-        try:
-            n = int(float(v))
-        except ValueError:
-            return False, v
-        return 1 <= n <= 16, str(n)
-    if k == "SUBS":
-        names = [x for x in re.split(r"[,\s]+", v) if x]
-        if not names or names[0].lower() in ("off", "0", "no"):
-            return True, "off"
-        return all(SUB_RE.match(x) for x in names), ",".join(names)
-    if k == "COOKIES":
-        if v.lower() in ("0", "-", "off", "no"):
-            return True, ""
-        return "\x00" not in v, v
     if k == "DEPS":
         names = [x for x in re.split(r"[,\s]+", v) if x]
         return all(DEP_RE.match(x) for x in names), ",".join(names)
@@ -748,157 +709,6 @@ def out_dir():
     return d
 
 
-_XW = []                 # avisos de los extras (subtitulos, portada...) de la descarga en curso; los recoge xw_take()
-
-
-def xw_take():
-    w = list(_XW)
-    del _XW[:]
-    return w
-
-
-def dbg(msg):
-    """DEBUG=1: agrega `msg` a dlpy_files/_log.txt (se vuelve a empezar al pasar de ~200 KB). Sin DEBUG no hace nada."""
-    if CFG.get("DEBUG") != "1":
-        return
-    try:
-        p = os.path.join(out_dir(), "_log.txt")
-        big = os.path.exists(p) and os.path.getsize(p) > 200000
-        with open(p, "w" if big else "a", encoding="utf-8") as f:
-            f.write("%s %s\n" % (time.strftime("%H:%M:%S"), ANSI.sub("", str(msg))))
-    except Exception:
-        pass
-
-
-def threads():
-    try:
-        return max(1, min(16, int(CFG["THREADS"])))
-    except ValueError:
-        return 4
-
-
-def cookies_path():
-    """Ruta del cookies.txt configurado si existe, si no \"\"."""
-    p = CFG["COOKIES"].strip()
-    if not p:
-        return ""
-    p = os.path.expanduser(p)
-    if not os.path.isabs(p):
-        p = os.path.join(DOCS, p)
-    return p if os.path.isfile(p) else ""
-
-
-def base_opts():
-    """Opciones de yt-dlp que dependen de la config y valen para listar y para descargar (cookies, verbose)."""
-    o = {}
-    ck = cookies_path()
-    if ck:
-        o["cookiefile"] = ck
-    if CFG["DEBUG"] == "1":
-        o["verbose"] = True
-    return o
-
-
-def _hms(s):
-    """'1:20', '80', '1:02:03.5' -> segundos (float) o None."""
-    parts = (s or "").strip().split(":")
-    if not parts[0] or len(parts) > 3:
-        return None
-    try:
-        vals = [float(p) for p in parts]
-    except ValueError:
-        return None
-    if any(v < 0 for v in vals):
-        return None
-    t = 0.0
-    for v in vals:
-        t = t * 60 + v
-    return t
-
-
-def parse_range(txt):
-    """'1:20-3:45' | '80-225' | '1:20-' (hasta el final) | '-45' (primeros 45 s) -> (inicio, fin) en segundos; fin = inf si no se da.
-    None si no es valido."""
-    m = re.match(r"^\s*([^-\u2013\u2014]*?)\s*[-\u2013\u2014]\s*([^-\u2013\u2014]*?)\s*$", txt or "")
-    if not m or not (m.group(1) or m.group(2)):
-        return None
-    a = _hms(m.group(1)) if m.group(1) else 0.0
-    b = _hms(m.group(2)) if m.group(2) else float("inf")
-    if a is None or b is None or b <= a:
-        return None
-    return (a, b)
-
-
-def range_tag(rng):
-    """Texto corto y seguro para el nombre del archivo: 1m20s-3m45s."""
-    def one(t):
-        if t == float("inf"):
-            return "fin"
-        h, r = divmod(int(t), 3600)
-        m, sec = divmod(r, 60)
-        return ("%dh%02dm%02ds" % (h, m, sec)) if h else ("%dm%02ds" % (m, sec))
-    return "%s-%s" % (one(rng[0]), one(rng[1]))
-
-
-def pp_failed(e):
-    """True si el error viene de un postprocesador de yt-dlp (no de la descarga)."""
-    n = e.__class__.__name__
-    return "Postprocessing" in str(e) or "PostProcessing" in n or "PPError" in n
-
-
-def ensure_dep(name):
-    """Instala un paquete de pip OPCIONAL solo cuando la opcion que lo necesita esta activa (regla LIGERO). True si queda disponible."""
-    if pip_version(name):
-        return True
-    upd_say(tr("⬇️ Instalando {x}…", x=name), LONG)
-    if pip_run(name, upgrade=False, quiet=True):
-        upd_say(tr("✅ {x} instalado.", x=name), LONG)
-        return True
-    upd_say(tr("⚠️ No se pudo instalar: {d}", d=name), LONG)
-    return False
-
-
-def extra_opts(audio_only, merge="mp4", audio_fmt="native"):
-    """EXTRAS opcionales de yt-dlp (subtitulos, portada, metadatos), todos apagados por defecto.
-    (opciones, postprocesadores, nombres): vacios si no hay nada activo o ffmpeg esta desactivado. Orden como en la CLI de yt-dlp:
-    convertidores (before_dl) y luego FFmpegMetadata -> FFmpegEmbedSubtitle -> EmbedThumbnail."""
-    if CFG["FFMPEG"].lower() in ("no", "0", "false"):
-        return {}, [], []
-    o, pre, post, names = {}, [], [], []
-    if CFG["META"] == "1":
-        post.append({"key": "FFmpegMetadata", "add_metadata": True, "add_chapters": True})
-        names.append(tr("metadatos"))
-    if CFG["SUBS"] != "off" and not audio_only:
-        o.update({"writesubtitles": True, "writeautomaticsub": CFG["SUBAUTO"] == "1",
-                  "subtitleslangs": CFG["SUBS"].split(","), "subtitlesformat": "srt/vtt/best"})
-        pre.append({"key": "FFmpegSubtitlesConvertor", "format": "srt", "when": "before_dl"})
-        post.append({"key": "FFmpegEmbedSubtitle", "already_have_subtitle": False})
-        names.append(tr("subtítulos"))
-    if CFG["THUMB"] == "1":
-        enc = ffmpeg_encoders()
-        fmt = "jpg" if (not enc or "mjpeg" in enc) else ("png" if "png" in enc else "")
-        need_mutagen = not ((audio_only and audio_fmt == "mp3") or (not audio_only and merge == "mkv"))
-        if fmt and (not need_mutagen or ensure_dep("mutagen")):
-            o["writethumbnail"] = True
-            pre.append({"key": "FFmpegThumbnailsConvertor", "format": fmt, "when": "before_dl"})
-            post.append({"key": "EmbedThumbnail", "already_have_thumbnail": False})
-            names.append(tr("portada"))
-        else:
-            _XW.append(tr("⚠️ No se pudo añadir {x}: {e}", x=tr("portada"), e="mutagen / mjpeg"))
-    return o, pre + post, names
-
-
-def entry_url(e):
-    """Enlace descargable de un elemento de lista (extract_flat): webpage_url/url si es http; si es solo un id de YouTube, se arma."""
-    u = str(e.get("webpage_url") or e.get("url") or "")
-    if u.startswith("http"):
-        return u
-    i = str(e.get("id") or u)
-    if i and str(e.get("ie_key") or "").lower() == "youtube":
-        return "https://www.youtube.com/watch?v=" + i
-    return ""
-
-
 class _Deadline(BaseException):
     """Se lanza desde _Log al vencer el limite. BaseException: yt-dlp atrapa Exception, no esto."""
 
@@ -908,7 +718,6 @@ class _Log:
 
     def debug(self, m):
         # yt-dlp manda aqui cada paso ("Downloading webpage"...): sirve para cortar sin hilos ni os._exit
-        dbg(m)
         if self.deadline is not None and time.time() > self.deadline:
             raise _Deadline()
 
@@ -1149,7 +958,6 @@ def extract(yt, url, sock=25, deadline=None):
     log.deadline = deadline
     o = {"quiet": True, "no_warnings": True, "logger": log, "skip_download": True,
          "noplaylist": True, "extract_flat": "in_playlist", "socket_timeout": sock}
-    o.update(base_opts())
     with yt.YoutubeDL(o) as y:
         return y.extract_info(url, download=False)
 
@@ -1164,6 +972,14 @@ def cache_hours():
         return max(0.0, float(CFG["CACHE_H"]))
     except ValueError:
         return 24.0
+
+
+def frags_n():
+    """Fragmentos simultaneos para streams HLS/DASH (clave FRAGS, 1-16)."""
+    try:
+        return min(16, max(1, int(CFG["FRAGS"])))
+    except (ValueError, KeyError):
+        return 4
 
 
 def sweep_cache(hours):
@@ -1488,17 +1304,19 @@ def anim_ui(url, fmt, audio_only):
 
 
 def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True,
-             audio_fmt="native", cache_h=24.0, dup="new", ui=None, rng=None):
-    """ui: AnimUI opcional (lo cierra quien lo creo); si no arranca la escena, se usa la barra simple.
-    rng: (inicio, fin) en segundos para bajar solo ese tramo (download_ranges); None = completo."""
+             audio_fmt="native", cache_h=24.0, dup="new", ui=None, frags=None):
+    """frags: fragmentos simultaneos en HLS/DASH (None = clave FRAGS). ui: AnimUI opcional (lo cierra quien lo creo); si no arranca la escena, se usa la barra simple."""
     sweep_cache(cache_h)
-    outdir = work_dir(url if not rng else "%s#%s-%s" % (url, rng[0], rng[1]))      # un tramo no comparte cache con el video completo
+    outdir = work_dir(url)
     last = [0.0]
     scene = bool(ui and show and ui.begin())
-    if CFG["COOKIES"] and not cookies_path() and show and not LONG:
-        print(tr("⚠️ No se encontró el archivo de cookies: {p}", p=CFG["COOKIES"]))
+    hook_lock = threading.Lock()       # con fragmentos en paralelo yt-dlp puede avisar desde varios hilos
 
     def hook(d):
+        with hook_lock:
+            _hook(d)
+
+    def _hook(d):
         if LONG:
             return long_hook(d)
         if not show:
@@ -1528,13 +1346,10 @@ def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True
         "outtmpl": os.path.join(outdir, "%(id)s.%(ext)s"),
         "noplaylist": True, "quiet": True, "no_warnings": True, "noprogress": True,
         "logger": _Log(), "progress_hooks": [hook], "retries": 5, "fragment_retries": 5,
+        "concurrent_fragment_downloads": max(1, min(16, int(frags if frags else frags_n()))),
         "socket_timeout": 25, "trim_file_name": 150, "keepvideo": cache_h > 0, "allow_multiple_audio_streams": bool(multi),
-        "merge_output_format": merge if merge in (
-            "mp4", "mkv") else "mp4", "concurrent_fragment_downloads": threads(),
+        "merge_output_format": merge if merge in ("mp4", "mkv") else "mp4",
     }
-    o.update(base_opts())
-    if rng:
-        o["download_ranges"] = yt.utils.download_range_func(None, [rng])
     if scene:
         o["postprocessor_hooks"] = [ui.pp_hook]
     elif LONG:
@@ -1542,29 +1357,10 @@ def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True
     if audio_only and audio_fmt in ("mp3", "m4a"):
         o["postprocessors"] = [{"key": "FFmpegExtractAudio", "preferredcodec": audio_fmt,
                                 "preferredquality": "192"}]
-
-    def fetch(opts):
-        with yt.YoutubeDL(opts) as y:
-            info = y.extract_info(url, download=True)
-            rd = info.get("requested_downloads") or []
-            p = (rd[0].get("filepath") if rd else None) or info.get("filepath") or y.prepare_filename(info)
-        return info, p
-
-    xo, xpp, xnames = extra_opts(audio_only, merge, audio_fmt)
-    if xnames:
-        ox = dict(o)
-        ox.update(xo)
-        ox["postprocessors"] = list(o.get("postprocessors") or []) + xpp
-        try:
-            info, path = fetch(ox)
-        except Exception as e:
-            if not pp_failed(e):
-                raise
-            dbg("EXTRAS " + repr(e))
-            _XW.append(tr("⚠️ No se pudo añadir {x}: {e}", x=", ".join(xnames), e=clean_err(e)))
-            info, path = fetch(o)               # sin extras: las pistas ya estan en la cache
-    else:
-        info, path = fetch(o)
+    with yt.YoutubeDL(o) as y:
+        info = y.extract_info(url, download=True)
+        rd = info.get("requested_downloads") or []
+        path = (rd[0].get("filepath") if rd else None) or info.get("filepath") or y.prepare_filename(info)
     if path and not os.path.exists(path):          # extension cambiada por el postproceso
         stem = os.path.splitext(path)[0]
         for ext in ("mp4", "mkv", "mp3", "m4a", "webm", "opus"):
@@ -1574,10 +1370,7 @@ def download(yt, url, fmt, merge="mp4", multi=False, audio_only=False, show=True
     # nombre final simple y seguro (el atajo decodifica % y +, el shell interpreta $ ` ! \\)
     if path and os.path.exists(path):
         ext = os.path.splitext(path)[1].lower()
-        stem = safe_title(info.get("title"), 60, safe_title(str(info.get("id") or ""), 60))
-        if rng:
-            stem += " " + range_tag(rng)
-        new = os.path.join(os.path.dirname(path), stem + ext)
+        new = os.path.join(os.path.dirname(path), safe_title(info.get("title"), 60, safe_title(str(info.get("id") or ""), 60)) + ext)
         if new != path:
             os.replace(path, new)
             path = new
@@ -1651,18 +1444,13 @@ def cmd_config(args):
                  ("AUDIO", tr("Formato de audio (native/mp3/m4a)")),
                  ("FFMPEG", tr("ffmpeg (auto/yes/no)")),
                  ("DUP", tr("Si el archivo ya existe (new/replace)")),
+                 ("FRAGS", tr("Fragmentos simultáneos en streaming HLS/DASH (1-16)")),
                  ("CACHE_H", tr("Horas de caché de pistas (0 = sin caché)")),
                  ("PATH", tr("Ruta enviada al atajo (abs/home/rel)")),
                  ("ANIM", tr("Animaciones (1/0)")),
                  ("DEPS", tr("Dependencias de pip al día (separadas por coma)")),
                  ("TOOLTAG", tr("Escribir DLpy en el software de codificación (1/0)")),
-                 ("UPDATE", tr("Buscar actualización de DLpy cada semana (1/0)")),
-                 ("THREADS", tr("Fragmentos en paralelo (1-16)")),
-                 ("SUBS", tr("Subtítulos (0 = no, o idiomas: es,en)")),
-                 ("SUBAUTO", tr("Subtítulos automáticos (1/0)")),
-                 ("THUMB", tr("Portada embebida (1/0)")),
-                 ("META", tr("Metadatos y capítulos (1/0)")),
-                 ("COOKIES", tr("Archivo de cookies (0 = ninguno)"))]
+                 ("UPDATE", tr("Buscar actualización de DLpy cada semana (1/0)"))]
         for i, (k, lab) in enumerate(items, 1):
             print(" %d. %s: %s" % (i, lab, CFG[k]))
         print(" %d. %s" % (len(items) + 1, tr("Actualizar yt-dlp")))
@@ -1989,10 +1777,10 @@ def cmd_scb(url=""):
 
 
 def parse_pick(p):
-    m = re.match(r"\s*V=([^,]*),A=([^,]*),X=(.*?)(?:,R=([^,]*))?\s*$", p or "", re.S)
+    m = re.match(r"\s*V=([^,]*),A=([^,]*),X=(.*)$", p or "", re.S)
     if not m:
         return None
-    return m.group(1).strip(), m.group(2).strip(), m.group(3).strip(), (m.group(4) or "").strip()
+    return m.group(1).strip(), m.group(2).strip(), m.group(3).strip()
 
 
 MP4_AUDIO = ("aac", "mp3", "ac3", "eac3", "alac")
@@ -2106,7 +1894,7 @@ def ensure_tool_tag(path):
             return True, ""
         base, ext = os.path.splitext(path)
         tmp = base + "_tool" + ext
-        ok, err = run_ffmpeg([ffmpeg_exe(), "-y", "-v", "error", "-i", "file:" + path, "-map", "0:v?", "-map", "0:a?", "-map", "0:s?", "-c", "copy"]
+        ok, err = run_ffmpeg([ffmpeg_exe(), "-y", "-v", "error", "-i", "file:" + path, "-map", "0:v?", "-map", "0:a?", "-c", "copy"]
                              + tool_args(tmp) + ["-movflags", "+faststart", tmp], tmp)
         if ok:
             os.replace(tmp, path)
@@ -2129,7 +1917,7 @@ def tag_audio_tracks(path, labels):
         return True, ""
     base, ext = os.path.splitext(path)
     tmp = base + "_tag" + ext
-    args = ["ffmpeg", "-y", "-v", "error", "-i", path, "-map", "0:v?", "-map", "0:a?", "-map", "0:s?", "-c", "copy"]
+    args = ["ffmpeg", "-y", "-v", "error", "-i", path, "-map", "0:v?", "-map", "0:a?", "-c", "copy"]
     for i, lab in enumerate(labels):
         args += ["-disposition:a:%d" % i, "default" if i == 0 else "0",
                  "-metadata:s:a:%d" % i, "language=und",
@@ -2483,12 +2271,7 @@ def apple_convert(path, streams, plan, show=False, ui=None):
         tail += ["-c:a:%d" % i, "copy" if m == "copy" else "aac"]
         if m != "copy":
             tail += ["-b:a:%d" % i, "%dk" % abr]
-    keep_subs = (not audio_only) and CFG["SUBS"] != "off" and final_ext in A_VEXT   # SUBS activo: los subtitulos pasan a mov_text
-    tail0 = tail
-
-    def mk_tail(subs):
-        return (["-vn"] if audio_only else (["-dn", "-c:s", "mov_text"] if subs else ["-sn", "-dn"])) + tail0 \
-            + ([] if audio_only else ["-movflags", "+faststart"])
+    tail = (["-vn"] if audio_only else ["-sn", "-dn"]) + tail + ([] if audio_only else ["-movflags", "+faststart"])
     names = []
     if vs and plan["v"] == "enc":
         try:
@@ -2501,27 +2284,25 @@ def apple_convert(path, streams, plan, show=False, ui=None):
     else:
         tries = [("", "audio", [])]
     errs = []
-    for use_subs in ((True, False) if keep_subs else (False,)):      # si con subtitulos no se pudo, se reintenta sin ellos
-        for enc, name, vopts in tries:
-            ui_conv(ui, "begin", path, streams, plan, final_ext, enc)
-            ok, err = run_conv(base + maps + (["-map", "0:s?"] if use_subs else []) + vopts + mk_tail(use_subs)
-                               + tool_args(tmp) + [tmp], tmp, streams.dur, show, ui)
-            if ok:
-                new = path if final_ext == ext else _unique(base_name + final_ext)
-                os.replace(tmp, new)
-                if new != path:
-                    try:
-                        os.remove(path)
-                    except Exception:
-                        pass
-                ui_conv(ui, "end", True)
-                return new, ""
-            errs.append("%s: %s" % (name, err))
-            try:
-                if os.path.exists(tmp):
-                    os.remove(tmp)
-            except Exception:
-                pass
+    for enc, name, vopts in tries:
+        ui_conv(ui, "begin", path, streams, plan, final_ext, enc)
+        ok, err = run_conv(base + maps + vopts + tail + tool_args(tmp) + [tmp], tmp, streams.dur, show, ui)
+        if ok:
+            new = path if final_ext == ext else _unique(base_name + final_ext)
+            os.replace(tmp, new)
+            if new != path:
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
+            ui_conv(ui, "end", True)
+            return new, ""
+        errs.append("%s: %s" % (name, err))
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
     ui_conv(ui, "end", False)
     return path, " | ".join(errs)[-400:] or "ffmpeg"
 
@@ -2556,7 +2337,7 @@ def ensure_apple(path, quiet=False, ui=None):
         return path, tr("⚠️ No se pudo comprobar la compatibilidad con Apple: {e}", e=clean_err(e))
 
 
-def run_pick(yt, url, v, a="", x="", r=""):
+def run_pick(yt, url, v, a="", x=""):
     """Descarga la eleccion (v=video o audio:ID, a=audio principal, x=extras unidos con +)."""
     v = v.replace("~", "+")
     audio_only = v.startswith("audio")
@@ -2565,15 +2346,9 @@ def run_pick(yt, url, v, a="", x="", r=""):
     else:
         fmt = "+".join(p for p in (v, a, x) if p)
     multi = bool(x) and not audio_only
-    rng = parse_range(r) if r else None
-    if r and not rng:
-        msg = tr("❌ Falló la descarga: {e}", e=tr("Tramo no válido."))
-        return emit_long(ok=False, error=msg) if LONG else print(msg)
-    del _XW[:]
     print(tr("⏳ Descargando…"))
     ui = anim_ui(url, fmt, audio_only)
     tag_err = tool_err = None
-    xw = []
     try:
         by = {}
         if (not audio_only and (multi or CFG["MERGE"].lower() == "auto")) or (LONG and "+" in fmt):
@@ -2582,8 +2357,7 @@ def run_pick(yt, url, v, a="", x="", r=""):
             long_plan(by, fmt)
         merge = "mp4" if audio_only else pick_container(by, fmt, CFG["MERGE"])
         path, _ = download(yt, url, fmt, merge, multi, audio_only, audio_fmt=CFG["AUDIO"],
-                           cache_h=cache_hours(), dup=CFG["DUP"], ui=ui, rng=rng)
-        xw = xw_take()
+                           cache_h=cache_hours(), dup=CFG["DUP"], ui=ui)
         path, apple_warn = ensure_apple(path, quiet=bool(ui), ui=ui)   # siempre: ni la lista ni MERGE garantizan que el archivo sirva
         if multi:
             ids = [i for i in [a] + x.split("+") if i]
@@ -2598,7 +2372,6 @@ def run_pick(yt, url, v, a="", x="", r=""):
             ui.abort()
         raise
     except Exception as e:
-        dbg("ERROR " + repr(e))
         if ui:
             ui.end(ok=False, error=clean_err(e))
         if LONG:
@@ -2611,8 +2384,7 @@ def run_pick(yt, url, v, a="", x="", r=""):
         prog("--done")
         warns = ([tr("⚠️ No se pudieron etiquetar las pistas de audio: {e}", e=tag_err)] if tag_err else []) \
             + ([apple_warn] if apple_warn else []) \
-            + ([tr("⚠️ No se pudo escribir DLpy en el software de codificación: {e}", e=tool_err)] if tool_err else []) \
-            + xw
+            + ([tr("⚠️ No se pudo escribir DLpy en el software de codificación: {e}", e=tool_err)] if tool_err else [])
         extra = {"warn": " ".join(warns)} if warns else {}
         return emit_long(ok=True, file_path=shared_path(path), file_title=os.path.basename(path), **extra)
     if ui:
@@ -2623,8 +2395,6 @@ def run_pick(yt, url, v, a="", x="", r=""):
         print(tr("⚠️ No se pudieron etiquetar las pistas de audio: {e}", e=tag_err))
     if tool_err:
         print(tr("⚠️ No se pudo escribir DLpy en el software de codificación: {e}", e=tool_err))
-    for w in xw:
-        print(w)
     finish(path)
 
 
@@ -2702,22 +2472,6 @@ def ask_multi(prompt, n):
     return res
 
 
-def ask_range(info):
-    """Pregunta si se quiere solo un tramo (solo con duracion conocida). Devuelve el texto del tramo o \"\" (completo)."""
-    if not info.get("duration"):
-        return ""
-    while True:
-        try:
-            t = input("\n" + tr("✂️ Tramo (Enter = completo, ej. 1:20-3:45): ")).strip()
-        except EOFError:
-            return ""
-        if not t:
-            return ""
-        if parse_range(t):
-            return t
-        print(tr("Tramo no válido."))
-
-
 def interactive_single(yt, info, url):
     merge_ok = can_merge(CFG["FFMPEG"])
     if not merge_ok:
@@ -2747,7 +2501,7 @@ def interactive_single(yt, info, url):
                 nums = [int(l.split(" · ")[0]) for l in others]
                 sel = ask_multi(tr("Número"), len(others))
                 x = "+".join(m["track_ids"][nums[j - 1] - 1] for j in sel)
-    run_pick(yt, url, v, a, x, ask_range(info))
+    run_pick(yt, url, v, a, x)
 
 
 def interactive_playlist(yt, info, url):
@@ -2756,7 +2510,7 @@ def interactive_playlist(yt, info, url):
     for i, e in enumerate(entries[:50], 1):
         print("  %d. %s" % (i, safe_title(e.get("title"), 50, str(e.get("id") or ""))))
     if len(entries) > 50:
-        print("  … " + tr("(+{n} más; puedes elegir hasta el {t})", n=len(entries) - 50, t=len(entries)))
+        print("  …")
     sel = ask_multi(tr("Elementos (Enter = todos, ej. 1-3,7)"), len(entries)) or list(range(1, len(entries) + 1))
     merge_ok = can_merge(CFG["FFMPEG"])
     presets = [(tr("Mejor calidad"), "bv*+ba/b" if merge_ok else "b", False)]
@@ -2769,26 +2523,20 @@ def interactive_playlist(yt, info, url):
         print("  %d. %s" % (i, l))
     _, fmt, audio = presets[ask_index(tr("Número"), len(presets)) - 1]
     ok = bad = 0
-    for pos, k in enumerate(sel, 1):
+    for k in sel:
         e = entries[k - 1]
-        eu = entry_url(e)
-        print("\n[%d/%d] %s" % (pos, len(sel), safe_title(e.get("title"), 50, "") or eu or str(e.get("id") or "")))
-        if not eu:
-            print(tr("❌ Falló la descarga: {e}", e=tr("No se encontró un enlace válido.")))
+        eu = e.get("webpage_url") or e.get("url") or ""
+        if not eu.startswith("http"):
             bad += 1
             continue
-        del _XW[:]
+        print("\n[%d/%d] %s" % (sel.index(k) + 1, len(sel), safe_title(e.get("title"), 50, "") or eu))
         try:
             path, _ = download(yt, eu, fmt, CFG["MERGE"], False, audio, audio_fmt=CFG["AUDIO"],
                                cache_h=cache_hours(), dup=CFG["DUP"])
-            path, warn = ensure_apple(path)          # igual que una descarga suelta: ni la lista ni MERGE garantizan que sirva en Apple
             ensure_tool_tag(path)
             print(tr("📁 Guardado en: {p}", p=path))
-            for w in ([warn] if warn else []) + xw_take():
-                print(w)
             ok += 1
         except Exception as ex:
-            dbg("ERROR " + repr(ex))
             print(tr("❌ Falló la descarga: {e}", e=clean_err(ex)))
             bad += 1
     print("\n" + tr("Terminado: {ok} bien, {bad} con error.", ok=ok, bad=bad))
@@ -2828,9 +2576,6 @@ Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas
     print(tr("  --long (con --shortcutpick o --scm): para \"Execute Long Command\" (iOS 27); sin limite de tiempo,\n"
              "                                      avisa el avance con `progress`, devuelve una linea JSON; con --scm,\n"
              "                                      la lista completa de formatos con lo Apple nativo primero"))
-    print(tr("  Opcionales (--config K=V; todos apagados salvo THREADS): THREADS=4, SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n"
-             "  COOKIES=cookies.txt, DEBUG=1 (registro en dlpy_files/_log.txt).\n"
-             "  --shortcutpick \"V=..,A=..,X=..,R=1:20-3:45\" <url>   baja solo ese tramo (R es opcional)"))
 
 
 def main(argv):
