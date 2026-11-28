@@ -1,5 +1,14 @@
 #!dlpy_anim.py
 # -*- coding: utf-8 -*-
+# 0.0.3: A 120 Hz. Los cuadros por segundo ya no son fijos (30): ANIM_FPS sale de DLPY_ANIMATION_FPS, de dlpy_anim.json (junto al modulo; lo escribe
+#        `python dlpy_anim.py --fps 120`) o de configure(fps=...): 15–120, por defecto 30. El host no sabe nada de esto. Es EL reloj de toda la escena (se retiran SITE_FPS, CONV_FPS y SCENE_FPS, que eran el mismo numero con tres
+#        nombres; solo queda aparte CONV_RUN_FPS = 12 mientras convierte, a proposito ligero). MOTOR UNICO: (1) el «ruido» de los glitch
+#        (letras que se desordenan en intros, transformaciones y textos) se sembraba con el NUMERO DE CUADRO, asi que a 120 Hz habria ido 4
+#        veces mas rapido y nervioso: ahora se siembra con un reloj propio de GLITCH_HZ = 30 por segundo, igual que se veia a 30 (a cualquier
+#        fps); (2) el hilo mide cuanto tarda en pintar un cuadro (incluido el volcado a la terminal) y baja solo los cuadros por segundo para
+#        no ocupar mas del 50 % del tiempo (FPS_DUTY): asi un fps alto nunca le quita CPU a la descarga ni atrasa la terminal; si el iPhone
+#        no llega a 120, va a lo que llegue y sube de nuevo cuando el dibujo es ligero; (3) el reposo entre cuadros nunca baja de 1 ms.
+#        Todo lo demas ya iba por tiempo (easing con dt, relojes ta·k, fases por segundos), asi que a 120 Hz solo se ve mas suave.
 # 0.0.2: la escena MUESTRA LA CONVERSION. El dibujo «conv» (chips origen → destino, via de puntos que se llena con el % real, el codigo
 #        de destino como titulo y el aviso «Espera mientras convierte…») venia de la 2.1.5 pero nadie lo activaba: con escena, ensure_apple
 #        convertia en silencio. Nuevo para el host (API sigue en 1; un modulo viejo simplemente no los tiene y el host los salta):
@@ -30,7 +39,7 @@ import site
 import urllib.parse
 import urllib
 
-VERSION = "0.0.2"       # version de este modulo
+VERSION = "0.0.3"       # version de este modulo
 API = 1                 # contrato con dlpy.py (su ANIM_API): subir al cambiar AnimUI/configure/available
 
 # ══════════════════════════════════════ PUENTE CON EL HOST (dlpy.py) ══════════════════════════════════════
@@ -215,9 +224,11 @@ class _FfmpegShim:
     executable = None
 
 
-def configure(tr=None, lang=None, env=None, version=None):
-    """El host (dlpy.py) entrega su traductor tr(texto) -> texto, el idioma, su version y, si quiere, env(nombre) -> valor."""
-    global LANG, HOST_VERSION
+def configure(tr=None, lang=None, env=None, version=None, fps=None):
+    """El host (dlpy.py) entrega su traductor tr(texto) -> texto, el idioma, su version y, si quiere, env(nombre) -> valor y los fps (15–120)."""
+    global LANG, HOST_VERSION, ANIM_FPS
+    if fps is not None:
+        ANIM_FPS = fps_parse(fps, ANIM_FPS)
     if version:
         HOST_VERSION = str(version)
     if tr is not None:
@@ -894,11 +905,41 @@ SITE_SECS = 2.0                                    # duración de la intro (s)
 
 SITE_HOLD_AT = 0.58                                # punto de la intro (0–1) donde espera si el análisis sigue en curso
 
-ANIM_FPS = 30
+FPS_DEFAULT, FPS_MIN, FPS_MAX = 30, 15, 120      # 0.0.3: cuadros por segundo de la escena (por defecto 30; DLPY_ANIMATION_FPS o configure(fps=) hasta 120)
+
+FPS_DUTY = 0.5                                   # 0.0.3: parte maxima del tiempo que el hilo puede pasar pintando; si no llega, baja los cuadros solos
+
+GLITCH_HZ = 30                                   # 0.0.3: ritmo del ruido de los glitch, fijo (a 120 fps no se vuelve frenetico)
+
+def fps_parse(raw, default=FPS_DEFAULT):
+    """0.0.3: DLPY_ANIMATION_FPS → cuadros por segundo: un entero entre FPS_MIN y FPS_MAX; lo vacio o invalido da `default`."""
+    try:
+        v = float(str(raw or "").strip().replace(",", "."))
+    except ValueError:
+        return default
+    return default if not math.isfinite(v) else int(max(FPS_MIN, min(FPS_MAX, round(v))))
+
+def fps_file():
+    """0.0.3: dlpy_anim.json junto a este modulo: donde el propio modulo guarda sus ajustes (el host no sabe de ellos)."""
+    try:
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "dlpy_anim.json")
+    except NameError:
+        return None
+
+def fps_setting():
+    """0.0.3: los cuadros por segundo elegidos: DLPY_ANIMATION_FPS del entorno o, si no esta, «fps» de dlpy_anim.json (lo escribe `python dlpy_anim.py --fps N`); si no, FPS_DEFAULT."""
+    raw = env_get("DLPY_ANIMATION_FPS")
+    if raw in (None, ""):
+        try:
+            with open(fps_file(), encoding="utf-8") as f:
+                raw = json.load(f).get("fps")
+        except Exception:
+            raw = None
+    return fps_parse(raw)
+
+ANIM_FPS = fps_setting()      # EL reloj de la escena (0.0.3: antes SITE_FPS = CONV_FPS = SCENE_FPS = 30)
 
 NOISE_FPS = 12
-
-SITE_FPS = ANIM_FPS
 
 SITE_ICON = {"video": "►", "audio": "♪", "both": "►♪", "list": "≡►", "live": "●"}
 
@@ -1050,8 +1091,6 @@ SCENE_STATUS_ROW = 4 + BADGE_ROW + 3                   # 1.8.2: +3 (antes +2) �
 
 SCENE_TOP = 3                  # fila 1 = aire exterior · fila 2 = topbar seguro · fila 3 = inicio de la escena
 
-CONV_FPS = ANIM_FPS       # 1.9.8: el reloj único (antes 24)
-
 CONV_FLOW = 5.0
 
 CONV_KEY_FADE = 0.35     # 1.2.1: s que tarda en apagarse la tecla Enter al pasar de la pregunta a la conversión
@@ -1068,8 +1107,6 @@ CONV_NOTICE = ("Espera mientras convierte · puede tardar · no cierres la app",
                "Espera · puede tardar · no cierres la app", "Espera · no cierres la app", "No cierres la app", "Espera…")    # 1.6.4: el aviso bajo el texto de estado, de más largo a más corto (cabe el primero que quepa)
 
 _FAST_WAKE = threading.Event()
-
-SCENE_FPS = ANIM_FPS        # 1.9.8: el reloj único (antes 15)
 
 CONV_SPEED = 6.0         # celdas por segundo que avanzan los bloques de la escena de conversión
 
@@ -1718,9 +1755,16 @@ class _SceneErrMute:
         return getattr(self._inner, name)
 
 def frame_gap(t, fps):
-    """1.9.8: s hasta el siguiente límite de cuadro de un reloj que lleva `t` s a `fps` cuadros por segundo (entre 0,5 ms y un cuadro)."""
+    """1.9.8: s hasta el siguiente límite de cuadro de un reloj que lleva `t` s a `fps` cuadros por segundo (entre 1 ms y un cuadro; 0.0.3: antes 0,5 ms)."""
     fps = max(1.0, float(fps))
-    return max(0.0005, min(1.0 / fps, (math.floor(t * fps + 1e-9) + 1) / fps - t))
+    return max(0.001, min(1.0 / fps, (math.floor(t * fps + 1e-9) + 1) / fps - t))
+
+def scene_fps_cap(fps, cost):
+    """0.0.3: los cuadros por segundo que el hilo puede sostener: `fps` si pintar un cuadro (`cost` s, media reciente) cabe en FPS_DUTY del tiempo; si no, los que
+    quepan (nunca menos de 10). Asi 120 Hz no le quita CPU a la descarga ni llena la terminal: lo que no alcanza se baja solo y sube de nuevo cuando el dibujo es ligero."""
+    if cost <= 0.0:
+        return float(fps)
+    return max(10.0, min(float(fps), FPS_DUTY / cost))
 
 def scene_refresh_slice(st, ymax, fps, period=0.35):
     """1.9.8: repintado de seguridad repartido: invalida unas pocas filas por cuadro (en rotación) y todas en `period` s, en vez de borrar toda la pantalla de golpe."""
@@ -4185,35 +4229,36 @@ def scene_motif(S, st, cells, ta, hold, f):
     return cells
 
 def scene_fps(S, st, ta, hold):
-    """Cuadros por segundo: a tope en intro/cierre/transformaciones; si no, CONV_FPS o SCENE_FPS. 1.0.3: también a tope durante salida de tipo."""
+    """Cuadros por segundo nominales: ANIM_FPS siempre, salvo la conversion corriendo (CONV_RUN_FPS, ligera). 0.0.3: un solo reloj (antes SITE/CONV/ANIM_FPS).
+    Lo que de verdad se pinta lo limita scene_fps_cap segun lo que cueste cada cuadro."""
     if ta < hold or S.get("t_out") is not None or S.get("k_out") is not None or S.get("t_in") is not None or S.get("ask"):
         # 1.1.1: también mientras espera el Enter (texto animado)
-        return SITE_FPS
+        return ANIM_FPS
     if st.get("key_fade_t") is not None and 0 <= ta - st["key_fade_t"] < CONV_KEY_FADE + 0.1:
         # 1.2.1: la tecla Enter apagándose, a tope de cuadros
-        return SITE_FPS
+        return ANIM_FPS
     for m in (st.get("bdg") or {}).values():                         # 1.0.7: la etiqueta cambiando va a tope de cuadros
         if m[1] is not None and 0 <= ta - m[1] < SCENE_BADGE_SECS + 0.1:
-            return SITE_FPS
+            return ANIM_FPS
     for key, dur in (("mt", SCENE_SWAP), ("t", SCENE_MORPH), ("tt", SCENE_TITLE_MORPH), ("site_trans_t", SCENE_SWAP)):
         t0 = st.get(key)
         # 1.0.6: incluye la espera de la cascada
         if t0 is not None and -SCENE_LAG_LABEL <= ta - t0 < dur + 0.1 + SCENE_LAG_LABEL:
-            return SITE_FPS
+            return ANIM_FPS
     if ta < st.get("rail_fast", 0.0):                                # 1.4.6: tarjetas del carril deslizándose
-        return SITE_FPS
+        return ANIM_FPS
     _ck = S.get("check") or {}
     # 1.6.1: los cuadros parpadeando, a tope de cuadros (1.6.2: y mientras espera a pintarse el primero)
     if _ck.get("verdict") is not None and (_ck.get("t") is None or 0 <= ta - _ck["t"] < CHECK_BLINK_SECS + 0.1):
-        return SITE_FPS
+        return ANIM_FPS
     # 1.1.3: unión y guardado (1.1.5: y limpieza; 1.2.5: y revisión; 1.2.9: y arranque), como la conversión (1.4.1: la marca light de MOTIFS)
     if getattr(MOTIFS.get(scene_motif_kind(S)), "light", False):
-        return CONV_FPS
+        return ANIM_FPS
     if S.get("brand"):
-        return SCENE_FPS
+        return ANIM_FPS
     cv = S.get("conv")
     # 1.2.1: la conversión, más ligera que el resto
-    return CONV_RUN_FPS if (cv and cv.get("end") is None) else SITE_FPS
+    return CONV_RUN_FPS if (cv and cv.get("end") is None) else ANIM_FPS
 
 def scene_fast(S, st, ta, hold, fps=None):
     """1.6.4: ¿la escena está en convert_fast_anim? Sí cuando DLPY_CONVERT_LIGHT_ANIMATION está activo, la conversión corre (sin terminar ni error), su dibujo ya ocupa
@@ -4464,14 +4509,14 @@ def scene_state():
     return {"rows": {}, "lab": None, "prev": "", "full": "", "t": 0.0, "tcur": None, "tprev": None, "tt": None}
 
 def scene_loop():
-    """Hilo de la escena: 24 cuadros por segundo hasta que SCENE["stop"]."""
+    """Hilo de la escena: ANIM_FPS cuadros por segundo (o los que aguante, ver scene_fps_cap) hasta que SCENE["stop"]."""
     S = SCENE
     out, (W, _h, _y0, ymax) = S["out"], S["geo"]
     st = scene_state()
     hold = SITE_HOLD_AT * SITE_SECS
     # al volver de la lista no se repite la intro
     t0 = full_t = time.monotonic() - (hold + 0.4 if S.get("resume") else 0.0)
-    rows_seen, last, fps = S["rows"], -1, SITE_FPS
+    rows_seen, last, fps, cost = S["rows"], -1, ANIM_FPS, 0.0      # cost: media (s) de lo que tarda pintar un cuadro
     # 1.0.6: instante del cuadro anterior (suavizado por tiempo)
     ft = time.monotonic()
     try:
@@ -4483,6 +4528,7 @@ def scene_loop():
             fps = scene_fps(S, st, ta, hold)
             # 1.6.4: convert_fast_anim: nada se anima mientras convierte
             S["fast"] = scene_fast(S, st, ta, hold, fps)
+            fps = scene_fps_cap(fps, cost)                      # 0.0.3: a lo que el iPhone y la terminal sostienen (la comparacion con CONV_RUN_FPS ya se hizo)
             if S["fast"]:
                 try:
                     _rn = term_rows()
@@ -4538,7 +4584,11 @@ def scene_loop():
                         S["t_in"] = None
                 else:
                     S["k_out"] = None
-                scene_paint(out, scene_cells(S, st, min(ta, hold), ta, f), st, W, ymax)
+                _tp = time.perf_counter()
+                # 0.0.3: el ruido de los glitch va a su propio reloj (GLITCH_HZ), no al numero de cuadro
+                scene_paint(out, scene_cells(S, st, min(ta, hold), ta, int(ta * GLITCH_HZ)), st, W, ymax)
+                _dt = time.perf_counter() - _tp
+                cost = _dt if cost <= 0.0 else cost + (_dt - cost) * 0.1
             time.sleep(frame_gap(time.monotonic() - t0, fps))      # 1.9.8: hasta el siguiente límite de cuadro
     except Exception as _ign:
         S["err"] = f"{type(_ign).__name__}: {_ign}"      # 1.0.1: --scb lo anota en state/scb_debug.json
@@ -5509,3 +5559,26 @@ def _safe_stop():
         ux_stop(clear=True)
     except Exception:
         pass
+
+
+def _cli(argv):
+    """0.0.3: `python dlpy_anim.py --fps` dice los cuadros por segundo; `--fps N` (15–120) los guarda en dlpy_anim.json junto a este modulo."""
+    if len(argv) >= 2 and argv[1] == "--fps":
+        if len(argv) == 2:
+            return print("%d fps" % ANIM_FPS)
+        try:
+            n = float(argv[2].replace(",", "."))
+        except ValueError:
+            return print("Uso: python dlpy_anim.py --fps <%d-%d>" % (FPS_MIN, FPS_MAX))
+        n = fps_parse(n)
+        try:
+            with open(fps_file(), "w", encoding="utf-8") as f:
+                json.dump({"fps": n}, f)
+            return print("✅ %d fps (se aplica la proxima vez que corra DLpy)" % n)
+        except OSError as e:
+            return print("⚠️ No se pudo guardar: %s" % e)
+    print("DLpy - animaciones %s. Uso: python dlpy_anim.py --fps [%d-%d]" % (VERSION, FPS_MIN, FPS_MAX))
+
+
+if __name__ == "__main__":
+    _cli(sys.argv)
