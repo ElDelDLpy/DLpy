@@ -1,0 +1,4 @@
+{
+  "version": "0.1.0",
+  "notes": "✨ Novedades 0.1.0\n🖥️ Verificación de a-Shell mini: si no lo tienes, avisa y abre la App Store\n⚙️ Nueva opción «Verificar a-Shell mini» en Configuración\n📱 Menú al abrir desde Atajos: 🔗 Ingresar link · ⚙️ Configuración\n⏱️ Frecuencia de búsqueda: diaria, semanal, mensual o manual\n🐍 Orden de actualización: primero dlpy.py y luego el atajo"
+}
