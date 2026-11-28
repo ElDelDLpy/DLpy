@@ -1,20 +1,31 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: DLpy\n"
+"Project-Id-Version: DLpy 0.2.4\n"
+"Language: it\n"
+"X-Label: 🇮🇹 Italiano\n"
+"X-Name: 🇮🇹 Italiano\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: it\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Label: 🇮🇹 Italiano\n"
+
+msgid "🔎 Buscando actualizaciones de {x}…"
+msgstr "🔎 Cerco aggiornamenti per {x}…"
+
+msgid "⬇️ Instalando {x}…"
+msgstr "⬇️ Installazione di {x}…"
+
+msgid "⚠️ No se pudo instalar: {d}"
+msgstr "⚠️ Installazione non riuscita: {d}"
 
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ Installazione di yt-dlp in corso (solo la prima volta)…"
+msgstr "⬇️ Installazione di yt-dlp (solo la prima volta)…"
 
-msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "Impossibile installare yt-dlp. Controlla la connessione."
+msgid "módulos"
+msgstr "moduli"
 
-msgid "⚙️ Procesando…"
-msgstr "⚙️ Elaborazione in corso…"
+msgid "idiomas"
+msgstr "lingue"
 
 msgid "✅ Listo"
 msgstr "✅ Fatto"
@@ -22,29 +33,206 @@ msgstr "✅ Fatto"
 msgid "📁 Guardado en: {p}"
 msgstr "📁 Salvato in: {p}"
 
+msgid "✅ DLpy actualizado a {v}."
+msgstr "✅ DLpy aggiornato a {v}."
+
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 Invio delle opzioni al comando rapido…"
+
+msgid "🍎 Comprobando compatibilidad con Apple…"
+msgstr "🍎 Verifica della compatibilità Apple…"
+
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ Download non riuscito: {e}"
+
+msgid "⏳ Descargando…"
+msgstr "⏳ Download in corso…"
+
+msgid ""
+"  --long (con --shortcutpick o --scm): para \"Execute Long Command\" (iOS "
+"27); sin limite de tiempo,\n                                      avisa el "
+"avance con `progress`, devuelve una linea JSON; con "
+"--scm,\n                                      la lista completa de formatos "
+"con lo Apple nativo primero"
+msgstr ""
+"  --long (con --shortcutpick o --scm): per \"Execute Long Command\" (iOS "
+"27); senza limite di tempo,\n                                      segnala "
+"l’avanzamento con `progress`, restituisce una riga JSON; con "
+"--scm,\n                                      l’elenco completo dei "
+"formati, prima quelli nativi Apple"
+
+msgid ""
+"  Opcionales (--config K=V; todos apagados salvo THREADS): THREADS=4, "
+"SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1 "
+"(registro en dlpy_files/_log.txt).\n  --shortcutpick "
+"\"V=..,A=..,X=..,R=1:20-3:45\" <url>   baja solo ese tramo (R es opcional)"
+msgstr ""
+"  Facoltativi (--config K=V; tutti spenti tranne THREADS): THREADS=4, "
+"SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1 "
+"(registro in dlpy_files/_log.txt).\n  --shortcutpick "
+"\"V=..,A=..,X=..,R=1:20-3:45\" <url>   scarica solo quell’intervallo (R è "
+"facoltativo)"
+
+msgid "✅ Idioma {c} instalado."
+msgstr "✅ Lingua {c} installata."
+
+msgid "🔄 Actualizando el idioma {c}…"
+msgstr "🔄 Aggiornamento della lingua {c}…"
+
+msgid "⚙️ Procesando…"
+msgstr "⚙️ Elaborazione…"
+
+msgid "✅ {x} instalado."
+msgstr "✅ {x} installato."
+
+msgid "metadatos"
+msgstr "metadati"
+
+msgid "subtítulos"
+msgstr "sottotitoli"
+
+msgid "✅ yt-dlp {v} instalado."
+msgstr "✅ yt-dlp {v} installato."
+
+msgid "🧩 Módulos instalados o actualizados: {m}"
+msgstr "🧩 Moduli installati o aggiornati: {m}"
+
+msgid "⚠️ El módulo {n} dice {v}, pero su index dice {i}."
+msgstr "⚠️ Il modulo {n} dice {v}, ma il suo index dice {i}."
+
+msgid "dependencias"
+msgstr "dipendenze"
+
+msgid "📦 Dependencias instaladas o actualizadas: {d}"
+msgstr "📦 Dipendenze installate o aggiornate: {d}"
+
+msgid "⚠️ No se pudo instalar o actualizar: {d}"
+msgstr "⚠️ Installazione o aggiornamento non riuscito: {d}"
+
+msgid "🌐 Idiomas actualizados: {l}"
+msgstr "🌐 Lingue aggiornate: {l}"
+
+msgid "⚠️ No se encontró el archivo de cookies: {p}"
+msgstr "⚠️ File dei cookie non trovato: {p}"
+
 msgid "Idioma del script"
 msgstr "Lingua dello script"
+
+msgid "🔄 Nueva versión {v} (tienes {o}): actualizando…"
+msgstr "🔄 Nuova versione {v} (hai {o}): aggiorno…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "Nessun formato scaricabile trovato."
+
+msgid "No se encontró un enlace válido."
+msgstr "Nessun link valido trovato."
+
+msgid ""
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg está "
+"desactivado."
+msgstr "⚠️ Impossibile verificare la compatibilità Apple: ffmpeg è disattivato."
+
+msgid "🔄 Convirtiendo a un formato compatible con Apple…"
+msgstr "🔄 Conversione in un formato compatibile Apple…"
+
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ Impossibile etichettare le tracce audio: {e}"
+
+msgid "⚠️ No se pudo escribir DLpy en el software de codificación: {e}"
+msgstr "⚠️ Impossibile scrivere DLpy nel software di codifica: {e}"
+
+msgid "Opción no válida."
+msgstr "Opzione non valida."
+
+msgid "Tramo no válido."
+msgstr "Intervallo non valido."
+
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ Senza ffmpeg: vengono offerti solo video che includono già l’audio."
+
+msgid "🎬 Elige la calidad"
+msgstr "🎬 Scegli la qualità"
+
+msgid "Número"
+msgstr "Numero"
+
+msgid "Elementos (Enter = todos, ej. 1-3,7)"
+msgstr "Elementi (Invio = tutti, es. 1-3,7)"
+
+msgid "Mejor calidad"
+msgstr "Qualità migliore"
+
+msgid "Solo audio"
+msgstr "Solo audio"
+
+msgid "Calidad para toda la lista"
+msgstr "Qualità per tutta la lista"
+
+msgid "Terminado: {ok} bien, {bad} con error."
+msgstr "Finito: {ok} riusciti, {bad} con errore."
+
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ Download della lingua…"
+
+msgid "portada"
+msgstr "copertina"
+
+msgid "⚠️ No se pudo añadir {x}: {e}"
+msgstr "⚠️ Impossibile aggiungere {x}: {e}"
+
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "Impossibile installare yt-dlp. Controlla la connessione."
+
+msgid "✅ Módulos al día."
+msgstr "✅ Moduli aggiornati."
+
+msgid "⚠️ No se pudo consultar los módulos."
+msgstr "⚠️ Impossibile consultare i moduli."
+
+msgid "⬇️ Instalando {n} ({b})…"
+msgstr "⬇️ Installazione di {n} ({b})…"
+
+msgid "🔄 Actualizando {n} ({a} → {b})…"
+msgstr "🔄 Aggiornamento di {n} ({a} → {b})…"
+
+msgid "✅ Dependencias al día."
+msgstr "✅ Dipendenze aggiornate."
+
+msgid "⚠️ No se pudo consultar las dependencias."
+msgstr "⚠️ Impossibile consultare le dipendenze."
+
+msgid "No hay idiomas instalados."
+msgstr "Nessuna lingua installata."
+
+msgid "✅ Idiomas al día."
+msgstr "✅ Lingue aggiornate."
+
+msgid "⚠️ No se pudo consultar los idiomas."
+msgstr "⚠️ Impossibile consultare le lingue."
+
+msgid "⬇️ Instalando el módulo {n} ({b})…"
+msgstr "⬇️ Installazione del modulo {n} ({b})…"
+
+msgid "✅ Módulo {n} {v} instalado."
+msgstr "✅ Modulo {n} {v} installato."
 
 msgid "✅ Idioma del script: {lang}"
 msgstr "✅ Lingua dello script: {lang}"
 
-msgid "⚠️ Valor no válido para {k}: {v}"
-msgstr "⚠️ Valore non valido per {k}: {v}"
-
 msgid "⚙️ Configuración de DLpy (script {v})"
-msgstr "⚙️ Impostazioni di DLpy (script {v})"
+msgstr "⚙️ Impostazioni DLpy (script {v})"
 
 msgid "Idioma"
 msgstr "Lingua"
 
 msgid "URL de idiomas (GitHub)"
-msgstr "URL lingue (GitHub)"
+msgstr "URL delle lingue (GitHub)"
 
 msgid "URL de módulos (GitHub)"
-msgstr "URL moduli (GitHub)"
+msgstr "URL dei moduli (GitHub)"
 
 msgid "Carpeta de descargas"
-msgstr "Cartella download"
+msgstr "Cartella dei download"
 
 msgid "Contenedor de video (auto/mp4/mkv)"
 msgstr "Contenitore video (auto/mp4/mkv)"
@@ -67,141 +255,160 @@ msgstr "Percorso inviato al comando rapido (abs/home/rel)"
 msgid "Animaciones (1/0)"
 msgstr "Animazioni (1/0)"
 
-msgid "Actualizar yt-dlp"
-msgstr "Aggiorna yt-dlp"
+msgid "Dependencias de pip al día (separadas por coma)"
+msgstr "Dipendenze pip aggiornate (separate da virgole)"
 
-msgid "Actualizar idiomas"
-msgstr "Aggiorna lingue"
+msgid "Escribir DLpy en el software de codificación (1/0)"
+msgstr "Scrivere DLpy nel software di codifica (1/0)"
+
+msgid "Buscar actualización de DLpy cada semana (1/0)"
+msgstr "Cercare aggiornamenti DLpy ogni settimana (1/0)"
+
+msgid "Fragmentos en paralelo (1-16)"
+msgstr "Frammenti in parallelo (1-16)"
+
+msgid "Subtítulos (0 = no, o idiomas: es,en)"
+msgstr "Sottotitoli (0 = no, o lingue: es,en)"
+
+msgid "Subtítulos automáticos (1/0)"
+msgstr "Sottotitoli automatici (1/0)"
+
+msgid "Portada embebida (1/0)"
+msgstr "Copertina incorporata (1/0)"
+
+msgid "Metadatos y capítulos (1/0)"
+msgstr "Metadati e capitoli (1/0)"
+
+msgid "Archivo de cookies (0 = ninguno)"
+msgstr "File dei cookie (0 = nessuno)"
 
 msgid "Salir"
 msgstr "Esci"
 
-msgid "Número"
-msgstr "Numero"
+msgid "✅ DLpy está al día ({v})."
+msgstr "✅ DLpy è aggiornato ({v})."
 
-msgid "Opción no válida."
-msgstr "Opzione non valida."
+msgid "⚠️ No se pudo consultar o verificar la actualización."
+msgstr "⚠️ Impossibile consultare o verificare l’aggiornamento."
 
-msgid "⬇️ Descargando idioma…"
-msgstr "⬇️ Download lingua in corso…"
-
-msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
-msgstr "⚠️ Impossibile scaricare la lingua (nessuna connessione o file non trovato)."
-
-msgid "Nuevo valor: "
-msgstr "Nuovo valore: "
-
-msgid "✅ Guardado."
-msgstr "✅ Salvato."
-
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 Aggiornamento di yt-dlp in corso…"
-
-msgid "No hay idiomas instalados."
-msgstr "Nessuna lingua installata."
-
-msgid "🌐 Actualizando idiomas…"
-msgstr "🌐 Aggiornamento lingue in corso…"
-
-msgid "No se encontraron formatos descargables."
-msgstr "Nessun formato scaricabile trovato."
+msgid "⚠️ No se pudo actualizar DLpy: {e}"
+msgstr "⚠️ Impossibile aggiornare DLpy: {e}"
 
 msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "Le dirette non possono essere scaricate."
+msgstr "Le dirette non si possono scaricare."
 
-msgid "No se encontró un enlace válido."
-msgstr "Nessun link valido trovato."
+msgid ""
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg/ffprobe no "
+"disponible o archivo ilegible."
+msgstr ""
+"⚠️ Impossibile verificare la compatibilità Apple: ffmpeg/ffprobe non "
+"disponibile o file illeggibile."
 
-msgid "No se pudo leer el enlace: {e}"
-msgstr "Impossibile leggere il link: {e}"
+msgid "⚠️ No se pudo convertir a un formato compatible con Apple: {e}"
+msgstr "⚠️ Impossibile convertire in un formato compatibile Apple: {e}"
 
-msgid "🔗 Pega el enlace: "
-msgstr "🔗 Incolla il link: "
-
-msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 Invio delle opzioni al comando rapido…"
-
-msgid "⏳ Descargando…"
-msgstr "⏳ Download in corso…"
-
-msgid "❌ Falló la descarga: {e}"
-msgstr "❌ Download non riuscito: {e}"
-
-msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ Impossibile etichettare le tracce audio: {e}"
-
-msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ Senza ffmpeg: vengono offerti solo i video che includono già l’audio."
-
-msgid "🎬 Elige la calidad"
-msgstr "🎬 Scegli la qualità"
+msgid "⚠️ No se pudo comprobar la compatibilidad con Apple: {e}"
+msgstr "⚠️ Impossibile verificare la compatibilità Apple: {e}"
 
 msgid "🔊 Audio principal"
 msgstr "🔊 Audio principale"
 
-msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
-msgstr "🔊 Audio aggiuntivi (numeri separati da virgola, a = tutti, Invio = nessuno)"
+msgid "(+{n} más; puedes elegir hasta el {t})"
+msgstr "(+{n} altri; puoi sceglierne fino a {t})"
 
-msgid "📃 Lista con {n} elemento: {t}"
-msgid_plural "📃 Lista con {n} elementos: {t}"
-msgstr[0] "📃 Elenco con {n} elemento: {t}"
-msgstr[1] "📃 Elenco con {n} elementi: {t}"
+msgid "No se pudo leer el enlace: {e}"
+msgstr "Impossibile leggere il link: {e}"
 
-msgid "Elementos (Enter = todos, ej. 1-3,7)"
-msgstr "Elementi (Invio = tutti, es. 1-3,7)"
-
-msgid "Mejor calidad"
-msgstr "Qualità migliore"
-
-msgid "Solo audio"
-msgstr "Solo audio"
-
-msgid "Calidad para toda la lista"
-msgstr "Qualità per l’intero elenco"
-
-msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "Completato: {ok} riusciti, {bad} con errore."
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python "
+"dlpy.py                      menú interactivo (pide el enlace)\n  python "
+"dlpy.py <url>                descarga interactiva de ese enlace\n  python "
+"dlpy.py --idiomas            JSON con los idiomas del script\n  python "
+"dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python "
+"dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; "
+"si no\n                                      alcanza o es lista/falta "
+"yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual "
+"pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py "
+"--shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: "
+"--update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), "
+"--update-modules (actualiza los módulos), --update-deps (actualiza pip, "
+"yt-dlp y demás dependencias), --self-update (busca ya TODO: DLpy, módulos, "
+"dependencias e idiomas), --version, --help."
+msgstr ""
+"Controllato dal comando rapido \"DLpy\". Comandi usati dal comando "
+"rapido:\n  python dlpy.py                      menu interattivo (chiede il "
+"link)\n  python dlpy.py <url>                download interattivo di quel "
+"link\n  python dlpy.py --idiomas            JSON con le lingue dello "
+"script\n  python dlpy.py --config [K=V ...]   impostazioni (senza "
+"argomenti: menu)\n  python dlpy.py --scm <url>          JSON rapido (max. 5 "
+"s) con TUTTO quello trovato; se\n                                      "
+"finisce il tempo o è una lista / manca yt-dlp: \"use_scb\": true\n  python "
+"dlpy.py --scb <url>          uguale, ma senza limite di tempo; manda il "
+"JSON al comando rapido\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" "
+"<url>   scarica la scelta\nInoltre: --update (aggiorna yt-dlp), "
+"--update-langs [codici] (ri-scarica le lingue), --update-modules (aggiorna "
+"i moduli), --update-deps (aggiorna pip, yt-dlp e le altre dipendenze), "
+"--self-update (cerca subito TUTTO: DLpy, moduli, dipendenze e lingue), "
+"--version, --help."
 
 msgid "❌ Error inesperado ({tipo}): {e}"
 msgstr "❌ Errore imprevisto ({tipo}): {e}"
 
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ Impossibile scaricare la lingua (senza internet o file non trovato)."
+
+msgid "🔄 Actualizando el módulo {n} ({a} → {b})…"
+msgstr "🔄 Aggiornamento del modulo {n} ({a} → {b})…"
+
+msgid "Actualizar yt-dlp"
+msgstr "Aggiorna yt-dlp"
+
+msgid "Actualizar idiomas"
+msgstr "Aggiorna le lingue"
+
+msgid "Actualizar módulos"
+msgstr "Aggiorna i moduli"
+
+msgid "Actualizar dependencias"
+msgstr "Aggiorna le dipendenze"
+
+msgid "Buscar todas las actualizaciones"
+msgstr "Cerca tutti gli aggiornamenti"
+
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 Incolla il link: "
+
+msgid "⚠️ No se pudo actualizar: {d}"
+msgstr "⚠️ Aggiornamento non riuscito: {d}"
+
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ Valore non valido per {k}: {v}"
+
+msgid "iniciando…"
+msgstr "avvio…"
+
 msgid ""
-"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
-"  python dlpy.py                      menú interactivo (pide el enlace)\n"
-"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
-"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
-"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
-"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
-"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
-"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
-msgstr ""
-"È controllato dal comando rapido \"DLpy\". Comandi usati dal comando rapido:\n"
-"  python dlpy.py                      menu interattivo (chiede il link)\n"
-"  python dlpy.py <url>                download interattivo di quel link\n"
-"  python dlpy.py --idiomas            JSON con le lingue dello script\n"
-"  python dlpy.py --config [K=V ...]   impostazioni (senza argomenti: menu)\n"
-"  python dlpy.py --scm <url>          JSON rapido (max 5 s) con TUTTO ciò che è stato trovato; se non\n"
-"                                      basta o è un elenco/manca yt-dlp: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          uguale ma senza limite di tempo; invia il JSON al comando rapido\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   scarica la scelta\n"
-"Inoltre: --update (aggiorna yt-dlp), --update-langs [codici] (scarica di nuovo le lingue), --version, --help."
+"🔊 Audios adicionales (números separados por coma, a = todos, Enter = "
+"ninguno)"
+msgstr "🔊 Audio aggiuntivi (numeri separati da virgole, a = tutti, Invio = nessuno)"
 
-msgid "seg"
-msgstr "s"
+msgid "✂️ Tramo (Enter = completo, ej. 1:20-3:45): "
+msgstr "✂️ Intervallo (Invio = intero, es. 1:20-3:45): "
 
-msgid "min"
-msgstr "min"
+msgid "✅ Guardado."
+msgstr "✅ Salvato."
+
+msgid "Nuevo valor: "
+msgstr "Nuovo valore: "
+
+msgid "Seleccione idioma"
+msgstr "Seleziona la lingua"
 
 msgid "Enter"
 msgstr "Invio"
 
-msgid "Seleccione idioma"
-msgstr "Seleziona lingua"
-
 msgid "compatible Apple"
-msgstr "compatibile con Apple"
+msgstr "compatibile Apple"
 
 msgid "pista original"
 msgstr "traccia originale"
@@ -212,29 +419,95 @@ msgstr "predefinita"
 msgid "recomendada"
 msgstr "consigliata"
 
+msgid "Espera mientras convierte · puede tardar · no cierres la app"
+msgstr "Attendi mentre converte · potrebbe volerci un po’ · non chiudere l’app"
+
+msgid "Espera mientras convierte · no cierres la app"
+msgstr "Attendi mentre converte · non chiudere l’app"
+
+msgid "Espera · puede tardar · no cierres la app"
+msgstr "Attendi · potrebbe volerci un po’ · non chiudere l’app"
+
+msgid "Espera · no cierres la app"
+msgstr "Attendi · non chiudere l’app"
+
+msgid "No cierres la app"
+msgstr "Non chiudere l’app"
+
+msgid "Espera…"
+msgstr "Attendi…"
+
+msgid "¿RES?"
+msgstr "RIS?"
+
+msgid "¿COD?"
+msgstr "COD?"
+
+msgid "¿FPS?"
+msgstr "FPS?"
+
+msgid "¿BIT?"
+msgstr "BIT?"
+
+msgid "¿KHZ?"
+msgstr "KHZ?"
+
+msgid "Uniendo pistas"
+msgstr "Unione delle tracce"
+
+msgid "Convirtiendo"
+msgstr "Conversione"
+
+msgid "Ajustando pistas"
+msgstr "Regolazione delle tracce"
+
 msgid "Revisando"
-msgstr "Verificando"
+msgstr "Verifica"
 
 msgid "Uniendo"
-msgstr "Unendo"
+msgstr "Unione"
 
 msgid "Ajustando"
-msgstr "Regolando"
+msgstr "Regolazione"
 
 msgid "Guardado"
 msgstr "Salvato"
 
 msgid "Sustituyendo"
-msgstr "Sostituendo"
+msgstr "Sostituzione"
 
 msgid "Limpiando"
-msgstr "Pulendo"
+msgstr "Pulizia"
 
 msgid "Vaciando"
-msgstr "Svuotando"
+msgstr "Svuotamento"
 
 msgid "Descargando"
-msgstr "Scaricando"
+msgstr "Download"
+
+msgid "carpetas"
+msgstr "cartelle"
+
+msgid "estado"
+msgstr "stato"
+
+msgid "listo"
+msgstr "pronto"
+
+msgid "VIDEO"
+msgstr "VIDEO"
+
+msgid "AUDIO"
+msgstr "AUDIO"
+
+msgid "UNIÓN"
+msgstr "UNIONE"
+
+msgid "GUARDADO"
+msgstr "SALVATO"
+
+msgid "PISTA"
+msgstr "TRACCIA"
 
 msgid "Sitio"
 msgstr "Sito"
@@ -249,7 +522,7 @@ msgid "Novedad"
 msgstr "Novità"
 
 msgid "Retroceso"
-msgstr "Indietro"
+msgstr "Downgrade"
 
 msgid "Igual"
 msgstr "Uguale"
@@ -258,10 +531,10 @@ msgid "Adelanto"
 msgstr "Avanti"
 
 msgid "Revisando archivo"
-msgstr "Verificando il file"
+msgstr "Verifica del file"
 
 msgid "Espera"
-msgstr "Attendi"
+msgstr "Attesa"
 
 msgid "Conversión"
 msgstr "Conversione"
@@ -285,73 +558,31 @@ msgid "Descarga"
 msgstr "Download"
 
 msgid "Pulso"
-msgstr "Battito"
+msgstr "Impulso"
 
 msgid "Carril"
 msgstr "Corsia"
 
-msgid "Uniendo pistas"
-msgstr "Unendo le tracce"
+msgid "seg"
+msgstr "s"
 
-msgid "Convirtiendo"
-msgstr "Convertendo"
+msgid "Error"
+msgstr "Errore"
 
-msgid "Ajustando pistas"
-msgstr "Regolando le tracce"
+msgid "espera"
+msgstr "attesa"
 
-msgid "Finalizando"
-msgstr "Completamento"
+msgid "min"
+msgstr "min"
 
-msgid "Espera mientras convierte · puede tardar · no cierres la app"
-msgstr "Attendi mentre converte · potrebbe volerci un po’ · non chiudere l’app"
+msgid "reintenta al abrir"
+msgstr "nuovo tentativo all’apertura"
 
-msgid "Espera mientras convierte · no cierres la app"
-msgstr "Attendi mentre converte · non chiudere l’app"
+msgid "falló"
+msgstr "non riuscito"
 
-msgid "Espera · puede tardar · no cierres la app"
-msgstr "Attendi · potrebbe volerci un po’ · non chiudere l’app"
-
-msgid "Espera · no cierres la app"
-msgstr "Attendi · non chiudere l’app"
-
-msgid "No cierres la app"
-msgstr "Non chiudere l’app"
-
-msgid "no cierres la app"
-msgstr "non chiudere l’app"
-
-msgid "Espera…"
-msgstr "Attendi…"
-
-msgid "VIDEO"
-msgstr "VIDEO"
-
-msgid "AUDIO"
-msgstr "AUDIO"
-
-msgid "UNIÓN"
-msgstr "UNIONE"
-
-msgid "GUARDADO"
-msgstr "SALVATO"
-
-msgid "PISTA"
-msgstr "TRACCIA"
-
-msgid "¿RES?"
-msgstr "RES?"
-
-msgid "¿COD?"
-msgstr "COD?"
-
-msgid "¿FPS?"
-msgstr "FPS?"
-
-msgid "¿BIT?"
-msgstr "BIT?"
-
-msgid "¿KHZ?"
-msgstr "KHZ?"
+msgid "listas"
+msgstr "pronte"
 
 msgid "papelera"
 msgstr "cestino"
@@ -359,11 +590,38 @@ msgstr "cestino"
 msgid "basura"
 msgstr "spazzatura"
 
-msgid "VIEJO"
-msgstr "VECCHIO"
+msgid "Toca la pantalla para abrir el teclado"
+msgstr "Tocca lo schermo per aprire la tastiera"
 
-msgid "NUEVO"
-msgstr "NUOVO"
+msgid "Toca para abrir el teclado"
+msgstr "Tocca per aprire la tastiera"
+
+msgid "Toca = teclado"
+msgstr "Tocca = tastiera"
+
+msgid "¿Sustituir el archivo?"
+msgstr "Sostituire il file?"
+
+msgid "¿Sustituir archivo?"
+msgstr "Sostituire il file?"
+
+msgid "¿Sustituir?"
+msgstr "Sostituire?"
+
+msgid "¿Convertir este video?"
+msgstr "Convertire questo video?"
+
+msgid "¿Convertir ahora?"
+msgstr "Convertire ora?"
+
+msgid "¿Convertir?"
+msgstr "Convertire?"
+
+msgid "sin respuesta se sustituye · "
+msgstr "Senza risposta, sostituisce · "
+
+msgid "sin respuesta se convierte · "
+msgstr "Senza risposta, converte · "
 
 msgid "Toca la pantalla · Enter sustituir · n conservar"
 msgstr "Tocca lo schermo · Invio sostituisci · n mantieni"
@@ -395,32 +653,20 @@ msgstr "Invio sì · r remux · n no"
 msgid "Enter · r · n"
 msgstr "Invio · r · n"
 
-msgid "Toca la pantalla para abrir el teclado"
-msgstr "Tocca lo schermo per aprire la tastiera"
+msgid "Preparando"
+msgstr "Preparazione"
 
-msgid "Toca para abrir el teclado"
-msgstr "Tocca per aprire la tastiera"
+msgid "Preparando descarga"
+msgstr "Preparazione del download"
 
-msgid "Toca = teclado"
-msgstr "Tocca = tastiera"
+msgid "Descargando video"
+msgstr "Download del video"
 
-msgid "¿Sustituir el archivo?"
-msgstr "Sostituire il file?"
+msgid "Descargando audio"
+msgstr "Download dell’audio"
 
-msgid "¿Sustituir archivo?"
-msgstr "Sostituire file?"
-
-msgid "¿Sustituir?"
-msgstr "Sostituire?"
-
-msgid "¿Convertir este video?"
-msgstr "Convertire questo video?"
-
-msgid "¿Convertir ahora?"
-msgstr "Convertire ora?"
-
-msgid "¿Convertir?"
-msgstr "Convertire?"
+msgid "Finalizando"
+msgstr "Completamento"
 
 msgid "Abriendo con view"
 msgstr "Apertura con view"
@@ -428,47 +674,16 @@ msgstr "Apertura con view"
 msgid "Enviando a DLpy"
 msgstr "Invio a DLpy"
 
-msgid "Preparando"
-msgstr "In preparazione"
-
-msgid "Preparando descarga"
-msgstr "Preparazione del download"
-
-msgid "Error"
-msgstr "Errore"
-
-msgid "falló"
-msgstr "non riuscito"
-
-msgid "reintenta al abrir"
-msgstr "riprova all’apertura"
-
-msgid "listas"
-msgstr "pronte"
-
-msgid "espera"
-msgstr "attendi"
-
-msgid "activa"
-msgstr "attiva"
-
-msgid "hecho"
-msgstr "fatto"
-
-msgid "sin respuesta se sustituye · "
-msgstr "senza risposta viene sostituito · "
-
-msgid "sin respuesta se convierte · "
-msgstr "senza risposta viene convertito · "
+msgid "GitHub"
+msgstr "GitHub"
 
 msgid "actualizaciones"
 msgstr "aggiornamenti"
 
 msgid "analizando"
-msgstr "analizzando"
+msgstr "analisi"
 
-msgid "boot"
-msgstr "avvio"
-
-msgid "GitHub"
-msgstr "GitHub"
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 Lista con {n} elemento: {t}"
+msgstr[1] "📃 Lista con {n} elementi: {t}"

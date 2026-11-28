@@ -1,20 +1,31 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: DLpy\n"
+"Project-Id-Version: DLpy 0.2.4\n"
+"Language: ru\n"
+"X-Label: 🇷🇺 Русский\n"
+"X-Name: 🇷🇺 Русский\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ru\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Label: 🇷🇺 Русский\n"
+
+msgid "🔎 Buscando actualizaciones de {x}…"
+msgstr "🔎 Проверка обновлений для {x}…"
+
+msgid "⬇️ Instalando {x}…"
+msgstr "⬇️ Установка {x}…"
+
+msgid "⚠️ No se pudo instalar: {d}"
+msgstr "⚠️ Не удалось установить: {d}"
 
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ Устанавливаю yt-dlp (только в первый раз)…"
+msgstr "⬇️ Установка yt-dlp (только в первый раз)…"
 
-msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "Не удалось установить yt-dlp. Проверь соединение."
+msgid "módulos"
+msgstr "модули"
 
-msgid "⚙️ Procesando…"
-msgstr "⚙️ Обрабатываю…"
+msgid "idiomas"
+msgstr "языки"
 
 msgid "✅ Listo"
 msgstr "✅ Готово"
@@ -22,14 +33,191 @@ msgstr "✅ Готово"
 msgid "📁 Guardado en: {p}"
 msgstr "📁 Сохранено в: {p}"
 
+msgid "✅ DLpy actualizado a {v}."
+msgstr "✅ DLpy обновлён до {v}."
+
+msgid "📲 Enviando las opciones al atajo…"
+msgstr "📲 Отправка параметров в команду…"
+
+msgid "🍎 Comprobando compatibilidad con Apple…"
+msgstr "🍎 Проверка совместимости с Apple…"
+
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ Ошибка скачивания: {e}"
+
+msgid "⏳ Descargando…"
+msgstr "⏳ Скачивание…"
+
+msgid ""
+"  --long (con --shortcutpick o --scm): para \"Execute Long Command\" (iOS "
+"27); sin limite de tiempo,\n                                      avisa el "
+"avance con `progress`, devuelve una linea JSON; con "
+"--scm,\n                                      la lista completa de formatos "
+"con lo Apple nativo primero"
+msgstr ""
+"  --long (с --shortcutpick или --scm): для \"Execute Long Command\" (iOS "
+"27); без лимита времени,\n                                      сообщает о "
+"прогрессе через `progress`, возвращает одну строку JSON; с "
+"--scm,\n                                      полный список форматов, "
+"сначала родные для Apple"
+
+msgid ""
+"  Opcionales (--config K=V; todos apagados salvo THREADS): THREADS=4, "
+"SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1 "
+"(registro en dlpy_files/_log.txt).\n  --shortcutpick "
+"\"V=..,A=..,X=..,R=1:20-3:45\" <url>   baja solo ese tramo (R es opcional)"
+msgstr ""
+"  Необязательные (--config K=V; всё выключено, кроме THREADS): THREADS=4, "
+"SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1 "
+"(журнал в dlpy_files/_log.txt).\n  --shortcutpick "
+"\"V=..,A=..,X=..,R=1:20-3:45\" <url>   качает только этот отрезок (R "
+"необязателен)"
+
+msgid "✅ Idioma {c} instalado."
+msgstr "✅ Язык {c} установлен."
+
+msgid "🔄 Actualizando el idioma {c}…"
+msgstr "🔄 Обновление языка {c}…"
+
+msgid "⚙️ Procesando…"
+msgstr "⚙️ Обработка…"
+
+msgid "✅ {x} instalado."
+msgstr "✅ {x} установлен."
+
+msgid "metadatos"
+msgstr "метаданные"
+
+msgid "subtítulos"
+msgstr "субтитры"
+
+msgid "✅ yt-dlp {v} instalado."
+msgstr "✅ yt-dlp {v} установлен."
+
+msgid "🧩 Módulos instalados o actualizados: {m}"
+msgstr "🧩 Модули установлены или обновлены: {m}"
+
+msgid "⚠️ El módulo {n} dice {v}, pero su index dice {i}."
+msgstr "⚠️ Модуль {n} сообщает {v}, а его index — {i}."
+
+msgid "dependencias"
+msgstr "зависимости"
+
+msgid "📦 Dependencias instaladas o actualizadas: {d}"
+msgstr "📦 Зависимости установлены или обновлены: {d}"
+
+msgid "⚠️ No se pudo instalar o actualizar: {d}"
+msgstr "⚠️ Не удалось установить или обновить: {d}"
+
+msgid "🌐 Idiomas actualizados: {l}"
+msgstr "🌐 Языки обновлены: {l}"
+
+msgid "⚠️ No se encontró el archivo de cookies: {p}"
+msgstr "⚠️ Файл cookies не найден: {p}"
+
 msgid "Idioma del script"
 msgstr "Язык скрипта"
 
+msgid "🔄 Nueva versión {v} (tienes {o}): actualizando…"
+msgstr "🔄 Новая версия {v} (у тебя {o}): обновляю…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "Скачиваемых форматов не найдено."
+
+msgid "No se encontró un enlace válido."
+msgstr "Действующая ссылка не найдена."
+
+msgid ""
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg está "
+"desactivado."
+msgstr "⚠️ Не удалось проверить совместимость с Apple: ffmpeg отключён."
+
+msgid "🔄 Convirtiendo a un formato compatible con Apple…"
+msgstr "🔄 Конвертация в формат, совместимый с Apple…"
+
+msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
+msgstr "⚠️ Не удалось подписать аудиодорожки: {e}"
+
+msgid "⚠️ No se pudo escribir DLpy en el software de codificación: {e}"
+msgstr "⚠️ Не удалось записать DLpy в программу кодирования: {e}"
+
+msgid "Opción no válida."
+msgstr "Неверный вариант."
+
+msgid "Tramo no válido."
+msgstr "Неверный отрезок."
+
+msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
+msgstr "ℹ️ Без ffmpeg: предлагаются только видео, в которых уже есть звук."
+
+msgid "🎬 Elige la calidad"
+msgstr "🎬 Выбери качество"
+
+msgid "Número"
+msgstr "Номер"
+
+msgid "Elementos (Enter = todos, ej. 1-3,7)"
+msgstr "Элементы (Ввод = все, напр. 1-3,7)"
+
+msgid "Mejor calidad"
+msgstr "Лучшее качество"
+
+msgid "Solo audio"
+msgstr "Только звук"
+
+msgid "Calidad para toda la lista"
+msgstr "Качество для всего списка"
+
+msgid "Terminado: {ok} bien, {bad} con error."
+msgstr "Готово: {ok} успешно, {bad} с ошибкой."
+
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ Скачивание языка…"
+
+msgid "portada"
+msgstr "обложка"
+
+msgid "⚠️ No se pudo añadir {x}: {e}"
+msgstr "⚠️ Не удалось добавить {x}: {e}"
+
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "Не удалось установить yt-dlp. Проверь соединение."
+
+msgid "✅ Módulos al día."
+msgstr "✅ Модули актуальны."
+
+msgid "⚠️ No se pudo consultar los módulos."
+msgstr "⚠️ Не удалось проверить модули."
+
+msgid "⬇️ Instalando {n} ({b})…"
+msgstr "⬇️ Установка {n} ({b})…"
+
+msgid "🔄 Actualizando {n} ({a} → {b})…"
+msgstr "🔄 Обновление {n} ({a} → {b})…"
+
+msgid "✅ Dependencias al día."
+msgstr "✅ Зависимости актуальны."
+
+msgid "⚠️ No se pudo consultar las dependencias."
+msgstr "⚠️ Не удалось проверить зависимости."
+
+msgid "No hay idiomas instalados."
+msgstr "Языки не установлены."
+
+msgid "✅ Idiomas al día."
+msgstr "✅ Языки актуальны."
+
+msgid "⚠️ No se pudo consultar los idiomas."
+msgstr "⚠️ Не удалось проверить языки."
+
+msgid "⬇️ Instalando el módulo {n} ({b})…"
+msgstr "⬇️ Установка модуля {n} ({b})…"
+
+msgid "✅ Módulo {n} {v} instalado."
+msgstr "✅ Модуль {n} {v} установлен."
+
 msgid "✅ Idioma del script: {lang}"
 msgstr "✅ Язык скрипта: {lang}"
-
-msgid "⚠️ Valor no válido para {k}: {v}"
-msgstr "⚠️ Недопустимое значение для {k}: {v}"
 
 msgid "⚙️ Configuración de DLpy (script {v})"
 msgstr "⚙️ Настройки DLpy (скрипт {v})"
@@ -62,10 +250,115 @@ msgid "Horas de caché de pistas (0 = sin caché)"
 msgstr "Часы кэша дорожек (0 = без кэша)"
 
 msgid "Ruta enviada al atajo (abs/home/rel)"
-msgstr "Путь для ярлыка (abs/home/rel)"
+msgstr "Путь, отправляемый в команду (abs/home/rel)"
 
 msgid "Animaciones (1/0)"
 msgstr "Анимации (1/0)"
+
+msgid "Dependencias de pip al día (separadas por coma)"
+msgstr "Зависимости pip актуальны (через запятую)"
+
+msgid "Escribir DLpy en el software de codificación (1/0)"
+msgstr "Записывать DLpy в программу кодирования (1/0)"
+
+msgid "Buscar actualización de DLpy cada semana (1/0)"
+msgstr "Искать обновления DLpy каждую неделю (1/0)"
+
+msgid "Fragmentos en paralelo (1-16)"
+msgstr "Параллельные фрагменты (1-16)"
+
+msgid "Subtítulos (0 = no, o idiomas: es,en)"
+msgstr "Субтитры (0 = нет, или языки: es,en)"
+
+msgid "Subtítulos automáticos (1/0)"
+msgstr "Автосубтитры (1/0)"
+
+msgid "Portada embebida (1/0)"
+msgstr "Встроенная обложка (1/0)"
+
+msgid "Metadatos y capítulos (1/0)"
+msgstr "Метаданные и главы (1/0)"
+
+msgid "Archivo de cookies (0 = ninguno)"
+msgstr "Файл cookies (0 = нет)"
+
+msgid "Salir"
+msgstr "Выход"
+
+msgid "✅ DLpy está al día ({v})."
+msgstr "✅ DLpy актуален ({v})."
+
+msgid "⚠️ No se pudo consultar o verificar la actualización."
+msgstr "⚠️ Не удалось проверить обновление."
+
+msgid "⚠️ No se pudo actualizar DLpy: {e}"
+msgstr "⚠️ Не удалось обновить DLpy: {e}"
+
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "Прямые трансляции скачать нельзя."
+
+msgid ""
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg/ffprobe no "
+"disponible o archivo ilegible."
+msgstr ""
+"⚠️ Не удалось проверить совместимость с Apple: ffmpeg/ffprobe недоступен "
+"или файл не читается."
+
+msgid "⚠️ No se pudo convertir a un formato compatible con Apple: {e}"
+msgstr "⚠️ Не удалось конвертировать в формат, совместимый с Apple: {e}"
+
+msgid "⚠️ No se pudo comprobar la compatibilidad con Apple: {e}"
+msgstr "⚠️ Не удалось проверить совместимость с Apple: {e}"
+
+msgid "🔊 Audio principal"
+msgstr "🔊 Основной звук"
+
+msgid "(+{n} más; puedes elegir hasta el {t})"
+msgstr "(+{n} ещё; можно выбрать до {t})"
+
+msgid "No se pudo leer el enlace: {e}"
+msgstr "Не удалось прочитать ссылку: {e}"
+
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python "
+"dlpy.py                      menú interactivo (pide el enlace)\n  python "
+"dlpy.py <url>                descarga interactiva de ese enlace\n  python "
+"dlpy.py --idiomas            JSON con los idiomas del script\n  python "
+"dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python "
+"dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; "
+"si no\n                                      alcanza o es lista/falta "
+"yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual "
+"pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py "
+"--shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: "
+"--update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), "
+"--update-modules (actualiza los módulos), --update-deps (actualiza pip, "
+"yt-dlp y demás dependencias), --self-update (busca ya TODO: DLpy, módulos, "
+"dependencias e idiomas), --version, --help."
+msgstr ""
+"Управляется командой \"DLpy\". Команды, которые использует команда:\n  "
+"python dlpy.py                      интерактивное меню (спрашивает "
+"ссылку)\n  python dlpy.py <url>                интерактивное скачивание "
+"этой ссылки\n  python dlpy.py --idiomas            JSON с языками "
+"скрипта\n  python dlpy.py --config [K=V ...]   настройки (без аргументов: "
+"меню)\n  python dlpy.py --scm <url>          быстрый JSON (макс. 5 с) со "
+"ВСЕМ найденным; если\n                                      не хватило "
+"времени или это список / нет yt-dlp: \"use_scb\": true\n  python dlpy.py "
+"--scb <url>          то же, но без лимита времени; отправляет JSON в "
+"команду\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   "
+"скачивает выбор\nКроме того: --update (обновляет yt-dlp), --update-langs "
+"[коды] (заново качает языки), --update-modules (обновляет модули), "
+"--update-deps (обновляет pip, yt-dlp и остальные зависимости), "
+"--self-update (проверяет прямо сейчас ВСЁ: DLpy, модули, зависимости и "
+"языки), --version, --help."
+
+msgid "❌ Error inesperado ({tipo}): {e}"
+msgstr "❌ Неожиданная ошибка ({tipo}): {e}"
+
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ Не удалось скачать язык (нет интернета или файл не найден)."
+
+msgid "🔄 Actualizando el módulo {n} ({a} → {b})…"
+msgstr "🔄 Обновление модуля {n} ({a} → {b})…"
 
 msgid "Actualizar yt-dlp"
 msgstr "Обновить yt-dlp"
@@ -73,133 +366,46 @@ msgstr "Обновить yt-dlp"
 msgid "Actualizar idiomas"
 msgstr "Обновить языки"
 
-msgid "Salir"
-msgstr "Выход"
+msgid "Actualizar módulos"
+msgstr "Обновить модули"
 
-msgid "Número"
-msgstr "Номер"
+msgid "Actualizar dependencias"
+msgstr "Обновить зависимости"
 
-msgid "Opción no válida."
-msgstr "Неверный вариант."
-
-msgid "⬇️ Descargando idioma…"
-msgstr "⬇️ Загружаю язык…"
-
-msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
-msgstr "⚠️ Не удалось скачать язык (нет интернета или файл не найден)."
-
-msgid "Nuevo valor: "
-msgstr "Новое значение: "
-
-msgid "✅ Guardado."
-msgstr "✅ Сохранено."
-
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 Обновляю yt-dlp…"
-
-msgid "No hay idiomas instalados."
-msgstr "Языки не установлены."
-
-msgid "🌐 Actualizando idiomas…"
-msgstr "🌐 Обновляю языки…"
-
-msgid "No se encontraron formatos descargables."
-msgstr "Скачиваемые форматы не найдены."
-
-msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "Прямые трансляции скачать нельзя."
-
-msgid "No se encontró un enlace válido."
-msgstr "Подходящая ссылка не найдена."
-
-msgid "No se pudo leer el enlace: {e}"
-msgstr "Не удалось прочитать ссылку: {e}"
+msgid "Buscar todas las actualizaciones"
+msgstr "Проверить все обновления"
 
 msgid "🔗 Pega el enlace: "
 msgstr "🔗 Вставь ссылку: "
 
-msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 Отправляю варианты в ярлык…"
+msgid "⚠️ No se pudo actualizar: {d}"
+msgstr "⚠️ Не удалось обновить: {d}"
 
-msgid "⏳ Descargando…"
-msgstr "⏳ Скачиваю…"
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ Неверное значение для {k}: {v}"
 
-msgid "❌ Falló la descarga: {e}"
-msgstr "❌ Скачивание не удалось: {e}"
-
-msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ Не удалось добавить теги аудиодорожкам: {e}"
-
-msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ Без ffmpeg: предлагаются только видео со звуком."
-
-msgid "🎬 Elige la calidad"
-msgstr "🎬 Выбери качество"
-
-msgid "🔊 Audio principal"
-msgstr "🔊 Основное аудио"
-
-msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
-msgstr "🔊 Дополнительные аудио (номера через запятую, a = все, Enter = ни одного)"
-
-msgid "📃 Lista con {n} elemento: {t}"
-msgid_plural "📃 Lista con {n} elementos: {t}"
-msgstr[0] "📃 Список на {n} элемент: {t}"
-msgstr[1] "📃 Список на {n} элемента: {t}"
-msgstr[2] "📃 Список на {n} элементов: {t}"
-
-msgid "Elementos (Enter = todos, ej. 1-3,7)"
-msgstr "Элементы (Enter = все, напр. 1-3,7)"
-
-msgid "Mejor calidad"
-msgstr "Лучшее качество"
-
-msgid "Solo audio"
-msgstr "Только аудио"
-
-msgid "Calidad para toda la lista"
-msgstr "Качество для всего списка"
-
-msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "Готово: {ok} успешно, {bad} с ошибкой."
-
-msgid "❌ Error inesperado ({tipo}): {e}"
-msgstr "❌ Неожиданная ошибка ({tipo}): {e}"
+msgid "iniciando…"
+msgstr "запуск…"
 
 msgid ""
-"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
-"  python dlpy.py                      menú interactivo (pide el enlace)\n"
-"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
-"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
-"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
-"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
-"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
-"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
-msgstr ""
-"Управляется ярлыком \"DLpy\". Команды, которые использует ярлык:\n"
-"  python dlpy.py                      интерактивное меню (запрашивает ссылку)\n"
-"  python dlpy.py <url>                интерактивная загрузка по этой ссылке\n"
-"  python dlpy.py --idiomas            JSON с языками скрипта\n"
-"  python dlpy.py --config [K=V ...]   настройки (без аргументов: меню)\n"
-"  python dlpy.py --scm <url>          быстрый JSON (макс. 5 с) со ВСЕМ найденным; если не\n"
-"                                      успевает, либо список / нет yt-dlp: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          то же, но без лимита времени; отправляет JSON в ярлык\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   загружает выбор\n"
-"Кроме того: --update (обновляет yt-dlp), --update-langs [коды] (заново скачивает языки), --version, --help."
+"🔊 Audios adicionales (números separados por coma, a = todos, Enter = "
+"ninguno)"
+msgstr "🔊 Дополнительный звук (номера через запятую, a = все, Ввод = ничего)"
 
-msgid "seg"
-msgstr "с"
+msgid "✂️ Tramo (Enter = completo, ej. 1:20-3:45): "
+msgstr "✂️ Отрезок (Ввод = целиком, напр. 1:20-3:45): "
 
-msgid "min"
-msgstr "мин"
+msgid "✅ Guardado."
+msgstr "✅ Сохранено."
 
-msgid "Enter"
-msgstr "Enter"
+msgid "Nuevo valor: "
+msgstr "Новое значение: "
 
 msgid "Seleccione idioma"
-msgstr "Выберите язык"
+msgstr "Выбери язык"
+
+msgid "Enter"
+msgstr "Ввод"
 
 msgid "compatible Apple"
 msgstr "совместимо с Apple"
@@ -211,103 +417,13 @@ msgid "predeterminada"
 msgstr "по умолчанию"
 
 msgid "recomendada"
-msgstr "рекомендованная"
-
-msgid "Revisando"
-msgstr "Проверяю"
-
-msgid "Uniendo"
-msgstr "Объединяю"
-
-msgid "Ajustando"
-msgstr "Настраиваю"
-
-msgid "Guardado"
-msgstr "Сохранено"
-
-msgid "Sustituyendo"
-msgstr "Заменяю"
-
-msgid "Limpiando"
-msgstr "Очищаю"
-
-msgid "Vaciando"
-msgstr "Опорожняю"
-
-msgid "Descargando"
-msgstr "Скачиваю"
-
-msgid "Sitio"
-msgstr "Сайт"
-
-msgid "DLPY"
-msgstr "DLPY"
-
-msgid "Primera ejecución"
-msgstr "Первый запуск"
-
-msgid "Novedad"
-msgstr "Новое"
-
-msgid "Retroceso"
-msgstr "Откат"
-
-msgid "Igual"
-msgstr "То же"
-
-msgid "Adelanto"
-msgstr "Продвижение"
-
-msgid "Revisando archivo"
-msgstr "Проверяю файл"
-
-msgid "Espera"
-msgstr "Подожди"
-
-msgid "Conversión"
-msgstr "Конвертация"
-
-msgid "Sustitución"
-msgstr "Замена"
-
-msgid "Unión"
-msgstr "Объединение"
-
-msgid "Limpieza"
-msgstr "Очистка"
-
-msgid "Papelera"
-msgstr "Корзина"
-
-msgid "Envío"
-msgstr "Отправка"
-
-msgid "Descarga"
-msgstr "Загрузка"
-
-msgid "Pulso"
-msgstr "Пульс"
-
-msgid "Carril"
-msgstr "Полоса"
-
-msgid "Uniendo pistas"
-msgstr "Объединяю дорожки"
-
-msgid "Convirtiendo"
-msgstr "Конвертирую"
-
-msgid "Ajustando pistas"
-msgstr "Настраиваю дорожки"
-
-msgid "Finalizando"
-msgstr "Завершаю"
+msgstr "рекомендуемая"
 
 msgid "Espera mientras convierte · puede tardar · no cierres la app"
-msgstr "Подожди, пока конвертируется · может занять время · не закрывай приложение"
+msgstr "Подожди, идёт конвертация · может занять время · не закрывай приложение"
 
 msgid "Espera mientras convierte · no cierres la app"
-msgstr "Подожди, пока конвертируется · не закрывай приложение"
+msgstr "Подожди, идёт конвертация · не закрывай приложение"
 
 msgid "Espera · puede tardar · no cierres la app"
 msgstr "Подожди · может занять время · не закрывай приложение"
@@ -318,29 +434,11 @@ msgstr "Подожди · не закрывай приложение"
 msgid "No cierres la app"
 msgstr "Не закрывай приложение"
 
-msgid "no cierres la app"
-msgstr "не закрывай приложение"
-
 msgid "Espera…"
 msgstr "Подожди…"
 
-msgid "VIDEO"
-msgstr "ВИДЕО"
-
-msgid "AUDIO"
-msgstr "АУДИО"
-
-msgid "UNIÓN"
-msgstr "ОБЪЕДИНЕНИЕ"
-
-msgid "GUARDADO"
-msgstr "СОХРАНЕНО"
-
-msgid "PISTA"
-msgstr "ДОРОЖКА"
-
 msgid "¿RES?"
-msgstr "РАЗР.?"
+msgstr "РАЗР?"
 
 msgid "¿COD?"
 msgstr "КОД?"
@@ -354,47 +452,143 @@ msgstr "БИТ?"
 msgid "¿KHZ?"
 msgstr "КГЦ?"
 
+msgid "Uniendo pistas"
+msgstr "Склейка дорожек"
+
+msgid "Convirtiendo"
+msgstr "Конвертация"
+
+msgid "Ajustando pistas"
+msgstr "Настройка дорожек"
+
+msgid "Revisando"
+msgstr "Проверка"
+
+msgid "Uniendo"
+msgstr "Склейка"
+
+msgid "Ajustando"
+msgstr "Настройка"
+
+msgid "Guardado"
+msgstr "Сохранено"
+
+msgid "Sustituyendo"
+msgstr "Замена"
+
+msgid "Limpiando"
+msgstr "Очистка"
+
+msgid "Vaciando"
+msgstr "Очистка"
+
+msgid "Descargando"
+msgstr "Скачивание"
+
+msgid "carpetas"
+msgstr "папки"
+
+msgid "estado"
+msgstr "состояние"
+
+msgid "listo"
+msgstr "готово"
+
+msgid "VIDEO"
+msgstr "ВИДЕО"
+
+msgid "AUDIO"
+msgstr "АУДИО"
+
+msgid "UNIÓN"
+msgstr "СКЛЕЙКА"
+
+msgid "GUARDADO"
+msgstr "СОХРАН."
+
+msgid "PISTA"
+msgstr "ДОРОЖКА"
+
+msgid "Sitio"
+msgstr "Сайт"
+
+msgid "DLPY"
+msgstr "DLPY"
+
+msgid "Primera ejecución"
+msgstr "Первый запуск"
+
+msgid "Novedad"
+msgstr "Новинка"
+
+msgid "Retroceso"
+msgstr "Откат"
+
+msgid "Igual"
+msgstr "Та же"
+
+msgid "Adelanto"
+msgstr "Впереди"
+
+msgid "Revisando archivo"
+msgstr "Проверка файла"
+
+msgid "Espera"
+msgstr "Ожидание"
+
+msgid "Conversión"
+msgstr "Конвертация"
+
+msgid "Sustitución"
+msgstr "Замена"
+
+msgid "Unión"
+msgstr "Склейка"
+
+msgid "Limpieza"
+msgstr "Очистка"
+
+msgid "Papelera"
+msgstr "Корзина"
+
+msgid "Envío"
+msgstr "Отправка"
+
+msgid "Descarga"
+msgstr "Скачивание"
+
+msgid "Pulso"
+msgstr "Пульс"
+
+msgid "Carril"
+msgstr "Дорожка"
+
+msgid "seg"
+msgstr "с"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "espera"
+msgstr "ожидание"
+
+msgid "min"
+msgstr "мин"
+
+msgid "reintenta al abrir"
+msgstr "повтор при открытии"
+
+msgid "falló"
+msgstr "не удалось"
+
+msgid "listas"
+msgstr "готовы"
+
 msgid "papelera"
 msgstr "корзина"
 
 msgid "basura"
 msgstr "мусор"
-
-msgid "VIEJO"
-msgstr "СТАРЫЙ"
-
-msgid "NUEVO"
-msgstr "НОВЫЙ"
-
-msgid "Toca la pantalla · Enter sustituir · n conservar"
-msgstr "Коснись экрана · Enter — заменить · n — оставить"
-
-msgid "Enter sustituir · n conservar"
-msgstr "Enter — заменить · n — оставить"
-
-msgid "Enter sustituir · n no"
-msgstr "Enter — заменить · n — нет"
-
-msgid "Enter sí · n no"
-msgstr "Enter — да · n — нет"
-
-msgid "Enter · n"
-msgstr "Enter · n"
-
-msgid "Toca la pantalla · Enter convertir · r remux · n original"
-msgstr "Коснись экрана · Enter — конвертировать · r — remux · n — оригинал"
-
-msgid "Enter convertir · r remux · n original"
-msgstr "Enter — конвертировать · r — remux · n — оригинал"
-
-msgid "Enter convertir · r remux · n no"
-msgstr "Enter — конвертировать · r — remux · n — нет"
-
-msgid "Enter sí · r remux · n no"
-msgstr "Enter — да · r — remux · n — нет"
-
-msgid "Enter · r · n"
-msgstr "Enter · r · n"
 
 msgid "Toca la pantalla para abrir el teclado"
 msgstr "Коснись экрана, чтобы открыть клавиатуру"
@@ -406,7 +600,7 @@ msgid "Toca = teclado"
 msgstr "Касание = клавиатура"
 
 msgid "¿Sustituir el archivo?"
-msgstr "Заменить этот файл?"
+msgstr "Заменить файл?"
 
 msgid "¿Sustituir archivo?"
 msgstr "Заменить файл?"
@@ -423,53 +617,74 @@ msgstr "Конвертировать сейчас?"
 msgid "¿Convertir?"
 msgstr "Конвертировать?"
 
-msgid "Abriendo con view"
-msgstr "Открываю через view"
-
-msgid "Enviando a DLpy"
-msgstr "Отправляю в DLpy"
-
-msgid "Preparando"
-msgstr "Подготавливаю"
-
-msgid "Preparando descarga"
-msgstr "Подготавливаю загрузку"
-
-msgid "Error"
-msgstr "Ошибка"
-
-msgid "falló"
-msgstr "не удалось"
-
-msgid "reintenta al abrir"
-msgstr "повтори при открытии"
-
-msgid "listas"
-msgstr "готово"
-
-msgid "espera"
-msgstr "подожди"
-
-msgid "activa"
-msgstr "активно"
-
-msgid "hecho"
-msgstr "готово"
-
 msgid "sin respuesta se sustituye · "
-msgstr "без ответа заменится · "
+msgstr "Без ответа заменит · "
 
 msgid "sin respuesta se convierte · "
-msgstr "без ответа конвертируется · "
+msgstr "Без ответа конвертирует · "
+
+msgid "Toca la pantalla · Enter sustituir · n conservar"
+msgstr "Коснись экрана · Ввод заменить · n оставить"
+
+msgid "Enter sustituir · n conservar"
+msgstr "Ввод заменить · n оставить"
+
+msgid "Enter sustituir · n no"
+msgstr "Ввод заменить · n нет"
+
+msgid "Enter sí · n no"
+msgstr "Ввод да · n нет"
+
+msgid "Enter · n"
+msgstr "Ввод · n"
+
+msgid "Toca la pantalla · Enter convertir · r remux · n original"
+msgstr "Коснись экрана · Ввод конвертировать · r remux · n оригинал"
+
+msgid "Enter convertir · r remux · n original"
+msgstr "Ввод конвертировать · r remux · n оригинал"
+
+msgid "Enter convertir · r remux · n no"
+msgstr "Ввод конвертировать · r remux · n нет"
+
+msgid "Enter sí · r remux · n no"
+msgstr "Ввод да · r remux · n нет"
+
+msgid "Enter · r · n"
+msgstr "Ввод · r · n"
+
+msgid "Preparando"
+msgstr "Подготовка"
+
+msgid "Preparando descarga"
+msgstr "Подготовка скачивания"
+
+msgid "Descargando video"
+msgstr "Скачивание видео"
+
+msgid "Descargando audio"
+msgstr "Скачивание звука"
+
+msgid "Finalizando"
+msgstr "Завершение"
+
+msgid "Abriendo con view"
+msgstr "Открытие с view"
+
+msgid "Enviando a DLpy"
+msgstr "Отправка в DLpy"
+
+msgid "GitHub"
+msgstr "GitHub"
 
 msgid "actualizaciones"
 msgstr "обновления"
 
 msgid "analizando"
-msgstr "анализирую"
+msgstr "анализ"
 
-msgid "boot"
-msgstr "запуск"
-
-msgid "GitHub"
-msgstr "GitHub"
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 Список из {n} элемента: {t}"
+msgstr[1] "📃 Список из {n} элементов: {t}"
+msgstr[2] "📃 Список из {n} элементов: {t}"

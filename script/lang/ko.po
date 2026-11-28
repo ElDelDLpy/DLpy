@@ -1,20 +1,31 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: DLpy\n"
+"Project-Id-Version: DLpy 0.2.4\n"
+"Language: ko\n"
+"X-Label: 🇰🇷 한국어\n"
+"X-Name: 🇰🇷 한국어\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Label: 🇰🇷 한국어\n"
+
+msgid "🔎 Buscando actualizaciones de {x}…"
+msgstr "🔎 {x} 업데이트 확인 중…"
+
+msgid "⬇️ Instalando {x}…"
+msgstr "⬇️ {x} 설치 중…"
+
+msgid "⚠️ No se pudo instalar: {d}"
+msgstr "⚠️ 설치하지 못했습니다: {d}"
 
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ yt-dlp 설치 중 (처음 한 번만)…"
+msgstr "⬇️ yt-dlp 설치 중(처음 한 번만)…"
 
-msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "yt-dlp 설치에 실패했어요. 연결을 확인해 주세요."
+msgid "módulos"
+msgstr "모듈"
 
-msgid "⚙️ Procesando…"
-msgstr "⚙️ 처리 중…"
+msgid "idiomas"
+msgstr "언어"
 
 msgid "✅ Listo"
 msgstr "✅ 완료"
@@ -22,132 +33,129 @@ msgstr "✅ 완료"
 msgid "📁 Guardado en: {p}"
 msgstr "📁 저장 위치: {p}"
 
-msgid "Idioma del script"
-msgstr "스크립트 언어"
-
-msgid "✅ Idioma del script: {lang}"
-msgstr "✅ 스크립트 언어: {lang}"
-
-msgid "⚠️ Valor no válido para {k}: {v}"
-msgstr "⚠️ {k}에 잘못된 값: {v}"
-
-msgid "⚙️ Configuración de DLpy (script {v})"
-msgstr "⚙️ DLpy 설정 (스크립트 {v})"
-
-msgid "Idioma"
-msgstr "언어"
-
-msgid "URL de idiomas (GitHub)"
-msgstr "언어 URL (GitHub)"
-
-msgid "URL de módulos (GitHub)"
-msgstr "모듈 URL (GitHub)"
-
-msgid "Carpeta de descargas"
-msgstr "다운로드 폴더"
-
-msgid "Contenedor de video (auto/mp4/mkv)"
-msgstr "비디오 컨테이너 (auto/mp4/mkv)"
-
-msgid "Formato de audio (native/mp3/m4a)"
-msgstr "오디오 형식 (native/mp3/m4a)"
-
-msgid "ffmpeg (auto/yes/no)"
-msgstr "ffmpeg (auto/yes/no)"
-
-msgid "Si el archivo ya existe (new/replace)"
-msgstr "파일이 이미 있을 때 (new/replace)"
-
-msgid "Horas de caché de pistas (0 = sin caché)"
-msgstr "트랙 캐시 시간 (0 = 캐시 안 함)"
-
-msgid "Ruta enviada al atajo (abs/home/rel)"
-msgstr "단축어로 보낼 경로 (abs/home/rel)"
-
-msgid "Animaciones (1/0)"
-msgstr "애니메이션 (1/0)"
-
-msgid "Actualizar yt-dlp"
-msgstr "yt-dlp 업데이트"
-
-msgid "Actualizar idiomas"
-msgstr "언어 업데이트"
-
-msgid "Salir"
-msgstr "종료"
-
-msgid "Número"
-msgstr "번호"
-
-msgid "Opción no válida."
-msgstr "올바르지 않은 옵션이에요."
-
-msgid "⬇️ Descargando idioma…"
-msgstr "⬇️ 언어 다운로드 중…"
-
-msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
-msgstr "⚠️ 언어를 다운로드하지 못했어요 (인터넷이 없거나 파일을 찾을 수 없음)."
-
-msgid "Nuevo valor: "
-msgstr "새 값: "
-
-msgid "✅ Guardado."
-msgstr "✅ 저장했어요."
-
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 yt-dlp 업데이트 중…"
-
-msgid "No hay idiomas instalados."
-msgstr "설치된 언어가 없어요."
-
-msgid "🌐 Actualizando idiomas…"
-msgstr "🌐 언어 업데이트 중…"
-
-msgid "No se encontraron formatos descargables."
-msgstr "다운로드할 수 있는 형식을 찾지 못했어요."
-
-msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "라이브 스트림은 다운로드할 수 없어요."
-
-msgid "No se encontró un enlace válido."
-msgstr "유효한 링크를 찾지 못했어요."
-
-msgid "No se pudo leer el enlace: {e}"
-msgstr "링크를 읽지 못했어요: {e}"
-
-msgid "🔗 Pega el enlace: "
-msgstr "🔗 링크를 붙여넣으세요: "
+msgid "✅ DLpy actualizado a {v}."
+msgstr "✅ DLpy가 {v}로 업데이트됐습니다."
 
 msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 단축어로 옵션 전송 중…"
+msgstr "📲 옵션을 단축어에 보내는 중…"
 
-msgid "⏳ Descargando…"
-msgstr "⏳ 다운로드 중…"
+msgid "🍎 Comprobando compatibilidad con Apple…"
+msgstr "🍎 Apple 호환성 확인 중…"
 
 msgid "❌ Falló la descarga: {e}"
 msgstr "❌ 다운로드 실패: {e}"
 
+msgid "⏳ Descargando…"
+msgstr "⏳ 다운로드 중…"
+
+msgid ""
+"  --long (con --shortcutpick o --scm): para \"Execute Long Command\" (iOS "
+"27); sin limite de tiempo,\n                                      avisa el "
+"avance con `progress`, devuelve una linea JSON; con "
+"--scm,\n                                      la lista completa de formatos "
+"con lo Apple nativo primero"
+msgstr ""
+"  --long(--shortcutpick 또는 --scm과 함께): \"Execute Long Command\"(iOS 27)용; "
+"시간 제한 없음,\n                                      `progress`로 진행 상황을 알리고 "
+"JSON 한 줄을 반환합니다; --scm에서는\n                                      전체 형식 목록을 "
+"Apple 네이티브부터 반환합니다"
+
+msgid ""
+"  Opcionales (--config K=V; todos apagados salvo THREADS): THREADS=4, "
+"SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1 "
+"(registro en dlpy_files/_log.txt).\n  --shortcutpick "
+"\"V=..,A=..,X=..,R=1:20-3:45\" <url>   baja solo ese tramo (R es opcional)"
+msgstr ""
+"  선택 사항(--config K=V; THREADS 외에는 모두 꺼짐): THREADS=4, SUBS=es,en, SUBAUTO=1, "
+"THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1(dlpy_files/_log.txt에 "
+"로그).\n  --shortcutpick \"V=..,A=..,X=..,R=1:20-3:45\" <url>   해당 구간만 "
+"다운로드합니다(R은 선택 사항)"
+
+msgid "✅ Idioma {c} instalado."
+msgstr "✅ 언어 {c}가 설치됐습니다."
+
+msgid "🔄 Actualizando el idioma {c}…"
+msgstr "🔄 언어 {c} 업데이트 중…"
+
+msgid "⚙️ Procesando…"
+msgstr "⚙️ 처리 중…"
+
+msgid "✅ {x} instalado."
+msgstr "✅ {x}가 설치됐습니다."
+
+msgid "metadatos"
+msgstr "메타데이터"
+
+msgid "subtítulos"
+msgstr "자막"
+
+msgid "✅ yt-dlp {v} instalado."
+msgstr "✅ yt-dlp {v}가 설치됐습니다."
+
+msgid "🧩 Módulos instalados o actualizados: {m}"
+msgstr "🧩 설치 또는 업데이트한 모듈: {m}"
+
+msgid "⚠️ El módulo {n} dice {v}, pero su index dice {i}."
+msgstr "⚠️ 모듈 {n}은 {v}라고 하는데, index는 {i}라고 합니다."
+
+msgid "dependencias"
+msgstr "종속성"
+
+msgid "📦 Dependencias instaladas o actualizadas: {d}"
+msgstr "📦 설치 또는 업데이트한 종속성: {d}"
+
+msgid "⚠️ No se pudo instalar o actualizar: {d}"
+msgstr "⚠️ 설치 또는 업데이트하지 못했습니다: {d}"
+
+msgid "🌐 Idiomas actualizados: {l}"
+msgstr "🌐 업데이트한 언어: {l}"
+
+msgid "⚠️ No se encontró el archivo de cookies: {p}"
+msgstr "⚠️ 쿠키 파일을 찾을 수 없습니다: {p}"
+
+msgid "Idioma del script"
+msgstr "스크립트 언어"
+
+msgid "🔄 Nueva versión {v} (tienes {o}): actualizando…"
+msgstr "🔄 새 버전 {v}(현재 {o}): 업데이트 중…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "다운로드 가능한 형식을 찾지 못했습니다."
+
+msgid "No se encontró un enlace válido."
+msgstr "유효한 링크를 찾지 못했습니다."
+
+msgid ""
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg está "
+"desactivado."
+msgstr "⚠️ Apple 호환성을 확인할 수 없습니다: ffmpeg이 꺼져 있습니다."
+
+msgid "🔄 Convirtiendo a un formato compatible con Apple…"
+msgstr "🔄 Apple 호환 형식으로 변환 중…"
+
 msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ 오디오 트랙에 태그를 지정하지 못했어요: {e}"
+msgstr "⚠️ 오디오 트랙에 태그를 달지 못했습니다: {e}"
+
+msgid "⚠️ No se pudo escribir DLpy en el software de codificación: {e}"
+msgstr "⚠️ 인코딩 소프트웨어에 DLpy를 쓰지 못했습니다: {e}"
+
+msgid "Opción no válida."
+msgstr "잘못된 옵션입니다."
+
+msgid "Tramo no válido."
+msgstr "잘못된 구간입니다."
 
 msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ ffmpeg이 없어서 오디오가 포함된 동영상만 제공돼요."
+msgstr "ℹ️ ffmpeg이 없으면 오디오가 이미 있는 영상만 표시됩니다."
 
 msgid "🎬 Elige la calidad"
 msgstr "🎬 화질을 선택하세요"
 
-msgid "🔊 Audio principal"
-msgstr "🔊 기본 오디오"
-
-msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
-msgstr "🔊 추가 오디오 (쉼표로 구분한 번호, a = 모두, Enter = 없음)"
-
-msgid "📃 Lista con {n} elemento: {t}"
-msgid_plural "📃 Lista con {n} elementos: {t}"
-msgstr[0] "📃 목록에 {n}개 항목: {t}"
+msgid "Número"
+msgstr "번호"
 
 msgid "Elementos (Enter = todos, ej. 1-3,7)"
-msgstr "항목 (Enter = 모두, 예: 1-3,7)"
+msgstr "항목(Enter = 전체, 예: 1-3,7)"
 
 msgid "Mejor calidad"
 msgstr "최고 화질"
@@ -159,45 +167,237 @@ msgid "Calidad para toda la lista"
 msgstr "목록 전체 화질"
 
 msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "완료: {ok}개 성공, {bad}개 오류."
+msgstr "완료: {ok}건 성공, {bad}건 오류."
 
-msgid "❌ Error inesperado ({tipo}): {e}"
-msgstr "❌ 예상치 못한 오류 ({tipo}): {e}"
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ 언어 다운로드 중…"
+
+msgid "portada"
+msgstr "커버"
+
+msgid "⚠️ No se pudo añadir {x}: {e}"
+msgstr "⚠️ {x}을(를) 추가하지 못했습니다: {e}"
+
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "yt-dlp를 설치하지 못했습니다. 연결을 확인하세요."
+
+msgid "✅ Módulos al día."
+msgstr "✅ 모듈이 최신입니다."
+
+msgid "⚠️ No se pudo consultar los módulos."
+msgstr "⚠️ 모듈을 확인하지 못했습니다."
+
+msgid "⬇️ Instalando {n} ({b})…"
+msgstr "⬇️ {n}({b}) 설치 중…"
+
+msgid "🔄 Actualizando {n} ({a} → {b})…"
+msgstr "🔄 {n}({a} → {b}) 업데이트 중…"
+
+msgid "✅ Dependencias al día."
+msgstr "✅ 종속성이 최신입니다."
+
+msgid "⚠️ No se pudo consultar las dependencias."
+msgstr "⚠️ 종속성을 확인하지 못했습니다."
+
+msgid "No hay idiomas instalados."
+msgstr "설치된 언어가 없습니다."
+
+msgid "✅ Idiomas al día."
+msgstr "✅ 언어가 최신입니다."
+
+msgid "⚠️ No se pudo consultar los idiomas."
+msgstr "⚠️ 언어를 확인하지 못했습니다."
+
+msgid "⬇️ Instalando el módulo {n} ({b})…"
+msgstr "⬇️ 모듈 {n}({b}) 설치 중…"
+
+msgid "✅ Módulo {n} {v} instalado."
+msgstr "✅ 모듈 {n} {v}가 설치됐습니다."
+
+msgid "✅ Idioma del script: {lang}"
+msgstr "✅ 스크립트 언어: {lang}"
+
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ DLpy 설정(스크립트 {v})"
+
+msgid "Idioma"
+msgstr "언어"
+
+msgid "URL de idiomas (GitHub)"
+msgstr "언어 URL(GitHub)"
+
+msgid "URL de módulos (GitHub)"
+msgstr "모듈 URL(GitHub)"
+
+msgid "Carpeta de descargas"
+msgstr "다운로드 폴더"
+
+msgid "Contenedor de video (auto/mp4/mkv)"
+msgstr "비디오 컨테이너(auto/mp4/mkv)"
+
+msgid "Formato de audio (native/mp3/m4a)"
+msgstr "오디오 형식(native/mp3/m4a)"
+
+msgid "ffmpeg (auto/yes/no)"
+msgstr "ffmpeg(auto/yes/no)"
+
+msgid "Si el archivo ya existe (new/replace)"
+msgstr "파일이 이미 있을 경우(new/replace)"
+
+msgid "Horas de caché de pistas (0 = sin caché)"
+msgstr "트랙 캐시 시간(0 = 캐시 없음)"
+
+msgid "Ruta enviada al atajo (abs/home/rel)"
+msgstr "단축어에 보낼 경로(abs/home/rel)"
+
+msgid "Animaciones (1/0)"
+msgstr "애니메이션(1/0)"
+
+msgid "Dependencias de pip al día (separadas por coma)"
+msgstr "pip 종속성 최신(쉼표로 구분)"
+
+msgid "Escribir DLpy en el software de codificación (1/0)"
+msgstr "인코딩 소프트웨어에 DLpy 쓰기(1/0)"
+
+msgid "Buscar actualización de DLpy cada semana (1/0)"
+msgstr "매주 DLpy 업데이트 확인(1/0)"
+
+msgid "Fragmentos en paralelo (1-16)"
+msgstr "병렬 조각(1-16)"
+
+msgid "Subtítulos (0 = no, o idiomas: es,en)"
+msgstr "자막(0 = 없음, 또는 언어: es,en)"
+
+msgid "Subtítulos automáticos (1/0)"
+msgstr "자동 자막(1/0)"
+
+msgid "Portada embebida (1/0)"
+msgstr "커버 삽입(1/0)"
+
+msgid "Metadatos y capítulos (1/0)"
+msgstr "메타데이터와 챕터(1/0)"
+
+msgid "Archivo de cookies (0 = ninguno)"
+msgstr "쿠키 파일(0 = 없음)"
+
+msgid "Salir"
+msgstr "종료"
+
+msgid "✅ DLpy está al día ({v})."
+msgstr "✅ DLpy가 최신입니다({v})."
+
+msgid "⚠️ No se pudo consultar o verificar la actualización."
+msgstr "⚠️ 업데이트를 확인하지 못했습니다."
+
+msgid "⚠️ No se pudo actualizar DLpy: {e}"
+msgstr "⚠️ DLpy를 업데이트하지 못했습니다: {e}"
+
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "실시간 방송은 다운로드할 수 없습니다."
 
 msgid ""
-"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
-"  python dlpy.py                      menú interactivo (pide el enlace)\n"
-"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
-"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
-"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
-"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
-"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
-"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg/ffprobe no "
+"disponible o archivo ilegible."
+msgstr "⚠️ Apple 호환성을 확인할 수 없습니다: ffmpeg/ffprobe이 없거나 파일을 읽을 수 없습니다."
+
+msgid "⚠️ No se pudo convertir a un formato compatible con Apple: {e}"
+msgstr "⚠️ Apple 호환 형식으로 변환하지 못했습니다: {e}"
+
+msgid "⚠️ No se pudo comprobar la compatibilidad con Apple: {e}"
+msgstr "⚠️ Apple 호환성을 확인할 수 없습니다: {e}"
+
+msgid "🔊 Audio principal"
+msgstr "🔊 기본 오디오"
+
+msgid "(+{n} más; puedes elegir hasta el {t})"
+msgstr "(+{n}개 더; {t}개까지 선택 가능)"
+
+msgid "No se pudo leer el enlace: {e}"
+msgstr "링크를 읽지 못했습니다: {e}"
+
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python "
+"dlpy.py                      menú interactivo (pide el enlace)\n  python "
+"dlpy.py <url>                descarga interactiva de ese enlace\n  python "
+"dlpy.py --idiomas            JSON con los idiomas del script\n  python "
+"dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python "
+"dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; "
+"si no\n                                      alcanza o es lista/falta "
+"yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual "
+"pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py "
+"--shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: "
+"--update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), "
+"--update-modules (actualiza los módulos), --update-deps (actualiza pip, "
+"yt-dlp y demás dependencias), --self-update (busca ya TODO: DLpy, módulos, "
+"dependencias e idiomas), --version, --help."
 msgstr ""
-"단축어 \"DLpy\"가 제어합니다. 단축어가 사용하는 명령어:\n"
-"  python dlpy.py                      대화형 메뉴 (링크 입력)\n"
-"  python dlpy.py <url>                해당 링크 대화형 다운로드\n"
-"  python dlpy.py --idiomas            스크립트 언어 JSON\n"
-"  python dlpy.py --config [K=V ...]   설정 (인수 없음: 메뉴)\n"
-"  python dlpy.py --scm <url>          빠른 JSON (최대 5초), 찾은 항목 전부; 시간\n"
-"                                      부족하거나 목록이거나 yt-dlp가 없으면: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          동일하지만 시간 제한 없음; JSON을 단축어로 전송\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   선택 항목 다운로드\n"
-"그 외: --update (yt-dlp 업데이트), --update-langs [코드] (언어 다시 다운로드), --version, --help."
+"\"DLpy\" 단축어가 제어합니다. 단축어가 사용하는 명령:\n  python dlpy.py                      "
+"대화형 메뉴(링크를 묻습니다)\n  python dlpy.py <url>                해당 링크의 대화형 다운로드\n  "
+"python dlpy.py --idiomas            스크립트 언어 목록 JSON\n  python dlpy.py "
+"--config [K=V ...]   설정(인수 없음: 메뉴)\n  python dlpy.py --scm <url>          "
+"빠른 JSON(최대 5초)에 찾은 모든 것; 만약\n                                      시간이 "
+"부족하거나 목록이거나 yt-dlp이 없으면: \"use_scb\": true\n  python dlpy.py --scb "
+"<url>          같지만 시간 제한 없음; JSON을 단축어에 보냅니다\n  python dlpy.py "
+"--shortcutpick \"V=..,A=..,X=..\" <url>   선택을 다운로드합니다\n그 외: --update(yt-dlp "
+"업데이트), --update-langs [코드](언어 다시 다운로드), --update-modules(모듈 업데이트), "
+"--update-deps(pip, yt-dlp 및 기타 종속성 업데이트), --self-update(지금 모든 것 확인: DLpy, "
+"모듈, 종속성, 언어), --version, --help."
 
-msgid "seg"
-msgstr "초"
+msgid "❌ Error inesperado ({tipo}): {e}"
+msgstr "❌ 예상치 못한 오류({tipo}): {e}"
 
-msgid "min"
-msgstr "분"
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ 언어를 다운로드하지 못했습니다(인터넷 없음 또는 파일 없음)."
+
+msgid "🔄 Actualizando el módulo {n} ({a} → {b})…"
+msgstr "🔄 모듈 {n}({a} → {b}) 업데이트 중…"
+
+msgid "Actualizar yt-dlp"
+msgstr "yt-dlp 업데이트"
+
+msgid "Actualizar idiomas"
+msgstr "언어 업데이트"
+
+msgid "Actualizar módulos"
+msgstr "모듈 업데이트"
+
+msgid "Actualizar dependencias"
+msgstr "종속성 업데이트"
+
+msgid "Buscar todas las actualizaciones"
+msgstr "모든 업데이트 확인"
+
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 링크를 붙여넣으세요: "
+
+msgid "⚠️ No se pudo actualizar: {d}"
+msgstr "⚠️ 업데이트하지 못했습니다: {d}"
+
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ {k}의 값이 잘못됐습니다: {v}"
+
+msgid "iniciando…"
+msgstr "시작 중…"
+
+msgid ""
+"🔊 Audios adicionales (números separados por coma, a = todos, Enter = "
+"ninguno)"
+msgstr "🔊 추가 오디오(쉼표로 구분한 번호, a = 전체, Enter = 없음)"
+
+msgid "✂️ Tramo (Enter = completo, ej. 1:20-3:45): "
+msgstr "✂️ 구간(Enter = 전체, 예: 1:20-3:45): "
+
+msgid "✅ Guardado."
+msgstr "✅ 저장됐습니다."
+
+msgid "Nuevo valor: "
+msgstr "새 값: "
+
+msgid "Seleccione idioma"
+msgstr "언어를 선택하세요"
 
 msgid "Enter"
 msgstr "Enter"
-
-msgid "Seleccione idioma"
-msgstr "언어 선택"
 
 msgid "compatible Apple"
 msgstr "Apple 호환"
@@ -206,106 +406,16 @@ msgid "pista original"
 msgstr "원본 트랙"
 
 msgid "predeterminada"
-msgstr "기본"
+msgstr "기본값"
 
 msgid "recomendada"
 msgstr "추천"
 
-msgid "Revisando"
-msgstr "확인 중"
-
-msgid "Uniendo"
-msgstr "병합 중"
-
-msgid "Ajustando"
-msgstr "조정 중"
-
-msgid "Guardado"
-msgstr "저장됨"
-
-msgid "Sustituyendo"
-msgstr "대체 중"
-
-msgid "Limpiando"
-msgstr "정리 중"
-
-msgid "Vaciando"
-msgstr "비우는 중"
-
-msgid "Descargando"
-msgstr "다운로드 중"
-
-msgid "Sitio"
-msgstr "사이트"
-
-msgid "DLPY"
-msgstr "DLPY"
-
-msgid "Primera ejecución"
-msgstr "첫 실행"
-
-msgid "Novedad"
-msgstr "새 소식"
-
-msgid "Retroceso"
-msgstr "뒤로"
-
-msgid "Igual"
-msgstr "같음"
-
-msgid "Adelanto"
-msgstr "앞으로"
-
-msgid "Revisando archivo"
-msgstr "파일 확인 중"
-
-msgid "Espera"
-msgstr "기다리세요"
-
-msgid "Conversión"
-msgstr "변환"
-
-msgid "Sustitución"
-msgstr "대체"
-
-msgid "Unión"
-msgstr "병합"
-
-msgid "Limpieza"
-msgstr "정리"
-
-msgid "Papelera"
-msgstr "휴지통"
-
-msgid "Envío"
-msgstr "전송"
-
-msgid "Descarga"
-msgstr "다운로드"
-
-msgid "Pulso"
-msgstr "펄스"
-
-msgid "Carril"
-msgstr "레인"
-
-msgid "Uniendo pistas"
-msgstr "트랙 병합 중"
-
-msgid "Convirtiendo"
-msgstr "변환 중"
-
-msgid "Ajustando pistas"
-msgstr "트랙 조정 중"
-
-msgid "Finalizando"
-msgstr "마무리 중"
-
 msgid "Espera mientras convierte · puede tardar · no cierres la app"
-msgstr "변환 중이니 기다리세요 · 시간이 걸릴 수 있어요 · 앱을 닫지 마세요"
+msgstr "변환하는 동안 기다리세요 · 시간이 걸릴 수 있어요 · 앱을 닫지 마세요"
 
 msgid "Espera mientras convierte · no cierres la app"
-msgstr "변환 중이니 기다리세요 · 앱을 닫지 마세요"
+msgstr "변환하는 동안 기다리세요 · 앱을 닫지 마세요"
 
 msgid "Espera · puede tardar · no cierres la app"
 msgstr "기다리세요 · 시간이 걸릴 수 있어요 · 앱을 닫지 마세요"
@@ -316,26 +426,8 @@ msgstr "기다리세요 · 앱을 닫지 마세요"
 msgid "No cierres la app"
 msgstr "앱을 닫지 마세요"
 
-msgid "no cierres la app"
-msgstr "앱을 닫지 마세요"
-
 msgid "Espera…"
-msgstr "기다리는 중…"
-
-msgid "VIDEO"
-msgstr "비디오"
-
-msgid "AUDIO"
-msgstr "오디오"
-
-msgid "UNIÓN"
-msgstr "병합"
-
-msgid "GUARDADO"
-msgstr "저장됨"
-
-msgid "PISTA"
-msgstr "트랙"
+msgstr "기다리세요…"
 
 msgid "¿RES?"
 msgstr "해상도?"
@@ -352,47 +444,143 @@ msgstr "비트?"
 msgid "¿KHZ?"
 msgstr "KHZ?"
 
+msgid "Uniendo pistas"
+msgstr "트랙 합치는 중"
+
+msgid "Convirtiendo"
+msgstr "변환 중"
+
+msgid "Ajustando pistas"
+msgstr "트랙 조정 중"
+
+msgid "Revisando"
+msgstr "확인 중"
+
+msgid "Uniendo"
+msgstr "합치는 중"
+
+msgid "Ajustando"
+msgstr "조정 중"
+
+msgid "Guardado"
+msgstr "저장됨"
+
+msgid "Sustituyendo"
+msgstr "바꾸는 중"
+
+msgid "Limpiando"
+msgstr "정리 중"
+
+msgid "Vaciando"
+msgstr "비우는 중"
+
+msgid "Descargando"
+msgstr "다운로드 중"
+
+msgid "carpetas"
+msgstr "폴더"
+
+msgid "estado"
+msgstr "상태"
+
+msgid "listo"
+msgstr "완료"
+
+msgid "VIDEO"
+msgstr "비디오"
+
+msgid "AUDIO"
+msgstr "오디오"
+
+msgid "UNIÓN"
+msgstr "합치기"
+
+msgid "GUARDADO"
+msgstr "저장됨"
+
+msgid "PISTA"
+msgstr "트랙"
+
+msgid "Sitio"
+msgstr "사이트"
+
+msgid "DLPY"
+msgstr "DLPY"
+
+msgid "Primera ejecución"
+msgstr "첫 실행"
+
+msgid "Novedad"
+msgstr "새 소식"
+
+msgid "Retroceso"
+msgstr "다운그레이드"
+
+msgid "Igual"
+msgstr "동일"
+
+msgid "Adelanto"
+msgstr "앞서 있음"
+
+msgid "Revisando archivo"
+msgstr "파일 확인 중"
+
+msgid "Espera"
+msgstr "대기"
+
+msgid "Conversión"
+msgstr "변환"
+
+msgid "Sustitución"
+msgstr "교체"
+
+msgid "Unión"
+msgstr "합치기"
+
+msgid "Limpieza"
+msgstr "정리"
+
+msgid "Papelera"
+msgstr "휴지통"
+
+msgid "Envío"
+msgstr "보내기"
+
+msgid "Descarga"
+msgstr "다운로드"
+
+msgid "Pulso"
+msgstr "펄스"
+
+msgid "Carril"
+msgstr "레인"
+
+msgid "seg"
+msgstr "초"
+
+msgid "Error"
+msgstr "오류"
+
+msgid "espera"
+msgstr "대기"
+
+msgid "min"
+msgstr "분"
+
+msgid "reintenta al abrir"
+msgstr "열 때 다시 시도합니다"
+
+msgid "falló"
+msgstr "실패"
+
+msgid "listas"
+msgstr "완료"
+
 msgid "papelera"
 msgstr "휴지통"
 
 msgid "basura"
-msgstr "휴지통"
-
-msgid "VIEJO"
-msgstr "이전"
-
-msgid "NUEVO"
-msgstr "신규"
-
-msgid "Toca la pantalla · Enter sustituir · n conservar"
-msgstr "화면을 터치하세요 · Enter 대체 · n 유지"
-
-msgid "Enter sustituir · n conservar"
-msgstr "Enter 대체 · n 유지"
-
-msgid "Enter sustituir · n no"
-msgstr "Enter 대체 · n 아니요"
-
-msgid "Enter sí · n no"
-msgstr "Enter 예 · n 아니요"
-
-msgid "Enter · n"
-msgstr "Enter · n"
-
-msgid "Toca la pantalla · Enter convertir · r remux · n original"
-msgstr "화면을 터치하세요 · Enter 변환 · r remux · n 원본"
-
-msgid "Enter convertir · r remux · n original"
-msgstr "Enter 변환 · r remux · n 원본"
-
-msgid "Enter convertir · r remux · n no"
-msgstr "Enter 변환 · r remux · n 아니요"
-
-msgid "Enter sí · r remux · n no"
-msgstr "Enter 예 · r remux · n 아니요"
-
-msgid "Enter · r · n"
-msgstr "Enter · r · n"
+msgstr "쓰레기"
 
 msgid "Toca la pantalla para abrir el teclado"
 msgstr "키보드를 열려면 화면을 터치하세요"
@@ -404,13 +592,13 @@ msgid "Toca = teclado"
 msgstr "터치 = 키보드"
 
 msgid "¿Sustituir el archivo?"
-msgstr "이 파일을 대체할까요?"
+msgstr "파일을 바꿀까요?"
 
 msgid "¿Sustituir archivo?"
-msgstr "파일을 대체할까요?"
+msgstr "파일을 바꿀까요?"
 
 msgid "¿Sustituir?"
-msgstr "대체할까요?"
+msgstr "바꿀까요?"
 
 msgid "¿Convertir este video?"
 msgstr "이 동영상을 변환할까요?"
@@ -421,11 +609,41 @@ msgstr "지금 변환할까요?"
 msgid "¿Convertir?"
 msgstr "변환할까요?"
 
-msgid "Abriendo con view"
-msgstr "view로 여는 중"
+msgid "sin respuesta se sustituye · "
+msgstr "응답이 없으면 바꿉니다 · "
 
-msgid "Enviando a DLpy"
-msgstr "DLpy로 보내는 중"
+msgid "sin respuesta se convierte · "
+msgstr "응답이 없으면 변환합니다 · "
+
+msgid "Toca la pantalla · Enter sustituir · n conservar"
+msgstr "화면 터치 · Enter 바꾸기 · n 유지"
+
+msgid "Enter sustituir · n conservar"
+msgstr "Enter 바꾸기 · n 유지"
+
+msgid "Enter sustituir · n no"
+msgstr "Enter 바꾸기 · n 아니요"
+
+msgid "Enter sí · n no"
+msgstr "Enter 네 · n 아니요"
+
+msgid "Enter · n"
+msgstr "Enter · n"
+
+msgid "Toca la pantalla · Enter convertir · r remux · n original"
+msgstr "화면 터치 · Enter 변환 · r remux · n 원본"
+
+msgid "Enter convertir · r remux · n original"
+msgstr "Enter 변환 · r remux · n 원본"
+
+msgid "Enter convertir · r remux · n no"
+msgstr "Enter 변환 · r remux · n 아니요"
+
+msgid "Enter sí · r remux · n no"
+msgstr "Enter 네 · r remux · n 아니요"
+
+msgid "Enter · r · n"
+msgstr "Enter · r · n"
 
 msgid "Preparando"
 msgstr "준비 중"
@@ -433,32 +651,23 @@ msgstr "준비 중"
 msgid "Preparando descarga"
 msgstr "다운로드 준비 중"
 
-msgid "Error"
-msgstr "오류"
+msgid "Descargando video"
+msgstr "동영상 다운로드 중"
 
-msgid "falló"
-msgstr "실패"
+msgid "Descargando audio"
+msgstr "오디오 다운로드 중"
 
-msgid "reintenta al abrir"
-msgstr "열 때 재시도"
+msgid "Finalizando"
+msgstr "마무리 중"
 
-msgid "listas"
-msgstr "준비됨"
+msgid "Abriendo con view"
+msgstr "view로 여는 중"
 
-msgid "espera"
-msgstr "대기 중"
+msgid "Enviando a DLpy"
+msgstr "DLpy에 보내는 중"
 
-msgid "activa"
-msgstr "활성"
-
-msgid "hecho"
-msgstr "완료"
-
-msgid "sin respuesta se sustituye · "
-msgstr "응답이 없으면 대체됨 · "
-
-msgid "sin respuesta se convierte · "
-msgstr "응답이 없으면 변환됨 · "
+msgid "GitHub"
+msgstr "GitHub"
 
 msgid "actualizaciones"
 msgstr "업데이트"
@@ -466,8 +675,6 @@ msgstr "업데이트"
 msgid "analizando"
 msgstr "분석 중"
 
-msgid "boot"
-msgstr "부팅"
-
-msgid "GitHub"
-msgstr "GitHub"
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 {n}개 항목 목록: {t}"

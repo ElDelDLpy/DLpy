@@ -1,153 +1,161 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: DLpy\n"
+"Project-Id-Version: DLpy 0.2.4\n"
+"Language: zh\n"
+"X-Label: 🇨🇳 中文（简体）\n"
+"X-Name: 🇨🇳 中文（简体）\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: zh\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Label: 🇨🇳 中文（简体）\n"
+
+msgid "🔎 Buscando actualizaciones de {x}…"
+msgstr "🔎 正在检查 {x} 的更新…"
+
+msgid "⬇️ Instalando {x}…"
+msgstr "⬇️ 正在安装 {x}…"
+
+msgid "⚠️ No se pudo instalar: {d}"
+msgstr "⚠️ 安装失败: {d}"
 
 msgid "⬇️ Instalando yt-dlp (solo la primera vez)…"
-msgstr "⬇️ 正在安装 yt-dlp（仅首次）…"
+msgstr "⬇️ 正在安装 yt-dlp(仅首次)…"
 
-msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
-msgstr "无法安装 yt-dlp，请检查网络连接。"
+msgid "módulos"
+msgstr "模块"
 
-msgid "⚙️ Procesando…"
-msgstr "⚙️ 处理中…"
+msgid "idiomas"
+msgstr "语言"
 
 msgid "✅ Listo"
 msgstr "✅ 完成"
 
 msgid "📁 Guardado en: {p}"
-msgstr "📁 已保存至：{p}"
+msgstr "📁 已保存到: {p}"
 
-msgid "Idioma del script"
-msgstr "脚本语言"
-
-msgid "✅ Idioma del script: {lang}"
-msgstr "✅ 脚本语言：{lang}"
-
-msgid "⚠️ Valor no válido para {k}: {v}"
-msgstr "⚠️ {k} 的值无效：{v}"
-
-msgid "⚙️ Configuración de DLpy (script {v})"
-msgstr "⚙️ DLpy 设置（脚本 {v}）"
-
-msgid "Idioma"
-msgstr "语言"
-
-msgid "URL de idiomas (GitHub)"
-msgstr "语言包地址（GitHub）"
-
-msgid "URL de módulos (GitHub)"
-msgstr "模块地址（GitHub）"
-
-msgid "Carpeta de descargas"
-msgstr "下载文件夹"
-
-msgid "Contenedor de video (auto/mp4/mkv)"
-msgstr "视频封装格式（auto/mp4/mkv）"
-
-msgid "Formato de audio (native/mp3/m4a)"
-msgstr "音频格式（native/mp3/m4a）"
-
-msgid "ffmpeg (auto/yes/no)"
-msgstr "ffmpeg（auto/yes/no）"
-
-msgid "Si el archivo ya existe (new/replace)"
-msgstr "文件已存在时（new/replace）"
-
-msgid "Horas de caché de pistas (0 = sin caché)"
-msgstr "音轨缓存时长（小时，0 = 不缓存）"
-
-msgid "Ruta enviada al atajo (abs/home/rel)"
-msgstr "发送给快捷指令的路径（abs/home/rel）"
-
-msgid "Animaciones (1/0)"
-msgstr "动画（1/0）"
-
-msgid "Actualizar yt-dlp"
-msgstr "更新 yt-dlp"
-
-msgid "Actualizar idiomas"
-msgstr "更新语言包"
-
-msgid "Salir"
-msgstr "退出"
-
-msgid "Número"
-msgstr "编号"
-
-msgid "Opción no válida."
-msgstr "无效选项。"
-
-msgid "⬇️ Descargando idioma…"
-msgstr "⬇️ 正在下载语言包…"
-
-msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
-msgstr "⚠️ 无法下载语言包（无网络或文件不存在）。"
-
-msgid "Nuevo valor: "
-msgstr "新值： "
-
-msgid "✅ Guardado."
-msgstr "✅ 已保存。"
-
-msgid "🔄 Actualizando yt-dlp…"
-msgstr "🔄 正在更新 yt-dlp…"
-
-msgid "No hay idiomas instalados."
-msgstr "尚未安装任何语言包。"
-
-msgid "🌐 Actualizando idiomas…"
-msgstr "🌐 正在更新语言包…"
-
-msgid "No se encontraron formatos descargables."
-msgstr "未找到可下载的格式。"
-
-msgid "Las transmisiones en vivo no se pueden descargar."
-msgstr "直播无法下载。"
-
-msgid "No se encontró un enlace válido."
-msgstr "未找到有效的链接。"
-
-msgid "No se pudo leer el enlace: {e}"
-msgstr "无法读取链接：{e}"
-
-msgid "🔗 Pega el enlace: "
-msgstr "🔗 粘贴链接： "
+msgid "✅ DLpy actualizado a {v}."
+msgstr "✅ DLpy 已更新到 {v}."
 
 msgid "📲 Enviando las opciones al atajo…"
-msgstr "📲 正在将选项发送给快捷指令…"
+msgstr "📲 正在把选项发给快捷指令…"
+
+msgid "🍎 Comprobando compatibilidad con Apple…"
+msgstr "🍎 正在检查 Apple 兼容性…"
+
+msgid "❌ Falló la descarga: {e}"
+msgstr "❌ 下载失败: {e}"
 
 msgid "⏳ Descargando…"
 msgstr "⏳ 下载中…"
 
-msgid "❌ Falló la descarga: {e}"
-msgstr "❌ 下载失败：{e}"
+msgid ""
+"  --long (con --shortcutpick o --scm): para \"Execute Long Command\" (iOS "
+"27); sin limite de tiempo,\n                                      avisa el "
+"avance con `progress`, devuelve una linea JSON; con "
+"--scm,\n                                      la lista completa de formatos "
+"con lo Apple nativo primero"
+msgstr ""
+"  --long(配合 --shortcutpick 或 --scm): 用于 \"Execute Long Command\"(iOS 27); "
+"没有时间限制,\n                                      用 `progress` 报告进度, 返回一行 "
+"JSON; 配合 --scm 时,\n                                      返回完整的格式列表, Apple "
+"原生格式排在前面"
+
+msgid ""
+"  Opcionales (--config K=V; todos apagados salvo THREADS): THREADS=4, "
+"SUBS=es,en, SUBAUTO=1, THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1 "
+"(registro en dlpy_files/_log.txt).\n  --shortcutpick "
+"\"V=..,A=..,X=..,R=1:20-3:45\" <url>   baja solo ese tramo (R es opcional)"
+msgstr ""
+"  可选项(--config K=V; 除 THREADS 外全部关闭): THREADS=4, SUBS=es,en, SUBAUTO=1, "
+"THUMB=1, META=1,\n  COOKIES=cookies.txt, DEBUG=1(日志在 "
+"dlpy_files/_log.txt).\n  --shortcutpick \"V=..,A=..,X=..,R=1:20-3:45\" "
+"<url>   只下载这段(R 可选)"
+
+msgid "✅ Idioma {c} instalado."
+msgstr "✅ 语言 {c} 已安装."
+
+msgid "🔄 Actualizando el idioma {c}…"
+msgstr "🔄 正在更新语言 {c}…"
+
+msgid "⚙️ Procesando…"
+msgstr "⚙️ 处理中…"
+
+msgid "✅ {x} instalado."
+msgstr "✅ {x} 已安装."
+
+msgid "metadatos"
+msgstr "元数据"
+
+msgid "subtítulos"
+msgstr "字幕"
+
+msgid "✅ yt-dlp {v} instalado."
+msgstr "✅ yt-dlp {v} 已安装."
+
+msgid "🧩 Módulos instalados o actualizados: {m}"
+msgstr "🧩 已安装或更新的模块: {m}"
+
+msgid "⚠️ El módulo {n} dice {v}, pero su index dice {i}."
+msgstr "⚠️ 模块 {n} 说是 {v}, 但它的 index 说是 {i}."
+
+msgid "dependencias"
+msgstr "依赖"
+
+msgid "📦 Dependencias instaladas o actualizadas: {d}"
+msgstr "📦 已安装或更新的依赖: {d}"
+
+msgid "⚠️ No se pudo instalar o actualizar: {d}"
+msgstr "⚠️ 安装或更新失败: {d}"
+
+msgid "🌐 Idiomas actualizados: {l}"
+msgstr "🌐 已更新的语言: {l}"
+
+msgid "⚠️ No se encontró el archivo de cookies: {p}"
+msgstr "⚠️ 找不到 Cookie 文件: {p}"
+
+msgid "Idioma del script"
+msgstr "脚本语言"
+
+msgid "🔄 Nueva versión {v} (tienes {o}): actualizando…"
+msgstr "🔄 有新版本 {v}(当前是 {o}): 正在更新…"
+
+msgid "No se encontraron formatos descargables."
+msgstr "没有找到可下载的格式."
+
+msgid "No se encontró un enlace válido."
+msgstr "没有找到有效的链接."
+
+msgid ""
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg está "
+"desactivado."
+msgstr "⚠️ 无法检查 Apple 兼容性: ffmpeg 已关闭."
+
+msgid "🔄 Convirtiendo a un formato compatible con Apple…"
+msgstr "🔄 正在转为 Apple 兼容格式…"
 
 msgid "⚠️ No se pudieron etiquetar las pistas de audio: {e}"
-msgstr "⚠️ 无法标记音轨：{e}"
+msgstr "⚠️ 无法给音频轨道打标签: {e}"
+
+msgid "⚠️ No se pudo escribir DLpy en el software de codificación: {e}"
+msgstr "⚠️ 无法把 DLpy 写进编码软件: {e}"
+
+msgid "Opción no válida."
+msgstr "选项无效."
+
+msgid "Tramo no válido."
+msgstr "片段无效."
 
 msgid "ℹ️ Sin ffmpeg: solo se ofrecen videos que ya traen audio."
-msgstr "ℹ️ 未安装 ffmpeg：仅提供自带音频的视频。"
+msgstr "ℹ️ 没有 ffmpeg: 只会提供本身就带音频的视频."
 
 msgid "🎬 Elige la calidad"
 msgstr "🎬 选择画质"
 
-msgid "🔊 Audio principal"
-msgstr "🔊 主音轨"
-
-msgid "🔊 Audios adicionales (números separados por coma, a = todos, Enter = ninguno)"
-msgstr "🔊 附加音轨（用逗号分隔编号，a = 全部，回车 = 无）"
-
-msgid "📃 Lista con {n} elemento: {t}"
-msgid_plural "📃 Lista con {n} elementos: {t}"
-msgstr[0] "📃 含 {n} 项的列表：{t}"
+msgid "Número"
+msgstr "编号"
 
 msgid "Elementos (Enter = todos, ej. 1-3,7)"
-msgstr "项目（回车 = 全部，如 1-3,7）"
+msgstr "条目(回车 = 全部, 如 1-3,7)"
 
 msgid "Mejor calidad"
 msgstr "最佳画质"
@@ -156,54 +164,245 @@ msgid "Solo audio"
 msgstr "仅音频"
 
 msgid "Calidad para toda la lista"
-msgstr "应用于整个列表的画质"
+msgstr "整个列表的画质"
 
 msgid "Terminado: {ok} bien, {bad} con error."
-msgstr "已完成：{ok} 个成功，{bad} 个出错。"
+msgstr "完成: {ok} 个成功, {bad} 个出错."
 
-msgid "❌ Error inesperado ({tipo}): {e}"
-msgstr "❌ 发生未知错误（{tipo}）：{e}"
+msgid "⬇️ Descargando idioma…"
+msgstr "⬇️ 正在下载语言…"
+
+msgid "portada"
+msgstr "封面"
+
+msgid "⚠️ No se pudo añadir {x}: {e}"
+msgstr "⚠️ 无法添加 {x}: {e}"
+
+msgid "No se pudo instalar yt-dlp. Revisa tu conexión."
+msgstr "无法安装 yt-dlp. 请检查网络."
+
+msgid "✅ Módulos al día."
+msgstr "✅ 模块已是最新."
+
+msgid "⚠️ No se pudo consultar los módulos."
+msgstr "⚠️ 无法查询模块."
+
+msgid "⬇️ Instalando {n} ({b})…"
+msgstr "⬇️ 正在安装 {n}({b})…"
+
+msgid "🔄 Actualizando {n} ({a} → {b})…"
+msgstr "🔄 正在更新 {n}({a} → {b})…"
+
+msgid "✅ Dependencias al día."
+msgstr "✅ 依赖已是最新."
+
+msgid "⚠️ No se pudo consultar las dependencias."
+msgstr "⚠️ 无法查询依赖."
+
+msgid "No hay idiomas instalados."
+msgstr "没有已安装的语言."
+
+msgid "✅ Idiomas al día."
+msgstr "✅ 语言已是最新."
+
+msgid "⚠️ No se pudo consultar los idiomas."
+msgstr "⚠️ 无法查询语言."
+
+msgid "⬇️ Instalando el módulo {n} ({b})…"
+msgstr "⬇️ 正在安装模块 {n}({b})…"
+
+msgid "✅ Módulo {n} {v} instalado."
+msgstr "✅ 模块 {n} {v} 已安装."
+
+msgid "✅ Idioma del script: {lang}"
+msgstr "✅ 脚本语言: {lang}"
+
+msgid "⚙️ Configuración de DLpy (script {v})"
+msgstr "⚙️ DLpy 设置(脚本 {v})"
+
+msgid "Idioma"
+msgstr "语言"
+
+msgid "URL de idiomas (GitHub)"
+msgstr "语言 URL(GitHub)"
+
+msgid "URL de módulos (GitHub)"
+msgstr "模块 URL(GitHub)"
+
+msgid "Carpeta de descargas"
+msgstr "下载文件夹"
+
+msgid "Contenedor de video (auto/mp4/mkv)"
+msgstr "视频容器(auto/mp4/mkv)"
+
+msgid "Formato de audio (native/mp3/m4a)"
+msgstr "音频格式(native/mp3/m4a)"
+
+msgid "ffmpeg (auto/yes/no)"
+msgstr "ffmpeg(auto/yes/no)"
+
+msgid "Si el archivo ya existe (new/replace)"
+msgstr "文件已存在时(new/replace)"
+
+msgid "Horas de caché de pistas (0 = sin caché)"
+msgstr "轨道缓存小时数(0 = 不缓存)"
+
+msgid "Ruta enviada al atajo (abs/home/rel)"
+msgstr "发给快捷指令的路径(abs/home/rel)"
+
+msgid "Animaciones (1/0)"
+msgstr "动画(1/0)"
+
+msgid "Dependencias de pip al día (separadas por coma)"
+msgstr "pip 依赖已是最新(逗号分隔)"
+
+msgid "Escribir DLpy en el software de codificación (1/0)"
+msgstr "把 DLpy 写进编码软件(1/0)"
+
+msgid "Buscar actualización de DLpy cada semana (1/0)"
+msgstr "每周检查 DLpy 更新(1/0)"
+
+msgid "Fragmentos en paralelo (1-16)"
+msgstr "并行片段(1-16)"
+
+msgid "Subtítulos (0 = no, o idiomas: es,en)"
+msgstr "字幕(0 = 不要, 或语言: es,en)"
+
+msgid "Subtítulos automáticos (1/0)"
+msgstr "自动字幕(1/0)"
+
+msgid "Portada embebida (1/0)"
+msgstr "内嵌封面(1/0)"
+
+msgid "Metadatos y capítulos (1/0)"
+msgstr "元数据和章节(1/0)"
+
+msgid "Archivo de cookies (0 = ninguno)"
+msgstr "Cookie 文件(0 = 无)"
+
+msgid "Salir"
+msgstr "退出"
+
+msgid "✅ DLpy está al día ({v})."
+msgstr "✅ DLpy 已是最新({v})."
+
+msgid "⚠️ No se pudo consultar o verificar la actualización."
+msgstr "⚠️ 无法查询或验证更新."
+
+msgid "⚠️ No se pudo actualizar DLpy: {e}"
+msgstr "⚠️ 无法更新 DLpy: {e}"
+
+msgid "Las transmisiones en vivo no se pueden descargar."
+msgstr "直播无法下载."
 
 msgid ""
-"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n"
-"  python dlpy.py                      menú interactivo (pide el enlace)\n"
-"  python dlpy.py <url>                descarga interactiva de ese enlace\n"
-"  python dlpy.py --idiomas            JSON con los idiomas del script\n"
-"  python dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n"
-"  python dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; si no\n"
-"                                      alcanza o es lista/falta yt-dlp: {\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          igual pero sin límite de tiempo; manda el JSON al atajo\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\n"
-"Además: --update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), --version, --help."
+"⚠️ No se pudo comprobar la compatibilidad con Apple: ffmpeg/ffprobe no "
+"disponible o archivo ilegible."
+msgstr "⚠️ 无法检查 Apple 兼容性: ffmpeg/ffprobe 不可用或文件无法读取."
+
+msgid "⚠️ No se pudo convertir a un formato compatible con Apple: {e}"
+msgstr "⚠️ 无法转为 Apple 兼容格式: {e}"
+
+msgid "⚠️ No se pudo comprobar la compatibilidad con Apple: {e}"
+msgstr "⚠️ 无法检查 Apple 兼容性: {e}"
+
+msgid "🔊 Audio principal"
+msgstr "🔊 主音频"
+
+msgid "(+{n} más; puedes elegir hasta el {t})"
+msgstr "(+{n} 个; 最多可选到 {t})"
+
+msgid "No se pudo leer el enlace: {e}"
+msgstr "无法读取链接: {e}"
+
+msgid ""
+"Lo controla el atajo \"DLpy\". Comandos que usa el atajo:\n  python "
+"dlpy.py                      menú interactivo (pide el enlace)\n  python "
+"dlpy.py <url>                descarga interactiva de ese enlace\n  python "
+"dlpy.py --idiomas            JSON con los idiomas del script\n  python "
+"dlpy.py --config [K=V ...]   configuración (sin argumentos: menú)\n  python "
+"dlpy.py --scm <url>          JSON rápido (máx. 5 s) con TODO lo encontrado; "
+"si no\n                                      alcanza o es lista/falta "
+"yt-dlp: {\"use_scb\":true}\n  python dlpy.py --scb <url>          igual "
+"pero sin límite de tiempo; manda el JSON al atajo\n  python dlpy.py "
+"--shortcutpick \"V=..,A=..,X=..\" <url>   descarga la elección\nAdemás: "
+"--update (actualiza yt-dlp), --update-langs [códigos] (re-baja idiomas), "
+"--update-modules (actualiza los módulos), --update-deps (actualiza pip, "
+"yt-dlp y demás dependencias), --self-update (busca ya TODO: DLpy, módulos, "
+"dependencias e idiomas), --version, --help."
 msgstr ""
-"由快捷指令“DLpy”控制。快捷指令使用的命令：\n"
-"  python dlpy.py                      交互式菜单（会询问链接）\n"
-"  python dlpy.py <url>                交互式下载该链接\n"
-"  python dlpy.py --idiomas            脚本语言的 JSON\n"
-"  python dlpy.py --config [K=V ...]   设置（无参数：打开菜单）\n"
-"  python dlpy.py --scm <url>          快速 JSON（最多 5 秒），包含所有找到的内容；若\n"
-"                                      超时或是列表/缺少 yt-dlp：{\"use_scb\":true}\n"
-"  python dlpy.py --scb <url>          相同，但不限时；将 JSON 发送给快捷指令\n"
-"  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   下载所选内容\n"
-"此外：--update（更新 yt-dlp）、--update-langs [代码]（重新下载语言包）、--version、--help。"
+"由 \"DLpy\" 快捷指令控制. 快捷指令使用的命令:\n  python dlpy.py                      "
+"交互菜单(会问链接)\n  python dlpy.py <url>                交互下载这个链接\n  python "
+"dlpy.py --idiomas            脚本语言的 JSON\n  python dlpy.py --config [K=V "
+"...]   设置(无参数: 菜单)\n  python dlpy.py --scm <url>          快速 JSON(最多 5 秒), "
+"包含找到的全部内容; 如果\n                                      超时, 或是列表 / 缺少 yt-dlp: "
+"\"use_scb\": true\n  python dlpy.py --scb <url>          一样, 但没有时间限制; 把 "
+"JSON 发给快捷指令\n  python dlpy.py --shortcutpick \"V=..,A=..,X=..\" <url>   "
+"下载所选内容\n另外: --update(更新 yt-dlp), --update-langs [代码](重新下载语言), "
+"--update-modules(更新模块), --update-deps(更新 pip、yt-dlp 及其他依赖), "
+"--self-update(立即检查全部: DLpy、模块、依赖和语言), --version, --help."
 
-msgid "seg"
-msgstr "秒"
+msgid "❌ Error inesperado ({tipo}): {e}"
+msgstr "❌ 意外错误({tipo}): {e}"
 
-msgid "min"
-msgstr "分"
+msgid "⚠️ No se pudo descargar el idioma (sin internet o archivo no encontrado)."
+msgstr "⚠️ 无法下载语言(无网络或文件不存在)."
 
-msgid "Enter"
-msgstr "回车"
+msgid "🔄 Actualizando el módulo {n} ({a} → {b})…"
+msgstr "🔄 正在更新模块 {n}({a} → {b})…"
+
+msgid "Actualizar yt-dlp"
+msgstr "更新 yt-dlp"
+
+msgid "Actualizar idiomas"
+msgstr "更新语言"
+
+msgid "Actualizar módulos"
+msgstr "更新模块"
+
+msgid "Actualizar dependencias"
+msgstr "更新依赖"
+
+msgid "Buscar todas las actualizaciones"
+msgstr "检查所有更新"
+
+msgid "🔗 Pega el enlace: "
+msgstr "🔗 粘贴链接: "
+
+msgid "⚠️ No se pudo actualizar: {d}"
+msgstr "⚠️ 更新失败: {d}"
+
+msgid "⚠️ Valor no válido para {k}: {v}"
+msgstr "⚠️ {k} 的值无效: {v}"
+
+msgid "iniciando…"
+msgstr "启动中…"
+
+msgid ""
+"🔊 Audios adicionales (números separados por coma, a = todos, Enter = "
+"ninguno)"
+msgstr "🔊 其他音频(逗号分隔的编号, a = 全部, 回车 = 无)"
+
+msgid "✂️ Tramo (Enter = completo, ej. 1:20-3:45): "
+msgstr "✂️ 片段(回车 = 完整, 如 1:20-3:45): "
+
+msgid "✅ Guardado."
+msgstr "✅ 已保存."
+
+msgid "Nuevo valor: "
+msgstr "新值: "
 
 msgid "Seleccione idioma"
 msgstr "选择语言"
+
+msgid "Enter"
+msgstr "回车"
 
 msgid "compatible Apple"
 msgstr "兼容 Apple"
 
 msgid "pista original"
-msgstr "原音轨"
+msgstr "原轨道"
 
 msgid "predeterminada"
 msgstr "默认"
@@ -211,116 +410,80 @@ msgstr "默认"
 msgid "recomendada"
 msgstr "推荐"
 
+msgid "Espera mientras convierte · puede tardar · no cierres la app"
+msgstr "转换时请稍等 · 可能需要一段时间 · 不要关闭 App"
+
+msgid "Espera mientras convierte · no cierres la app"
+msgstr "转换时请稍等 · 不要关闭 App"
+
+msgid "Espera · puede tardar · no cierres la app"
+msgstr "请稍等 · 可能需要一段时间 · 不要关闭 App"
+
+msgid "Espera · no cierres la app"
+msgstr "请稍等 · 不要关闭 App"
+
+msgid "No cierres la app"
+msgstr "不要关闭 App"
+
+msgid "Espera…"
+msgstr "请稍等…"
+
+msgid "¿RES?"
+msgstr "分辨率?"
+
+msgid "¿COD?"
+msgstr "编码?"
+
+msgid "¿FPS?"
+msgstr "帧率?"
+
+msgid "¿BIT?"
+msgstr "比特率?"
+
+msgid "¿KHZ?"
+msgstr "KHZ?"
+
+msgid "Uniendo pistas"
+msgstr "正在合并轨道"
+
+msgid "Convirtiendo"
+msgstr "正在转换"
+
+msgid "Ajustando pistas"
+msgstr "正在调整轨道"
+
 msgid "Revisando"
-msgstr "检查中"
+msgstr "正在检查"
 
 msgid "Uniendo"
-msgstr "合并中"
+msgstr "正在合并"
 
 msgid "Ajustando"
-msgstr "调整中"
+msgstr "正在调整"
 
 msgid "Guardado"
 msgstr "已保存"
 
 msgid "Sustituyendo"
-msgstr "替换中"
+msgstr "正在替换"
 
 msgid "Limpiando"
-msgstr "清理中"
+msgstr "正在清理"
 
 msgid "Vaciando"
-msgstr "清空中"
+msgstr "正在清空"
 
 msgid "Descargando"
-msgstr "下载中"
+msgstr "正在下载"
 
-msgid "Sitio"
-msgstr "网站"
+msgid "carpetas"
+msgstr "文件夹"
 
-msgid "DLPY"
-msgstr "DLPY"
+msgid "estado"
+msgstr "状态"
 
-msgid "Primera ejecución"
-msgstr "首次运行"
-
-msgid "Novedad"
-msgstr "新功能"
-
-msgid "Retroceso"
-msgstr "回退"
-
-msgid "Igual"
-msgstr "相同"
-
-msgid "Adelanto"
-msgstr "快进"
-
-msgid "Revisando archivo"
-msgstr "正在检查文件"
-
-msgid "Espera"
-msgstr "请稍候"
-
-msgid "Conversión"
-msgstr "转换"
-
-msgid "Sustitución"
-msgstr "替换"
-
-msgid "Unión"
-msgstr "合并"
-
-msgid "Limpieza"
-msgstr "清理"
-
-msgid "Papelera"
-msgstr "回收站"
-
-msgid "Envío"
-msgstr "发送"
-
-msgid "Descarga"
-msgstr "下载"
-
-msgid "Pulso"
-msgstr "脉冲"
-
-msgid "Carril"
-msgstr "轨道"
-
-msgid "Uniendo pistas"
-msgstr "正在合并音轨"
-
-msgid "Convirtiendo"
-msgstr "转换中"
-
-msgid "Ajustando pistas"
-msgstr "正在调整音轨"
-
-msgid "Finalizando"
-msgstr "收尾中"
-
-msgid "Espera mientras convierte · puede tardar · no cierres la app"
-msgstr "转换中请稍候 · 可能需要一段时间 · 请勿关闭 App"
-
-msgid "Espera mientras convierte · no cierres la app"
-msgstr "转换中请稍候 · 请勿关闭 App"
-
-msgid "Espera · puede tardar · no cierres la app"
-msgstr "请稍候 · 可能需要一段时间 · 请勿关闭 App"
-
-msgid "Espera · no cierres la app"
-msgstr "请稍候 · 请勿关闭 App"
-
-msgid "No cierres la app"
-msgstr "请勿关闭 App"
-
-msgid "no cierres la app"
-msgstr "请勿关闭 App"
-
-msgid "Espera…"
-msgstr "请稍候…"
+msgid "listo"
+msgstr "就绪"
 
 msgid "VIDEO"
 msgstr "视频"
@@ -335,139 +498,182 @@ msgid "GUARDADO"
 msgstr "已保存"
 
 msgid "PISTA"
-msgstr "音轨"
+msgstr "轨道"
 
-msgid "¿RES?"
-msgstr "分辨率?"
+msgid "Sitio"
+msgstr "网站"
 
-msgid "¿COD?"
-msgstr "编码?"
+msgid "DLPY"
+msgstr "DLPY"
 
-msgid "¿FPS?"
-msgstr "帧率?"
+msgid "Primera ejecución"
+msgstr "首次运行"
 
-msgid "¿BIT?"
-msgstr "码率?"
+msgid "Novedad"
+msgstr "新内容"
 
-msgid "¿KHZ?"
-msgstr "采样率?"
+msgid "Retroceso"
+msgstr "回退"
+
+msgid "Igual"
+msgstr "相同"
+
+msgid "Adelanto"
+msgstr "超前"
+
+msgid "Revisando archivo"
+msgstr "正在检查文件"
+
+msgid "Espera"
+msgstr "等待"
+
+msgid "Conversión"
+msgstr "转换"
+
+msgid "Sustitución"
+msgstr "替换"
+
+msgid "Unión"
+msgstr "合并"
+
+msgid "Limpieza"
+msgstr "清理"
+
+msgid "Papelera"
+msgstr "废纸篓"
+
+msgid "Envío"
+msgstr "发送"
+
+msgid "Descarga"
+msgstr "下载"
+
+msgid "Pulso"
+msgstr "脉冲"
+
+msgid "Carril"
+msgstr "轨道"
+
+msgid "seg"
+msgstr "秒"
+
+msgid "Error"
+msgstr "错误"
+
+msgid "espera"
+msgstr "等待"
+
+msgid "min"
+msgstr "分钟"
+
+msgid "reintenta al abrir"
+msgstr "打开时会重试"
+
+msgid "falló"
+msgstr "失败"
+
+msgid "listas"
+msgstr "就绪"
 
 msgid "papelera"
-msgstr "回收站"
+msgstr "废纸篓"
 
 msgid "basura"
 msgstr "垃圾"
 
-msgid "VIEJO"
-msgstr "旧"
+msgid "Toca la pantalla para abrir el teclado"
+msgstr "点按屏幕打开键盘"
 
-msgid "NUEVO"
-msgstr "新"
+msgid "Toca para abrir el teclado"
+msgstr "点按打开键盘"
+
+msgid "Toca = teclado"
+msgstr "点按 = 键盘"
+
+msgid "¿Sustituir el archivo?"
+msgstr "要替换这个文件吗?"
+
+msgid "¿Sustituir archivo?"
+msgstr "要替换文件吗?"
+
+msgid "¿Sustituir?"
+msgstr "要替换吗?"
+
+msgid "¿Convertir este video?"
+msgstr "要转换这个视频吗?"
+
+msgid "¿Convertir ahora?"
+msgstr "现在转换吗?"
+
+msgid "¿Convertir?"
+msgstr "要转换吗?"
+
+msgid "sin respuesta se sustituye · "
+msgstr "无响应则替换 · "
+
+msgid "sin respuesta se convierte · "
+msgstr "无响应则转换 · "
 
 msgid "Toca la pantalla · Enter sustituir · n conservar"
-msgstr "轻点屏幕 · 回车替换 · n 保留"
+msgstr "点按屏幕 · 回车替换 · n保留"
 
 msgid "Enter sustituir · n conservar"
-msgstr "回车替换 · n 保留"
+msgstr "回车替换 · n保留"
 
 msgid "Enter sustituir · n no"
-msgstr "回车替换 · n 否"
+msgstr "回车替换 · n不"
 
 msgid "Enter sí · n no"
-msgstr "回车是 · n 否"
+msgstr "回车是 · n不"
 
 msgid "Enter · n"
 msgstr "回车 · n"
 
 msgid "Toca la pantalla · Enter convertir · r remux · n original"
-msgstr "轻点屏幕 · 回车转换 · r remux · n 原格式"
+msgstr "点按屏幕 · 回车转换 · r remux · n原文件"
 
 msgid "Enter convertir · r remux · n original"
-msgstr "回车转换 · r remux · n 原格式"
+msgstr "回车转换 · r remux · n原文件"
 
 msgid "Enter convertir · r remux · n no"
-msgstr "回车转换 · r remux · n 否"
+msgstr "回车转换 · r remux · n不"
 
 msgid "Enter sí · r remux · n no"
-msgstr "回车是 · r remux · n 否"
+msgstr "回车是 · r remux · n不"
 
 msgid "Enter · r · n"
 msgstr "回车 · r · n"
 
-msgid "Toca la pantalla para abrir el teclado"
-msgstr "轻点屏幕打开键盘"
-
-msgid "Toca para abrir el teclado"
-msgstr "轻点打开键盘"
-
-msgid "Toca = teclado"
-msgstr "轻点 = 键盘"
-
-msgid "¿Sustituir el archivo?"
-msgstr "要替换该文件吗？"
-
-msgid "¿Sustituir archivo?"
-msgstr "要替换文件吗？"
-
-msgid "¿Sustituir?"
-msgstr "要替换吗？"
-
-msgid "¿Convertir este video?"
-msgstr "要转换这个视频吗？"
-
-msgid "¿Convertir ahora?"
-msgstr "现在转换吗？"
-
-msgid "¿Convertir?"
-msgstr "要转换吗？"
-
-msgid "Abriendo con view"
-msgstr "正在通过 view 打开"
-
-msgid "Enviando a DLpy"
-msgstr "正在发送给 DLpy"
-
 msgid "Preparando"
-msgstr "准备中"
+msgstr "正在准备"
 
 msgid "Preparando descarga"
 msgstr "正在准备下载"
 
-msgid "Error"
-msgstr "错误"
+msgid "Descargando video"
+msgstr "正在下载视频"
 
-msgid "falló"
-msgstr "失败"
+msgid "Descargando audio"
+msgstr "正在下载音频"
 
-msgid "reintenta al abrir"
-msgstr "打开时重试"
+msgid "Finalizando"
+msgstr "正在收尾"
 
-msgid "listas"
-msgstr "就绪"
+msgid "Abriendo con view"
+msgstr "正在用 view 打开"
 
-msgid "espera"
-msgstr "等待"
+msgid "Enviando a DLpy"
+msgstr "正在发给 DLpy"
 
-msgid "activa"
-msgstr "已开启"
-
-msgid "hecho"
-msgstr "完成"
-
-msgid "sin respuesta se sustituye · "
-msgstr "无操作则替换 · "
-
-msgid "sin respuesta se convierte · "
-msgstr "无操作则转换 · "
+msgid "GitHub"
+msgstr "GitHub"
 
 msgid "actualizaciones"
 msgstr "更新"
 
 msgid "analizando"
-msgstr "分析中"
+msgstr "正在分析"
 
-msgid "boot"
-msgstr "启动"
-
-msgid "GitHub"
-msgstr "GitHub"
+msgid "📃 Lista con {n} elemento: {t}"
+msgid_plural "📃 Lista con {n} elementos: {t}"
+msgstr[0] "📃 有 {n} 个条目的列表: {t}"
